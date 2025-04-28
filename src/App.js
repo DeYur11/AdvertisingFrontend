@@ -1,45 +1,69 @@
-import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
-import { useState } from "react";
+import { BrowserRouter as Router, Route, Routes, useLocation } from "react-router-dom";
 import Header from "./component/Header/Header";
 import Login from "./component/Login/Login";
-import Settings from "./page/Settings/Settings";
+import Settings from "./component/page/Settings/Settings";
+import Home from "./component/page/Home";
+import EmployeeDashboard from "./component/page/EmployeeDashboard/EmployeeDashboard";
+import ProtectedRoute from "./component/ProtectedRoute";
 
-function Home() {
-    return <h2>Home Page</h2>;
-}
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
-function About() {
-    return <h2>About Page</h2>;
-}
+function AppContent() {
+    const location = useLocation();
 
-function Services() {
-    return <h2>Services Page</h2>;
-}
+    return (
+        <>
+            {/* Показуємо Header тільки якщо ми НЕ на /login */}
+            {location.pathname !== "/login" && <Header />}
 
-function AdminPanel() {
-    return <h2>Admin Panel</h2>;
+            <main>
+                <Routes>
+                    <Route path="/login" element={<Login />} />
+                    <Route
+                        path="/settings"
+                        element={
+                            <ProtectedRoute>
+                                <Settings />
+                            </ProtectedRoute>
+                        }
+                    />
+                    <Route
+                        path="/public"
+                        element={
+                            <ProtectedRoute>
+                                <Home />
+                            </ProtectedRoute>
+                        }
+                    />
+                    <Route
+                        path="/dashboard"
+                        element={
+                            <ProtectedRoute>
+                                <EmployeeDashboard />
+                            </ProtectedRoute>
+                        }
+                    />
+                    <Route
+                        path="/"
+                        element={
+                            <ProtectedRoute>
+                                <Home />
+                            </ProtectedRoute>
+                        }
+                    />
+                </Routes>
+            </main>
+
+            <ToastContainer position="top-right" autoClose={3000} />
+        </>
+    );
 }
 
 export default function App() {
-    const [role, setRole] = useState(null); // Спочатку користувач не залогінений
-
     return (
         <Router>
-            {role && <Header role={role} setRole={setRole} />}
-            <main>
-                <Routes>
-                    {!role && <Route path="*" element={<Login setRole={setRole} />} />}
-                    {role && (
-                        <>
-                            <Route path="/" element={<Home />} />
-                            <Route path="/about" element={<About />} />
-                            <Route path="/services" element={<Services />} />
-                            <Route path="/admin" element={<AdminPanel />} />
-                            <Route path="/settings" element={<Settings />} />
-                        </>
-                    )}
-                </Routes>
-            </main>
+            <AppContent />
         </Router>
     );
 }

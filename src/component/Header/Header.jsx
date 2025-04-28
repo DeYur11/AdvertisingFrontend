@@ -1,24 +1,10 @@
-import { Link, useNavigate } from "react-router-dom";
-import { useState } from "react";
+import { NavLink } from "react-router-dom";
+import ProfileMenu from "./../ProfileMenu/ProfileMenu";
+import { useSelector } from "react-redux";
 import "./Header.css";
 
-export default function Header({ role, setRole }) {
-    const navigate = useNavigate();
-    const [isMenuOpen, setIsMenuOpen] = useState(false);
-
-    function handleLogout() {
-        setRole(null);
-        navigate("/login");
-    }
-
-    function handleSettings() {
-        navigate("/settings");
-        setIsMenuOpen(false);
-    }
-
-    function toggleMenu() {
-        setIsMenuOpen(prev => !prev);
-    }
+export default function Header() {
+    const user = useSelector(state => state.user);
 
     return (
         <header className="header">
@@ -27,30 +13,37 @@ export default function Header({ role, setRole }) {
             </div>
 
             <nav className="nav">
-                <Link to="/public" className="nav-link">Home</Link>
-                <Link to="/about" className="nav-link">About</Link>
+                <NavLink to="/public" className={({ isActive }) => isActive ? "nav-button active" : "nav-button"}>
+                    Home
+                </NavLink>
+                <NavLink to="/about" className={({ isActive }) => isActive ? "nav-button active" : "nav-button"}>
+                    About
+                </NavLink>
 
-                {(role === "Admin" || role === "Manager") && (
-                    <Link to="/services" className="nav-link">Services</Link>
+                {/* Доступ до Services для Project Manager або Scrum Master */}
+                {(user.mainRole === "ProjectManager" || user.mainRole === "ScrumMaster") && (
+                    <NavLink to="/services" className={({ isActive }) => isActive ? "nav-button active" : "nav-button"}>
+                        Services
+                    </NavLink>
                 )}
-                {role === "Admin" && (
-                    <Link to="/admin" className="nav-link">Admin Panel</Link>
+
+                {/* Доступ до Admin Panel тільки для Project Manager */}
+                {user.mainRole === "ProjectManager" && (
+                    <NavLink to="/admin" className={({ isActive }) => isActive ? "nav-button active" : "nav-button"}>
+                        Admin Panel
+                    </NavLink>
+                )}
+
+                {/* Доступ до Dashboard тільки для Worker */}
+                {user.mainRole === "Worker" && (
+                    <NavLink to="/dashboard" className={({ isActive }) => isActive ? "nav-button active" : "nav-button"}>
+                        My Tasks
+                    </NavLink>
                 )}
             </nav>
 
             <div className="right-section">
-                <div className="profile-wrapper">
-                    <div className="profile" onClick={toggleMenu}>
-                        {role[0]}
-                    </div>
-
-                    {isMenuOpen && (
-                        <div className="dropdown-menu">
-                            <button onClick={handleSettings}>Settings</button>
-                            <button onClick={handleLogout}>Logout</button>
-                        </div>
-                    )}
-                </div>
+                <ProfileMenu />
             </div>
         </header>
     );

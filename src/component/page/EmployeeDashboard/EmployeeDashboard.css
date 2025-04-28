@@ -1,0 +1,70 @@
+.employee-dashboard {
+    max-width: 900px;
+    margin: 30px auto;
+    padding: 20px;
+    background-color: #f1f5f9;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.employee-dashboard h2 {
+    margin-bottom: 10px;
+    color: #1e3a8a;
+}
+
+.employee-dashboard h3 {
+    margin-bottom: 20px;
+    color: #334155;
+}
+
+.tasks-list {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.task-item {
+    background-color: white;
+    padding: 14px 20px;
+    border-radius: 8px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+}
+
+.task-title {
+    font-weight: 600;
+    font-size: 16px;
+    color: #1e293b;
+}
+
+.task-status {
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 500;
+    text-transform: capitalize;
+}
+
+.status-in-progress {
+    background-color: #e0e7ff;
+    color: #4338ca;
+}
+
+.status-completed {
+    background-color: #d1fae5;
+    color: #059669;
+}
+
+.status-pending {
+    background-color: #fee2e2;
+    color: #b91c1c;
+}
+
+.access-denied {
+    text-align: center;
+    margin-top: 40px;
+    color: #dc2626;
+    font-size: 18px;
+}
