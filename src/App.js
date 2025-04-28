@@ -1,25 +1,45 @@
-import logo from './logo.svg';
-import './App.css';
+import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
+import { useState } from "react";
+import Header from "./component/Header/Header";
+import Login from "./component/Login/Login";
+import Settings from "./page/Settings/Settings";
 
-function App() {
-  return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
-  );
+function Home() {
+    return <h2>Home Page</h2>;
 }
 
-export default App;
+function About() {
+    return <h2>About Page</h2>;
+}
+
+function Services() {
+    return <h2>Services Page</h2>;
+}
+
+function AdminPanel() {
+    return <h2>Admin Panel</h2>;
+}
+
+export default function App() {
+    const [role, setRole] = useState(null); // Спочатку користувач не залогінений
+
+    return (
+        <Router>
+            {role && <Header role={role} setRole={setRole} />}
+            <main>
+                <Routes>
+                    {!role && <Route path="*" element={<Login setRole={setRole} />} />}
+                    {role && (
+                        <>
+                            <Route path="/" element={<Home />} />
+                            <Route path="/about" element={<About />} />
+                            <Route path="/services" element={<Services />} />
+                            <Route path="/admin" element={<AdminPanel />} />
+                            <Route path="/settings" element={<Settings />} />
+                        </>
+                    )}
+                </Routes>
+            </main>
+        </Router>
+    );
+}
