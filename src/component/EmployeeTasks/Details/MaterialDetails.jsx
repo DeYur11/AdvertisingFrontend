@@ -22,9 +22,9 @@ export default function MaterialDetails({ material, onBack }) {
     const { data, loading, error } = useQuery(REVIEWS_BY_MATERIAL, {
         variables: { materialId: material.id },
         fetchPolicy: "network-only",
-        onError: (error) =>{
-            console.log(error)
-        }
+        onError: (error) => {
+            console.error("Помилка завантаження відгуків:", error.message);
+        },
     });
 
     const reviews = data?.reviewsByMaterial || [];
@@ -41,35 +41,74 @@ export default function MaterialDetails({ material, onBack }) {
             <p><strong>Статус:</strong> {material.status?.name || "—"}</p>
             <p><strong>Мова:</strong> {material.language?.name || "—"}</p>
 
-            <hr/>
-
-            <h5>Відгуки про матеріал</h5>
-            {loading && (
-                <Box sx={{display: "flex", justifyContent: "center", mt: 2}}>
-                    <CircularProgress size={24}/>
-                </Box>
-            )}
-            {error && <p className="text-danger">Помилка при завантаженні відгуків.</p>}
-
-            <div style={{maxHeight: "300px", overflowY: "auto", marginTop: "10px", paddingRight: "5px"}}>
-                {!loading && !error && reviews.length === 0 && (
-                    <p>Відгуків поки немає.</p>
-                )}
-                {!loading && !error && reviews.length > 0 && (
-                    <div>
-                        {reviews.map((review) => (
-                            <div key={review.id} className="border rounded p-2 mb-3">
-                                <div>
-                                    <strong>Рецензент:</strong> {review.reviewer ? `${review.reviewer.name} ${review.reviewer.surname}` : "Невідомо"}
-                                </div>
-                                <div><strong>Дата рецензії:</strong> {review.reviewDate || review.createDatetime}</div>
-                                <div><strong>Коментар:</strong> {review.comments || "—"}</div>
-                                <div><strong>Запропоновані зміни:</strong> {review.suggestedChange || "—"}</div>
-                            </div>
+            {material.keywords?.length > 0 ? (
+                <>
+                    <h6 className="mt-3">Ключові слова</h6>
+                    <div className="d-flex flex-wrap gap-2 mb-3">
+                        {material.keywords.map((kw) => (
+                            <span
+                                key={kw.id}
+                                className="badge bg-light border text-dark px-2 py-1"
+                            >
+                #{kw.name}
+              </span>
                         ))}
                     </div>
-                )}
-            </div>
+                </>
+            ) : (
+                <p className="text-muted">Ключові слова не вказано.</p>
+            )}
+
+            <hr />
+
+            <h5>Відгуки про матеріал</h5>
+
+            {loading && (
+                <Box sx={{ display: "flex", justifyContent: "center", mt: 2 }}>
+                    <CircularProgress size={24} />
+                </Box>
+            )}
+
+            {error && (
+                <p className="text-danger mt-2">Помилка при завантаженні відгуків.</p>
+            )}
+
+            {!loading && !error && (
+                <div
+                    style={{
+                        maxHeight: "300px",
+                        overflowY: "auto",
+                        marginTop: "10px",
+                        paddingRight: "5px",
+                    }}
+                >
+                    {reviews.length === 0 ? (
+                        <p>Відгуків поки немає.</p>
+                    ) : (
+                        reviews.map((review) => (
+                            <div key={review.id} className="border rounded p-2 mb-3">
+                                <div>
+                                    <strong>Рецензент:</strong>{" "}
+                                    {review.reviewer
+                                        ? `${review.reviewer.name} ${review.reviewer.surname}`
+                                        : "Невідомо"}
+                                </div>
+                                <div>
+                                    <strong>Дата рецензії:</strong>{" "}
+                                    {review.reviewDate || review.createDatetime}
+                                </div>
+                                <div>
+                                    <strong>Коментар:</strong> {review.comments || "—"}
+                                </div>
+                                <div>
+                                    <strong>Запропоновані зміни:</strong>{" "}
+                                    {review.suggestedChange || "—"}
+                                </div>
+                            </div>
+                        ))
+                    )}
+                </div>
+            )}
         </div>
     );
 }

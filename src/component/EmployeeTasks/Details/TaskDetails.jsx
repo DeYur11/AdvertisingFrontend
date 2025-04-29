@@ -1,13 +1,11 @@
 import { useState } from "react";
-import { useQuery, gql } from "@apollo/client";
+import { useQuery, useMutation, gql } from "@apollo/client";
 import AddMaterialForm from "./AddMaterialForm";
 import EditMaterialModal from "./EditMaterialModal";
-import "./TaskDetails.css";
 import MaterialDetails from "./MaterialDetails";
+import "./TaskDetails.css";
 
-
-
-// --- GraphQL-запит на отримання матеріалів за завданням
+// --- GraphQL-запити ---
 const MATERIALS_BY_TASK = gql`
   query GetMaterialsByTask($taskId: ID!) {
     materialsByTask(taskId: $taskId) {
@@ -16,12 +14,19 @@ const MATERIALS_BY_TASK = gql`
       description
       status { name }
       language { name }
+      keywords { name }
     }
   }
 `;
 
+const DELETE_MATERIAL = gql`
+  mutation DeleteMaterial($id: ID!) {
+    deleteMaterial(id: $id)
+  }
+`;
+
 export default function TaskDetails({ data }) {
-    const [activeTab, setActiveTab] = useState("info"); // 'info' | 'materials' | 'materialDetails'
+    const [activeTab, setActiveTab] = useState("info");
     const [activeMaterial, setActiveMaterial] = useState(null);
     const [editingMaterial, setEditingMaterial] = useState(null);
 
@@ -30,16 +35,31 @@ export default function TaskDetails({ data }) {
         fetchPolicy: "cache-and-network",
     });
 
+    const [deleteMaterial] = useMutation(DELETE_MATERIAL);
+
     const materials = materialsData?.materialsByTask || [];
 
     const handleEditClick = (material, e) => {
-        e.stopPropagation(); // щоб не клікати на перегляд
+        e.stopPropagation();
         setEditingMaterial(material);
     };
 
-    const handleCloseModal = () => {
-        setEditingMaterial(null);
+    const handleDeleteClick = async (materialId, e) => {
+        e.stopPropagation();
+        const confirmDelete = window.confirm("Ви впевнені, що хочете видалити цей матеріал?");
+        if (!confirmDelete) return;
+
+        try {
+            await deleteMaterial({ variables: { id: materialId } });
+            await refetch();
+            alert("✅ Матеріал успішно видалено.");
+        } catch (err) {
+            console.error("❌ Помилка при видаленні:", err.message);
+            alert("❌ Помилка при видаленні матеріалу.");
+        }
     };
+
+    const handleCloseModal = () => setEditingMaterial(null);
 
     const handleMaterialUpdated = () => {
         refetch();
@@ -55,23 +75,14 @@ export default function TaskDetails({ data }) {
         <div className="task-sidebar">
             {/* Вкладки */}
             <div className="tab-buttons mb-3" style={{ display: "flex", gap: "10px" }}>
-                <button
-                    onClick={() => setActiveTab("info")}
-                    className={`tab-btn ${activeTab === "info" ? "active" : ""}`}
-                >
+                <button onClick={() => setActiveTab("info")} className={`tab-btn ${activeTab === "info" ? "active" : ""}`}>
                     Інформація
                 </button>
-                <button
-                    onClick={() => setActiveTab("materials")}
-                    className={`tab-btn ${activeTab === "materials" ? "active" : ""}`}
-                >
+                <button onClick={() => setActiveTab("materials")} className={`tab-btn ${activeTab === "materials" ? "active" : ""}`}>
                     Матеріали
                 </button>
                 {activeTab === "materialDetails" && (
-                    <button
-                        onClick={() => setActiveTab("materials")}
-                        className="tab-btn"
-                    >
+                    <button onClick={() => setActiveTab("materials")} className="tab-btn">
                         ⬅️ Назад
                     </button>
                 )}
@@ -103,8 +114,8 @@ export default function TaskDetails({ data }) {
                             {materials.map((mat) => (
                                 <li
                                     key={mat.id}
-                                    className="list-group-item mb-3 border rounded p-2 material-item" // 👈 додаємо клас
-                                    style={{cursor: "pointer"}}
+                                    className="list-group-item mb-3 border rounded p-2 material-item"
+                                    style={{ cursor: "pointer" }}
                                     onClick={() => handleViewMaterial(mat)}
                                 >
                                     <div><strong>Назва:</strong> {mat.name}</div>
@@ -121,28 +132,30 @@ export default function TaskDetails({ data }) {
                                             >
                                                 📝 Редагувати
                                             </button>
-                                            <button className="btn btn-sm btn-outline-warning">📤 На рецензію</button>
-                                            <button className="btn btn-sm btn-outline-danger">🗑 Видалити</button>
+                                            <button
+                                                className="btn btn-sm btn-outline-danger"
+                                                onClick={(e) => handleDeleteClick(mat.id, e)}
+                                            >
+                                                🗑 Видалити
+                                            </button>
                                         </div>
                                     )}
                                 </li>
                             ))}
                         </ul>
-
                     ) : (
                         !loading && !error && <p>Матеріалів поки немає.</p>
                     )}
 
-                    <hr className="my-3"/>
-                    <AddMaterialForm taskId={data.id} onAdded={refetch}/>
+                    <hr className="my-3" />
+                    <AddMaterialForm taskId={data.id} onAdded={refetch} />
                 </div>
             )}
 
             {/* Вкладка "Перегляд матеріалу" */}
             {activeTab === "materialDetails" && activeMaterial && (
-                <MaterialDetails material={activeMaterial} onBack={() => setActiveTab("materials")}/>
+                <MaterialDetails material={activeMaterial} onBack={() => setActiveTab("materials")} />
             )}
-
 
             {/* Модальне вікно редагування матеріалу */}
             {editingMaterial && (
