@@ -5,7 +5,7 @@ import {
 import { useState, useEffect } from "react";
 import { useQuery, useMutation, gql } from "@apollo/client";
 
-// --- Запити ---
+// --- GraphQL запити ---
 const GET_MATERIAL_BY_ID = gql`
   query GetMaterialById($id: ID!) {
     material(id: $id) {
@@ -41,43 +41,45 @@ const UPDATE_MATERIAL = gql`
 `;
 
 export default function EditMaterialModal({ materialId, onClose, onUpdated }) {
+
     const { data: materialData, loading: loadingMaterial } = useQuery(GET_MATERIAL_BY_ID, {
         variables: { id: materialId },
         skip: !materialId,
         fetchPolicy: "network-only",
+        onCompleted: (data) => {
+            console.log("✅ Дані прийшли на фронт:", data);
+        },
     });
 
     const { data: refData, loading: loadingRefs } = useQuery(GET_MATERIAL_REFERENCE_DATA, {
         fetchPolicy: "network-only",
+        onCompleted: (data) => {
+            console.log("✅ Дані прийшли на фронт:", data);
+        },
     });
 
     const [updateMaterial, { loading: saving }] = useMutation(UPDATE_MATERIAL);
-    const [form, setForm] = useState({
-        name: "",
-        description: "",
-        typeId: "",
-        licenceTypeId: "",
-        usageRestrictionId: "",
-        targetAudienceId: "",
-        languageId: "",
-    });
+
+    const [form, setForm] = useState(null); // Форма буде створена тільки після завантаження даних
 
     useEffect(() => {
+        console.log("✅ Оновлення");
+        console.log(materialData)
         if (materialData?.material) {
             const m = materialData.material;
             setForm({
-                name: m.name || "",
-                description: m.description || "",
-                typeId: m.type?.id || "",
-                licenceTypeId: m.licenceType?.id || "",
-                usageRestrictionId: m.usageRestriction?.id || "",
-                targetAudienceId: m.targetAudience?.id || "",
-                languageId: m.language?.id || "",
+                name: m.name ?? "",
+                description: m.description ?? "",
+                typeId: m.type?.id ?? "",
+                licenceTypeId: m.licenceType?.id ?? "",
+                usageRestrictionId: m.usageRestriction?.id ?? "",
+                targetAudienceId: m.targetAudience?.id ?? "",
+                languageId: m.language?.id ?? "",
             });
         }
-    }, [materialData]);
-
-    if (loadingMaterial || loadingRefs) {
+    }, [materialData, refData]);
+    console.log(form, loadingMaterial, loadingRefs)
+    if (!form || loadingMaterial || loadingRefs) {
         return (
             <Dialog open onClose={onClose} maxWidth="md" fullWidth>
                 <DialogTitle>Редагування матеріалу</DialogTitle>
@@ -151,8 +153,8 @@ export default function EditMaterialModal({ materialId, onClose, onUpdated }) {
                         <InputLabel>Тип ліцензії</InputLabel>
                         <Select name="licenceTypeId" value={form.licenceTypeId} onChange={handleChange}>
                             <MenuItem value="">—</MenuItem>
-                            {refData.licenceTypes.map(t => (
-                                <MenuItem key={t.id} value={t.id}>{t.name}</MenuItem>
+                            {refData.licenceTypes.map(lt => (
+                                <MenuItem key={lt.id} value={lt.id}>{lt.name}</MenuItem>
                             ))}
                         </Select>
                     </FormControl>
