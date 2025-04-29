@@ -5,6 +5,8 @@ import EditMaterialModal from "./EditMaterialModal";
 import "./TaskDetails.css";
 import MaterialDetails from "./MaterialDetails";
 
+
+
 // --- GraphQL-запит на отримання матеріалів за завданням
 const MATERIALS_BY_TASK = gql`
   query GetMaterialsByTask($taskId: ID!) {

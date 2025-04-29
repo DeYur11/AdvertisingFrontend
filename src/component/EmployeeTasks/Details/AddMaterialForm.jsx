@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useQuery, useMutation, gql } from "@apollo/client";
+import CreatableSelect from "../CreatableSelect";
 
 // Запит для довідників
 const GET_MATERIAL_REFERENCE_DATA = gql`
@@ -12,6 +13,16 @@ const GET_MATERIAL_REFERENCE_DATA = gql`
   }
 `;
 
+const CREATE_TARGET_AUDIENCE = gql`
+  mutation CreateTargetAudience($input: CreateTargetAudienceInput!) {
+  createTargetAudience(input: $input) {
+    id
+    name
+  }
+}
+
+`;
+
 // Мутація на створення матеріалу
 const CREATE_MATERIAL = gql`
   mutation CreateMaterial($input: CreateMaterialInput!) {
@@ -22,7 +33,7 @@ const CREATE_MATERIAL = gql`
   }
 `;
 
-export default function AddMaterialForm({ taskId }) {
+export default function AddMaterialForm({ taskId, onAdded }) {
     const [newMaterial, setNewMaterial] = useState({
         name: "",
         description: "",
@@ -33,7 +44,7 @@ export default function AddMaterialForm({ taskId }) {
         languageId: "",
     });
 
-    const { loading, error, data } = useQuery(GET_MATERIAL_REFERENCE_DATA);
+    const { loading, error, data , refetch} = useQuery(GET_MATERIAL_REFERENCE_DATA);
     const [createMaterial] = useMutation(CREATE_MATERIAL);
 
     if (loading) return <p>Завантаження довідників...</p>;
@@ -151,20 +162,15 @@ export default function AddMaterialForm({ taskId }) {
                     </select>
                 </div>
 
-                <div className="mb-2">
-                    <label className="form-label">Цільова аудиторія</label>
-                    <select
-                        className="form-select"
-                        name="targetAudienceId"
-                        value={newMaterial.targetAudienceId}
-                        onChange={handleChange}
-                    >
-                        <option value="">Оберіть</option>
-                        {data.targetAudiences.map(ta => (
-                            <option key={ta.id} value={ta.id}>{ta.name}</option>
-                        ))}
-                    </select>
-                </div>
+                <CreatableSelect
+                    label="Цільова аудиторія"
+                    name="targetAudienceId"
+                    options={data.targetAudiences}
+                    value={newMaterial.targetAudienceId}
+                    onChange={(val) => setNewMaterial(prev => ({ ...prev, targetAudienceId: val }))}
+                    createMutation={CREATE_TARGET_AUDIENCE} // Передаємо gql документ
+                    refetchOptions={refetch}
+                />
 
                 <div className="mb-2">
                     <label className="form-label">Мова</label>
