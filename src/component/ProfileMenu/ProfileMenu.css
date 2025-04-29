@@ -40,13 +40,14 @@
     transform: scale(0.95);
     pointer-events: none;
     transition: all 0.3s ease;
-    z-index: 10;
+    z-index: 1300;
 }
 
 .dropdown-menu.show {
     opacity: 1;
     transform: scale(1);
     pointer-events: auto;
+    z-index: 1200;
 }
 
 .user-info {
