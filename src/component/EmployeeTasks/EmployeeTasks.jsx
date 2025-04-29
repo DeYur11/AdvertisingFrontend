@@ -1,22 +1,31 @@
 import { useState } from "react";
 import { useQuery, gql } from "@apollo/client";
 import { useSelector } from "react-redux";
+import TaskFilterBar from "./TaskFilterBar";
+import ProjectCard from "./ProjectCard";
+import Sidebar from "./Sidebar";
 import "./EmployeeTasks.css";
+import {
+    ProjectNameMatchHandler,
+    ActiveTaskExistenceHandler,
+    ServiceNameMatchHandler,
+    ActiveServiceExistenceHandler
+} from "../../handlers/employeeTasks";
 
-// Правильний запит: workerId типу ID!
 const GET_TASKS_BY_WORKER = gql`
-  query GetTasksByWorker($workerId: ID!) {
+  query MyQuery($workerId: ID!) {
     tasksByWorker(workerId: $workerId) {
       id
       name
       description
       startDate
       deadline
+      endDate
+      priority
+      value
       taskStatus {
         name
       }
-      priority
-      value
       serviceInProgress {
         id
         startDate
@@ -26,12 +35,19 @@ const GET_TASKS_BY_WORKER = gql`
           name
         }
         projectService {
+          service {
+            id
+            serviceName
+            estimateCost
+            serviceType {
+              name
+            }
+          }
           project {
             id
             name
             startDate
             endDate
-            description
             status {
               name
             }
@@ -41,14 +57,9 @@ const GET_TASKS_BY_WORKER = gql`
             client {
               name
             }
-          }
-          service {
-            id
-            serviceName
-            duration
-            estimateCost
-            serviceType {
+            manager {
               name
+              surname
             }
           }
         }
@@ -57,12 +68,10 @@ const GET_TASKS_BY_WORKER = gql`
   }
 `;
 
-
-
-
-export default function EmployeeTasks() {
+export default function EmployeeTasks({ onSelect }) {
     const [expandedProjectId, setExpandedProjectId] = useState(null);
-    const [taskFilter, setTaskFilter] = useState("active"); // "active" або "all"
+    const [selectedItem, setSelectedItem] = useState(null);
+    const [taskFilter, setTaskFilter] = useState("active");
     const [searchQuery, setSearchQuery] = useState("");
 
     const user = useSelector(state => state.user);
@@ -86,17 +95,11 @@ export default function EmployeeTasks() {
         const service = task.serviceInProgress.projectService.service;
 
         if (!groupedProjects[project.id]) {
-            groupedProjects[project.id] = {
-                ...project,
-                services: {}
-            };
+            groupedProjects[project.id] = { ...project, services: {} };
         }
 
         if (!groupedProjects[project.id].services[service.id]) {
-            groupedProjects[project.id].services[service.id] = {
-                ...service,
-                tasks: []
-            };
+            groupedProjects[project.id].services[service.id] = { ...service, tasks: [] };
         }
 
         groupedProjects[project.id].services[service.id].tasks.push(task);
@@ -104,119 +107,82 @@ export default function EmployeeTasks() {
 
     const projectsArray = Object.values(groupedProjects);
 
+    function handleItemSelect(item) {
+        onSelect(item);
+    }
+
     function toggleProject(id) {
         setExpandedProjectId(prev => (prev === id ? null : id));
     }
 
-    function filterTasks(tasks) {
-        if (taskFilter === "active") {
-            return tasks.filter(task => {
-                const status = task.taskStatus.name.toLowerCase();
-                return status === "in progress" || status === "pending";
-            });
-        }
-        return tasks;
+    function getVisibleProjectsForActiveTasks(projectsArray) {
+        const chain = new ProjectNameMatchHandler(
+            searchQuery,
+            new ActiveTaskExistenceHandler(
+                new ActiveServiceExistenceHandler(searchQuery, null)
+            )
+        );
+
+        return projectsArray
+            .map(project => chain.handle(project))
+            .filter(project => project !== null);
     }
 
-    function matchesSearch(text) {
-        return text.toLowerCase().includes(searchQuery.trim().toLowerCase());
+    function getVisibleProjectsForAllTasks(projectsArray) {
+        const chain = new ProjectNameMatchHandler(
+            searchQuery,
+            new ServiceNameMatchHandler(
+                searchQuery,
+                null
+            )
+        );
+
+        return projectsArray
+            .map(project => chain.handle(project))
+            .filter(project => project !== null);
     }
+
+    // 🔥 Тут міняємо document.body --> .employee-tasks-wrapper
+    function handleSelect(item) {
+        if (item.type !== "project") {
+            const wrapper = document.querySelector('.employee-tasks-wrapper');
+            wrapper?.classList.add("sidebar-open");
+            setSelectedItem(item);
+        }
+    }
+
+    function handleCloseSidebar() {
+        const wrapper = document.querySelector('.employee-tasks-wrapper');
+        wrapper?.classList.remove("sidebar-open");
+        setSelectedItem(null);
+    }
+
+    const visibleProjects = taskFilter === "active"
+        ? getVisibleProjectsForActiveTasks(projectsArray)
+        : getVisibleProjectsForAllTasks(projectsArray);
 
     return (
-        <div className="employee-tasks-container">
-
-            {/* Панель фільтрів і пошуку */}
-            <div className="task-filter-bar">
-                <button
-                    className={`filter-button ${taskFilter === "active" ? "active" : ""}`}
-                    onClick={() => setTaskFilter("active")}
-                >
-                    Active Tasks
-                </button>
-                <button
-                    className={`filter-button ${taskFilter === "all" ? "active" : ""}`}
-                    onClick={() => setTaskFilter("all")}
-                >
-                    All Tasks
-                </button>
-
-                <input
-                    type="text"
-                    className="search-input"
-                    placeholder="Search by project, service, or task..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
+        <div className={`employee-tasks-wrapper ${selectedItem && selectedItem.type !== "project" ? "sidebar-open" : ""}`}>
+            <div className="employee-tasks-container">
+                <TaskFilterBar
+                    taskFilter={taskFilter}
+                    setTaskFilter={setTaskFilter}
+                    searchQuery={searchQuery}
+                    setSearchQuery={setSearchQuery}
                 />
+
+                {visibleProjects.map(project => (
+                    <ProjectCard
+                        key={project.id}
+                        project={project}
+                        expanded={expandedProjectId === project.id}
+                        onToggle={() => toggleProject(project.id)}
+                        services={project.services}
+                        searchQuery={searchQuery}
+                        onSelect={handleItemSelect}
+                    />
+                ))}
             </div>
-
-            {/* Відображення проектів */}
-            {projectsArray
-                .map(project => {
-                    const servicesWithFilteredTasks = Object.values(project.services)
-                        .map(service => {
-                            const filteredByActivity = filterTasks(service.tasks);
-
-                            const finalFilteredTasks = filteredByActivity.filter(task =>
-                                matchesSearch(task.name)
-                            );
-
-                            const serviceMatchesSearch = matchesSearch(service.serviceName);
-
-                            if (serviceMatchesSearch || finalFilteredTasks.length > 0) {
-                                return {
-                                    ...service,
-                                    filteredTasks: finalFilteredTasks
-                                };
-                            }
-                            return null;
-                        })
-                        .filter(service => service !== null);
-
-                    const projectMatchesSearch = matchesSearch(project.name);
-
-                    if (servicesWithFilteredTasks.length === 0 && !projectMatchesSearch) {
-                        return null;
-                    }
-
-                    return (
-                        <div key={project.id} className="project-section">
-                            <div className="project-header" onClick={() => toggleProject(project.id)}>
-                                <div>
-                                    {project.name}
-                                    <div className="project-info">
-                                        {project.projectType?.name} — {project.status?.name} — Client: {project.client?.name}
-                                    </div>
-                                </div>
-                                <div className={`toggle-icon ${expandedProjectId === project.id ? "expanded" : ""}`}>
-                                    {expandedProjectId === project.id ? "▲" : "▼"}
-                                </div>
-                            </div>
-
-                            {expandedProjectId === project.id && (
-                                <div className="services-grid">
-                                    {servicesWithFilteredTasks.map(service => (
-                                        <div key={service.id} className="service-card">
-                                            <div className="service-name">{service.serviceName}</div>
-                                            <div className="tasks-list">
-                                                {service.filteredTasks.map(task => (
-                                                    <div key={task.id} className="task-item">
-                                                        ➔ {task.name}{" "}
-                                                        <span className={`task-status ${task.taskStatus.name.toLowerCase()}`}>
-                              {task.taskStatus.name}
-                            </span>
-                                                    </div>
-                                                ))}
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
-                            )}
-                        </div>
-                    );
-                })
-            }
         </div>
     );
 }
-
-

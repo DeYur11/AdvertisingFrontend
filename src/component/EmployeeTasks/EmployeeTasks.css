@@ -1,20 +1,37 @@
-.employee-tasks-container {
-    max-width: 1200px;
-    margin: 30px auto;
-    padding: 20px;
+:root {
+    --sidebar-width: 480px;
 }
 
+/* Загальна обгортка для сторінки завдань */
+.employee-tasks-wrapper {
+    display: flex;
+    width: 100%;
+    transition: all 0.3s ease;
+}
+
+.employee-tasks-container {
+    flex-grow: 1;
+    padding: 12px;
+    transition: all 0.3s ease;
+}
+
+/* Коли відкрито Sidebar */
+.employee-tasks-wrapper.with-sidebar .employee-tasks-container {
+    width: calc(100% - var(--sidebar-width));
+}
+
+/* Проект */
 .project-section {
     background-color: #f8fafc;
     border-radius: 12px;
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
-    margin-bottom: 24px;
+    margin-bottom: 12px;
     overflow: hidden;
     transition: all 0.3s ease;
 }
 
 .project-header {
-    padding: 20px 24px;
+    padding: 10px 20px;
     font-size: 22px;
     font-weight: bold;
     cursor: pointer;
@@ -30,12 +47,18 @@
     background-color: #cbd5e1;
 }
 
+.project-title {
+    font-size: 20px;
+    font-weight: bold;
+}
+
 .project-info {
     font-size: 14px;
     color: #64748b;
     margin-top: 4px;
 }
 
+/* Сервіси всередині проекту */
 .services-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
@@ -48,27 +71,33 @@
     padding: 16px;
     border-radius: 10px;
     box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
-    transition: box-shadow 0.3s;
+    transition: box-shadow 0.3s ease;
 }
 
 .service-card:hover {
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
-.service-name {
+.service-title {
     font-weight: 600;
-    margin-bottom: 10px;
     font-size: 18px;
     color: #334155;
 }
 
+.service-info {
+    font-size: 14px;
+    color: #475569;
+    margin-top: 4px;
+}
+
+/* Список завдань в сервісі */
 .tasks-list {
     display: flex;
     flex-direction: column;
     gap: 8px;
-    max-height: 250px; /* <-- Обмеження висоти */
-    overflow-y: auto;  /* <-- Прокрутка якщо задач більше */
-    padding-right: 6px; /* Щоб скролбар не налазив на текст */
+    max-height: 250px;
+    overflow-y: auto;
+    padding-right: 6px;
 }
 
 /* Стилізація скролбару */
@@ -85,52 +114,28 @@
     background-color: #94a3b8;
 }
 
-.task-item {
-    font-size: 15px;
-    color: #475569;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-.task-status {
-    font-size: 12px;
-    padding: 2px 8px;
-    border-radius: 6px;
-    background-color: #e0e7ff;
-    color: #4338ca;
-}
-
-.task-status.completed {
-    background-color: #d1fae5;
-    color: #059669;
-}
-
-.task-status.pending {
-    background-color: #fee2e2;
-    color: #b91c1c;
-}
-
+/* Іконка розгортання проекту */
 .toggle-icon {
     font-size: 18px;
-    transition: transform 0.3s;
+    transition: transform 0.3s ease;
 }
 
 .toggle-icon.expanded {
     transform: rotate(180deg);
 }
 
+/* Панель фільтрації */
 .task-filter-bar {
     display: flex;
     gap: 12px;
-    margin-bottom: 20px;
+    margin-bottom: 12px;
     padding: 0 24px;
 }
 
 .filter-button {
     background-color: transparent;
     border: 2px solid #1e3a8a;
-    padding: 8px 16px;
+    padding: 8px 12px;
     border-radius: 20px;
     font-weight: 600;
     color: #1e3a8a;
@@ -148,6 +153,7 @@
     color: white;
 }
 
+/* Пошук */
 .search-input {
     flex-grow: 1;
     padding: 8px 12px;
@@ -166,3 +172,10 @@
     box-shadow: 0 0 0 2px rgba(30, 58, 138, 0.2);
 }
 
+/* Підсвічування результату пошуку */
+.highlight {
+    background-color: #fde68a;
+    padding: 0 2px;
+    border-radius: 3px;
+    font-weight: bold;
+}
