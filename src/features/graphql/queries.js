@@ -116,7 +116,7 @@ export const GET_MATERIAL_REFERENCE_DATA = gql`
     query GetMaterialReferenceData {
         materialTypes { id name }
         licenceTypes { id name }
-        usageRestrictions { id description }
+        usageRestrictions { id name }
         targetAudiences { id name }
         languages { id name }
     }

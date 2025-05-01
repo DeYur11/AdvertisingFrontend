@@ -335,14 +335,22 @@ export default function TaskDetails({ data }) {
 
             {/* Edit material modal */}
             {editingMaterial && (
-                <EditMaterialModal
-                    materialId={editingMaterial}
+                <Modal
+                    isOpen={!!editingMaterial}
                     onClose={() => setEditingMaterial(null)}
-                    onUpdated={() => {
-                        setEditingMaterial(null);
-                        refetch();
-                    }}
-                />
+                    title="Edit Material"
+                    size="large"
+                >
+                    <EditMaterialModal
+                        materialId={editingMaterial}
+                        onClose={() => setEditingMaterial(null)}
+                        onUpdated={() => {
+                            setEditingMaterial(null);
+                            refetch();
+                        }}
+                    />
+                </Modal>
+
             )}
 
             {/* Delete confirmation modal */}

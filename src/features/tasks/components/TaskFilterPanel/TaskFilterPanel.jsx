@@ -47,6 +47,7 @@ export default function TaskFilterPanel({
     // Local state for filter values
     const [localFilters, setLocalFilters] = useState(filters);
     const [activeFilterCount, setActiveFilterCount] = useState(0);
+    const [clientSearchQuery, setClientSearchQuery] = useState("");
 
     // Update active filter count and local filters when filters change
     useEffect(() => {
@@ -121,6 +122,7 @@ export default function TaskFilterPanel({
     // Reset all filters
     const handleResetFilters = () => {
         setFilters({});
+        setClientSearchQuery("");
     };
 
     // Helper to apply quick date filters
@@ -150,6 +152,25 @@ export default function TaskFilterPanel({
         { value: "medium", label: "Medium (4-7)", class: "priority-medium" },
         { value: "low", label: "Low (1-3)", class: "priority-low" }
     ];
+
+    // Get sorted clients with filtered search
+    const getSortedClients = () => {
+        if (!refData?.clients) return [];
+
+        // Sort alphabetically by name
+        const sortedClients = [...refData.clients].sort((a, b) =>
+            a.name.localeCompare(b.name)
+        );
+
+        // Filter by search query if it exists
+        if (clientSearchQuery) {
+            return sortedClients.filter(client =>
+                client.name.toLowerCase().includes(clientSearchQuery.toLowerCase())
+            );
+        }
+
+        return sortedClients;
+    };
 
     return (
         <div className="task-filter-panel-container">
@@ -217,8 +238,8 @@ export default function TaskFilterPanel({
                             <div className="active-filter">
                                 <span className="filter-name">Status:</span>
                                 <span className="filter-value">
-                  {filters.status.join(', ')}
-                </span>
+                                    {filters.status.join(', ')}
+                                </span>
                                 <button
                                     className="remove-filter"
                                     onClick={() => applyFilter('status', [])}
@@ -233,8 +254,8 @@ export default function TaskFilterPanel({
                             <div className="active-filter">
                                 <span className="filter-name">Priority:</span>
                                 <span className="filter-value">
-                  {filters.priority.join(', ')}
-                </span>
+                                    {filters.priority.join(', ')}
+                                </span>
                                 <button
                                     className="remove-filter"
                                     onClick={() => applyFilter('priority', [])}
@@ -249,12 +270,12 @@ export default function TaskFilterPanel({
                             <div className="active-filter">
                                 <span className="filter-name">Deadline:</span>
                                 <span className="filter-value">
-                  {filters.deadline.from &&
-                      `From: ${new Date(filters.deadline.from).toLocaleDateString()}`}
+                                    {filters.deadline.from &&
+                                        `From: ${new Date(filters.deadline.from).toLocaleDateString()}`}
                                     {filters.deadline.from && filters.deadline.to && ' - '}
                                     {filters.deadline.to &&
                                         `To: ${new Date(filters.deadline.to).toLocaleDateString()}`}
-                </span>
+                                </span>
                                 <button
                                     className="remove-filter"
                                     onClick={() => applyFilter('deadline', {})}
@@ -269,8 +290,8 @@ export default function TaskFilterPanel({
                             <div className="active-filter">
                                 <span className="filter-name">Project Type:</span>
                                 <span className="filter-value">
-                  {filters.projectType.join(', ')}
-                </span>
+                                    {filters.projectType.join(', ')}
+                                </span>
                                 <button
                                     className="remove-filter"
                                     onClick={() => applyFilter('projectType', [])}
@@ -285,15 +306,31 @@ export default function TaskFilterPanel({
                             <div className="active-filter">
                                 <span className="filter-name">Client:</span>
                                 <span className="filter-value">
-                  {refData?.clients
-                      .filter(c => filters.clientId.includes(c.id))
-                      .map(c => c.name)
-                      .join(', ')}
-                </span>
+                                    {refData?.clients
+                                        .filter(c => filters.clientId.includes(c.id))
+                                        .map(c => c.name)
+                                        .join(', ')}
+                                </span>
                                 <button
                                     className="remove-filter"
                                     onClick={() => applyFilter('clientId', [])}
                                     aria-label="Remove client filter"
+                                >
+                                    ✕
+                                </button>
+                            </div>
+                        )}
+
+                        {filters.serviceType?.length > 0 && (
+                            <div className="active-filter">
+                                <span className="filter-name">Service Type:</span>
+                                <span className="filter-value">
+                                    {filters.serviceType.join(', ')}
+                                </span>
+                                <button
+                                    className="remove-filter"
+                                    onClick={() => applyFilter('serviceType', [])}
+                                    aria-label="Remove service type filter"
                                 >
                                     ✕
                                 </button>
@@ -422,26 +459,44 @@ export default function TaskFilterPanel({
                                 {/* Client Filters */}
                                 <div className="filter-section">
                                     <h3 className="filter-section-title">Client</h3>
-                                    <div className="select-wrapper">
-                                        <select
-                                            className="filter-select"
-                                            multiple
-                                            value={filters.clientId || []}
-                                            onChange={(e) => {
-                                                const selectedValues = Array.from(
-                                                    e.target.selectedOptions,
-                                                    option => option.value
-                                                );
-                                                applyFilter('clientId', selectedValues);
-                                            }}
-                                        >
-                                            {refData?.clients.map(client => (
-                                                <option key={client.id} value={client.id}>
-                                                    {client.name}
-                                                </option>
-                                            ))}
-                                        </select>
-                                        <div className="select-helper">Hold Ctrl/Cmd to select multiple</div>
+
+                                    {/* Search bar for clients */}
+                                    <div className="client-search-container">
+                                        <input
+                                            type="text"
+                                            className="client-search-input"
+                                            placeholder="Search clients..."
+                                            value={clientSearchQuery}
+                                            onChange={(e) => setClientSearchQuery(e.target.value)}
+                                            aria-label="Search clients"
+                                        />
+                                        {clientSearchQuery && (
+                                            <button
+                                                className="clear-client-search"
+                                                onClick={() => setClientSearchQuery("")}
+                                                aria-label="Clear client search"
+                                            >
+                                                ✕
+                                            </button>
+                                        )}
+                                    </div>
+
+                                    <div className="client-list">
+                                        {getSortedClients().map(client => (
+                                            <div
+                                                key={client.id}
+                                                className={`client-item ${(filters.clientId || []).includes(client.id) ? 'selected' : ''}`}
+                                                onClick={() => handleOptionToggle('clientId', client.id)}
+                                            >
+                                                {client.name}
+                                                {(filters.clientId || []).includes(client.id) && (
+                                                    <span className="client-selected-check">✓</span>
+                                                )}
+                                            </div>
+                                        ))}
+                                        {getSortedClients().length === 0 && (
+                                            <div className="no-clients-found">No clients found</div>
+                                        )}
                                     </div>
                                 </div>
 

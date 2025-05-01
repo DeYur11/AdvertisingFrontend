@@ -1,70 +1,111 @@
-// src/features/tasks/components/details/TaskDetails/EditMaterialModal.jsx
-import {
-    Dialog, DialogTitle, DialogContent, CircularProgress,
-    DialogActions, TextField, Button, Box, FormControl, InputLabel, Select, MenuItem
-} from "@mui/material";
-import { useState, useEffect } from "react";
-import { useQuery, useMutation } from "@apollo/client";
-import { GET_MATERIAL_BY_ID, GET_MATERIAL_REFERENCE_DATA, UPDATE_MATERIAL } from "../../../graphql/queries";
+import { useEffect, useState } from "react";
+import { useQuery, useMutation, gql } from "@apollo/client";
+import SelectWithCreate from "../../../../components/common/SelectWithCreate";
+import CreatableSelect from "react-select/creatable";
 
-export default function EditMaterialModal({ materialId, onClose, onUpdated }) {
+// --- Queries & Mutations ---
+const GET_MATERIAL_REFERENCE_DATA = gql`
+    query GetMaterialReferenceData {
+        materialTypes { id name }
+        licenceTypes { id name }
+        usageRestrictions { id name }
+        targetAudiences { id name }
+        languages { id name }
+        keywords { id name }
+    }
+`;
 
-    const { data: materialData, loading: loadingMaterial } = useQuery(GET_MATERIAL_BY_ID, {
+const GET_MATERIAL_BY_ID = gql`
+    query GetMaterial($id: ID!) {
+        material(id: $id) {
+            name description
+            type { id }
+            licenceType { id }
+            usageRestriction { id }
+            targetAudience { id }
+            language { id }
+            keywords { id name }
+        }
+    }
+`;
+
+const UPDATE_MATERIAL = gql`
+    mutation UpdateMaterial($id: ID!, $input: UpdateMaterialInput!) {
+        updateMaterial(id: $id, input: $input) {
+            id
+        }
+    }
+`;
+
+const CREATE_KEYWORD = gql`
+    mutation($input: CreateKeywordInput!) {
+        createKeyword(input: $input) {
+            id name
+        }
+    }
+`;
+
+// --- For SelectWithCreate ---
+const CREATE_MUTATIONS = {
+    typeId: gql`mutation($input: CreateMaterialTypeInput!) { createMaterialType(input: $input) { id name } }`,
+    licenceTypeId: gql`mutation($input: CreateLicenceTypeInput!) { createLicenceType(input: $input) { id name } }`,
+    usageRestrictionId: gql`mutation($input: CreateUsageRestrictionInput!) { createUsageRestriction(input: $input) { id description } }`,
+    targetAudienceId: gql`mutation($input: CreateTargetAudienceInput!) { createTargetAudience(input: $input) { id name } }`,
+    languageId: gql`mutation($input: CreateLanguageInput!) { createLanguage(input: $input) { id name } }`
+};
+
+export default function EditMaterialForm({ materialId, onUpdated }) {
+    const { data: materialData } = useQuery(GET_MATERIAL_BY_ID, {
         variables: { id: materialId },
         skip: !materialId,
-        fetchPolicy: "network-only",
-        onCompleted: (data) => {
-            console.log("✅ Дані прийшли на фронт:", data);
-        },
+        fetchPolicy: "network-only"
     });
 
-    const { data: refData, loading: loadingRefs } = useQuery(GET_MATERIAL_REFERENCE_DATA, {
-        fetchPolicy: "network-only",
-        onCompleted: (data) => {
-            console.log("✅ Дані прийшли на фронт:", data);
-        },
-    });
-
+    const { data: refData, loading, error, refetch } = useQuery(GET_MATERIAL_REFERENCE_DATA);
     const [updateMaterial, { loading: saving }] = useMutation(UPDATE_MATERIAL);
+    const [createKeyword] = useMutation(CREATE_KEYWORD);
 
-    const [form, setForm] = useState(null); // Форма буде створена тільки після завантаження даних
+    const [form, setForm] = useState(null);
 
     useEffect(() => {
-        console.log("✅ Оновлення");
-        console.log(materialData)
         if (materialData?.material) {
             const m = materialData.material;
             setForm({
-                name: m.name ?? "",
-                description: m.description ?? "",
-                typeId: m.type?.id ?? "",
-                licenceTypeId: m.licenceType?.id ?? "",
-                usageRestrictionId: m.usageRestriction?.id ?? "",
-                targetAudienceId: m.targetAudience?.id ?? "",
-                languageId: m.language?.id ?? "",
+                name: m.name || "",
+                description: m.description || "",
+                typeId: m.type?.id || "",
+                licenceTypeId: m.licenceType?.id || "",
+                usageRestrictionId: m.usageRestriction?.id || "",
+                targetAudienceId: m.targetAudience?.id || "",
+                languageId: m.language?.id || "",
+                keywordIds: m.keywords?.map(k => k.id) || [],
             });
         }
-    }, [materialData, refData]);
-    console.log(form, loadingMaterial, loadingRefs)
-    if (!form || loadingMaterial || loadingRefs) {
-        return (
-            <Dialog open onClose={onClose} maxWidth="md" fullWidth>
-                <DialogTitle>Редагування матеріалу</DialogTitle>
-                <DialogContent dividers>
-                    <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center", minHeight: "200px" }}>
-                        <CircularProgress />
-                    </Box>
-                </DialogContent>
-            </Dialog>
-        );
-    }
+    }, [materialData]);
+
+    if (!form || loading) return <p>Завантаження...</p>;
+    if (error) return <p>Помилка: {error.message}</p>;
 
     const handleChange = (e) => {
         const { name, value } = e.target;
         setForm(prev => ({ ...prev, [name]: value }));
     };
 
-    const handleSave = async () => {
+    const handleKeywordChange = async (selected) => {
+        const existing = selected.filter(opt => !opt.__isNew__);
+        const toCreate = selected.filter(opt => opt.__isNew__);
+        const newIds = [...existing.map(k => k.value)];
+
+        for (const kw of toCreate) {
+            const { data } = await createKeyword({ variables: { input: { name: kw.label } } });
+            if (data?.createKeyword?.id) newIds.push(data.createKeyword.id);
+        }
+
+        setForm(prev => ({ ...prev, keywordIds: newIds }));
+    };
+
+    const handleUpdate = async (e) => {
+        e.preventDefault();
         try {
             await updateMaterial({
                 variables: {
@@ -73,93 +114,77 @@ export default function EditMaterialModal({ materialId, onClose, onUpdated }) {
                         name: form.name,
                         description: form.description,
                         typeId: parseInt(form.typeId),
-                        licenceTypeId: form.licenceTypeId ? parseInt(form.licenceTypeId) : null,
                         usageRestrictionId: form.usageRestrictionId ? parseInt(form.usageRestrictionId) : null,
+                        licenceTypeId: form.licenceTypeId ? parseInt(form.licenceTypeId) : null,
                         targetAudienceId: form.targetAudienceId ? parseInt(form.targetAudienceId) : null,
                         languageId: form.languageId ? parseInt(form.languageId) : null,
-                    },
-                },
+                        keywordIds: form.keywordIds.map(id => parseInt(id))
+                    }
+                }
             });
-            if (onUpdated) onUpdated();
-            onClose();
-        } catch (error) {
-            console.error("❌ Помилка збереження:", error.message);
+
+            alert("✅ Матеріал оновлено успішно!");
+            onUpdated?.();
+        } catch (err) {
+            console.error("❌ Оновлення не вдалося:", err.message);
         }
     };
 
+    const keywordOptions = refData.keywords.map(k => ({ value: k.id, label: k.name }));
+    const selectedKeywords = keywordOptions.filter(opt => form.keywordIds.includes(opt.value));
+
     return (
-        <Dialog open onClose={onClose} maxWidth="md" fullWidth>
-            <DialogTitle>Редагування матеріалу</DialogTitle>
-            <DialogContent dividers>
-                <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
-                    <TextField
-                        label="Назва"
+        <div>
+            <h6>✏️ Редагувати матеріал</h6>
+            <form className="mt-2" onSubmit={handleUpdate}>
+                <div className="mb-2">
+                    <label className="form-label">Назва</label>
+                    <input
+                        type="text"
+                        className="form-control"
                         name="name"
                         value={form.name}
                         onChange={handleChange}
-                        fullWidth
+                        required
                     />
-                    <TextField
-                        label="Опис"
+                </div>
+
+                <div className="mb-2">
+                    <label className="form-label">Опис</label>
+                    <textarea
+                        className="form-control"
                         name="description"
                         value={form.description}
                         onChange={handleChange}
-                        fullWidth
-                        multiline
-                        rows={3}
+                        rows="2"
                     />
-                    <FormControl fullWidth required>
-                        <InputLabel>Тип матеріалу</InputLabel>
-                        <Select name="typeId" value={form.typeId} onChange={handleChange}>
-                            {refData.materialTypes.map(t => (
-                                <MenuItem key={t.id} value={t.id}>{t.name}</MenuItem>
-                            ))}
-                        </Select>
-                    </FormControl>
-                    <FormControl fullWidth>
-                        <InputLabel>Тип ліцензії</InputLabel>
-                        <Select name="licenceTypeId" value={form.licenceTypeId} onChange={handleChange}>
-                            <MenuItem value="">—</MenuItem>
-                            {refData.licenceTypes.map(lt => (
-                                <MenuItem key={lt.id} value={lt.id}>{lt.name}</MenuItem>
-                            ))}
-                        </Select>
-                    </FormControl>
-                    <FormControl fullWidth>
-                        <InputLabel>Обмеження використання</InputLabel>
-                        <Select name="usageRestrictionId" value={form.usageRestrictionId} onChange={handleChange}>
-                            <MenuItem value="">Без обмежень</MenuItem>
-                            {refData.usageRestrictions.map(r => (
-                                <MenuItem key={r.id} value={r.id}>{r.description}</MenuItem>
-                            ))}
-                        </Select>
-                    </FormControl>
-                    <FormControl fullWidth>
-                        <InputLabel>Цільова аудиторія</InputLabel>
-                        <Select name="targetAudienceId" value={form.targetAudienceId} onChange={handleChange}>
-                            <MenuItem value="">—</MenuItem>
-                            {refData.targetAudiences.map(a => (
-                                <MenuItem key={a.id} value={a.id}>{a.name}</MenuItem>
-                            ))}
-                        </Select>
-                    </FormControl>
-                    <FormControl fullWidth>
-                        <InputLabel>Мова</InputLabel>
-                        <Select name="languageId" value={form.languageId} onChange={handleChange}>
-                            <MenuItem value="">—</MenuItem>
-                            {refData.languages.map(l => (
-                                <MenuItem key={l.id} value={l.id}>{l.name}</MenuItem>
-                            ))}
-                        </Select>
-                    </FormControl>
-                </Box>
-            </DialogContent>
-            <DialogActions>
-                <Button onClick={onClose}>Скасувати</Button>
-                <Button onClick={handleSave} variant="contained" disabled={saving}>
-                    {saving ? "Збереження..." : "Зберегти"}
-                </Button>
-            </DialogActions>
-        </Dialog>
+                </div>
+
+                <SelectWithCreate label="Тип матеріалу" options={refData.materialTypes} value={form.typeId} onChange={(val) => setForm((prev) => ({ ...prev, typeId: val }))} createMutation={CREATE_MUTATIONS.typeId} refetchOptions={refetch} />
+
+                <SelectWithCreate label="Тип ліцензії" options={refData.licenceTypes} value={form.licenceTypeId} onChange={(val) => setForm((prev) => ({ ...prev, licenceTypeId: val }))} createMutation={CREATE_MUTATIONS.licenceTypeId} refetchOptions={refetch} />
+
+                <SelectWithCreate label="Обмеження використання" options={refData.usageRestrictions} value={form.usageRestrictionId} onChange={(val) => setForm((prev) => ({ ...prev, usageRestrictionId: val }))} createMutation={CREATE_MUTATIONS.usageRestrictionId} refetchOptions={refetch} />
+
+                <SelectWithCreate label="Цільова аудиторія" options={refData.targetAudiences} value={form.targetAudienceId} onChange={(val) => setForm((prev) => ({ ...prev, targetAudienceId: val }))} createMutation={CREATE_MUTATIONS.targetAudienceId} refetchOptions={refetch} />
+
+                <SelectWithCreate label="Мова" options={refData.languages} value={form.languageId} onChange={(val) => setForm((prev) => ({ ...prev, languageId: val }))} createMutation={CREATE_MUTATIONS.languageId} refetchOptions={refetch} />
+
+                <div className="mb-2">
+                    <label className="form-label">Ключові слова</label>
+                    <CreatableSelect
+                        isMulti
+                        value={selectedKeywords}
+                        placeholder="Оберіть або створіть ключові слова"
+                        onChange={handleKeywordChange}
+                        options={keywordOptions}
+                    />
+                </div>
+
+                <button type="submit" className="btn btn-sm btn-primary mt-3" disabled={saving}>
+                    {saving ? "Збереження..." : "💾 Зберегти зміни"}
+                </button>
+            </form>
+        </div>
     );
 }
