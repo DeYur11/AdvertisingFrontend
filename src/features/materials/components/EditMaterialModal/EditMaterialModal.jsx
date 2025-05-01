@@ -1,44 +1,11 @@
+// src/features/tasks/components/details/TaskDetails/EditMaterialModal.jsx
 import {
     Dialog, DialogTitle, DialogContent, CircularProgress,
     DialogActions, TextField, Button, Box, FormControl, InputLabel, Select, MenuItem
 } from "@mui/material";
 import { useState, useEffect } from "react";
-import { useQuery, useMutation, gql } from "@apollo/client";
-
-// --- GraphQL запити ---
-const GET_MATERIAL_BY_ID = gql`
-  query GetMaterialById($id: ID!) {
-    material(id: $id) {
-      id
-      name
-      description
-      type { id }
-      licenceType { id }
-      usageRestriction { id }
-      targetAudience { id }
-      language { id }
-    }
-  }
-`;
-
-const GET_MATERIAL_REFERENCE_DATA = gql`
-  query GetMaterialReferenceData {
-    materialTypes { id name }
-    licenceTypes { id name }
-    usageRestrictions { id name }
-    targetAudiences { id name }
-    languages { id name }
-  }
-`;
-
-const UPDATE_MATERIAL = gql`
-  mutation UpdateMaterial($id: ID!, $input: UpdateMaterialInput!) {
-    updateMaterial(id: $id, input: $input) {
-      id
-      name
-    }
-  }
-`;
+import { useQuery, useMutation } from "@apollo/client";
+import { GET_MATERIAL_BY_ID, GET_MATERIAL_REFERENCE_DATA, UPDATE_MATERIAL } from "../../../graphql/queries";
 
 export default function EditMaterialModal({ materialId, onClose, onUpdated }) {
 

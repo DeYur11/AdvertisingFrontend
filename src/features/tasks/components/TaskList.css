@@ -9,11 +9,11 @@
     max-width: 100%;
 }
 
-/* Projects grid */
+/* Projects grid - updated for wider cards */
 .projects-grid {
     display: grid;
     grid-template-columns: 1fr;
-    gap: 20px;
+    gap: 16px;
     margin-top: 20px;
 }
 
@@ -22,11 +22,11 @@
 .loading-message,
 .error-message,
 .no-projects-message {
-    padding: 24px;
+    padding: 16px;
     margin: 16px 0;
     text-align: center;
     border-radius: 8px;
-    font-size: 16px;
+    font-size: 15px;
 }
 
 .no-worker-message {
@@ -50,7 +50,7 @@
 .no-projects-message {
     color: #64748b;
     font-style: italic;
-    padding: 40px;
+    padding: 24px;
 }
 
 .empty-state-card {
@@ -118,9 +118,9 @@
 }
 
 /* Responsive adjustments */
-@media (min-width: 768px) {
+@media (min-width: 1024px) {
     .projects-grid {
-        grid-template-columns: repeat(auto-fill, minmax(600px, 1fr));
+        grid-template-columns: 1fr;
     }
 }
 

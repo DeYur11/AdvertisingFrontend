@@ -1,60 +1,31 @@
 import { useState } from "react";
-import { useQuery, useMutation } from "@apollo/client";
 import Badge from "../../../../../components/common/Badge/Badge";
 import Button from "../../../../../components/common/Button/Button";
 import Card from "../../../../../components/common/Card/Card";
-import Modal from "../../../../../components/common/Modal/Modal";
-import MaterialDetails from "../../../../../features/materials/components/MaterialDetails/MaterialDetails";
-import EditMaterialModal from "../../../../../features/materials/components/EditMaterialModal/EditMaterialModal";
-import AddMaterialForm from "../../../../../features/materials/components/AddMaterialForm/AddMaterialForm";
-import {
-    MATERIALS_BY_TASK,
-    DELETE_MATERIAL
-} from "../../../graphql/queries";
 import "./TaskDetails.css";
 
 export default function TaskDetails({ data }) {
     const [activeTab, setActiveTab] = useState("info");
-    const [activeMaterial, setActiveMaterial] = useState(null);
-    const [editingMaterial, setEditingMaterial] = useState(null);
-    const [materialDetailsOpen, setMaterialDetailsOpen] = useState(false);
-    const [editMaterialOpen, setEditMaterialOpen] = useState(false);
-    const [addMaterialOpen, setAddMaterialOpen] = useState(false);
 
-    const { loading, error, data: materialsData, refetch } = useQuery(MATERIALS_BY_TASK, {
-        variables: { taskId: data.id },
-        fetchPolicy: "cache-and-network",
-    });
-
-    const [deleteMaterial] = useMutation(DELETE_MATERIAL);
-
-    const materials = materialsData?.materialsByTask || [];
-
-    const handleEditClick = (material, e) => {
-        e.stopPropagation();
-        setEditingMaterial(material);
-        setEditMaterialOpen(true);
-    };
-
-    const handleDeleteClick = async (materialId, e) => {
-        e.stopPropagation();
-        const confirmDelete = window.confirm("Are you sure you want to delete this material?");
-        if (!confirmDelete) return;
-
-        try {
-            await deleteMaterial({ variables: { id: materialId } });
-            await refetch();
-            alert("✅ Material successfully deleted");
-        } catch (err) {
-            console.error("❌ Error deleting material:", err.message);
-            alert("❌ Error deleting material");
+    // Mock materials data for preview (in real app this would come from query)
+    const materials = [
+        {
+            id: 1,
+            name: "Homepage Mockup",
+            description: "High-fidelity mockup of the homepage design",
+            status: { name: "In Review" },
+            language: { name: "English" },
+            keywords: [{ name: "design" }, { name: "homepage" }, { name: "mockup" }]
+        },
+        {
+            id: 2,
+            name: "Component Library Documentation",
+            description: "Documentation for all UI components used in the project",
+            status: { name: "Accepted" },
+            language: { name: "English" },
+            keywords: [{ name: "documentation" }, { name: "components" }]
         }
-    };
-
-    const handleViewMaterial = (material) => {
-        setActiveMaterial(material);
-        setMaterialDetailsOpen(true);
-    };
+    ];
 
     const formatDate = (dateString) => {
         if (!dateString) return "—";
@@ -124,7 +95,7 @@ export default function TaskDetails({ data }) {
                         {data.description && (
                             <div className="task-description">
                                 <h3 className="section-title">Description</h3>
-                                <div className="description-content">{data.description}</div>
+                                <div className="description-content">{data.description || "No description provided."}</div>
                             </div>
                         )}
 
@@ -189,23 +160,19 @@ export default function TaskDetails({ data }) {
                             variant="primary"
                             size="small"
                             icon="+"
-                            onClick={() => setAddMaterialOpen(true)}
+                            className="add-material-btn"
                         >
                             Add Material
                         </Button>
                     </div>
 
-                    {loading && <div className="loading-indicator">Loading materials...</div>}
-                    {error && <div className="error-message">Error loading materials: {error.message}</div>}
-
-                    {!loading && !error && materials.length > 0 ? (
+                    {materials.length > 0 ? (
                         <div className="materials-grid">
                             {materials.map((material) => (
                                 <Card
                                     key={material.id}
                                     className="material-card"
                                     hoverable
-                                    onClick={() => handleViewMaterial(material)}
                                 >
                                     <div className="material-header">
                                         <div className="material-name">{material.name}</div>
@@ -259,7 +226,6 @@ export default function TaskDetails({ data }) {
                                             <Button
                                                 variant="outline"
                                                 size="small"
-                                                onClick={(e) => handleEditClick(material, e)}
                                                 icon="✏️"
                                             >
                                                 Edit
@@ -267,7 +233,6 @@ export default function TaskDetails({ data }) {
                                             <Button
                                                 variant="danger"
                                                 size="small"
-                                                onClick={(e) => handleDeleteClick(material.id, e)}
                                                 icon="🗑"
                                             >
                                                 Delete
@@ -278,73 +243,18 @@ export default function TaskDetails({ data }) {
                             ))}
                         </div>
                     ) : (
-                        !loading && !error && (
-                            <Card className="empty-state-card">
-                                <div className="no-materials">
-                                    <div className="empty-icon">📄</div>
-                                    <div className="empty-message">No materials attached to this task yet</div>
-                                    <Button
-                                        variant="primary"
-                                        onClick={() => setAddMaterialOpen(true)}
-                                    >
-                                        Add First Material
-                                    </Button>
-                                </div>
-                            </Card>
-                        )
+                        <Card className="empty-state-card">
+                            <div className="no-materials">
+                                <div className="empty-icon">📄</div>
+                                <div className="empty-message">No materials attached to this task yet</div>
+                                <Button variant="primary">
+                                    Add First Material
+                                </Button>
+                            </div>
+                        </Card>
                     )}
                 </div>
             )}
-
-            {/* Material Details Modal */}
-            <Modal
-                isOpen={materialDetailsOpen}
-                onClose={() => setMaterialDetailsOpen(false)}
-                title={`Material: ${activeMaterial?.name || ""}`}
-                size="large"
-            >
-                {activeMaterial && (
-                    <MaterialDetails
-                        material={activeMaterial}
-                        onBack={() => setMaterialDetailsOpen(false)}
-                    />
-                )}
-            </Modal>
-
-            {/* Edit Material Modal */}
-            <Modal
-                isOpen={editMaterialOpen}
-                onClose={() => setEditMaterialOpen(false)}
-                title={`Edit Material: ${editingMaterial?.name || ""}`}
-                size="large"
-            >
-                {editingMaterial && (
-                    <EditMaterialModal
-                        materialId={editingMaterial.id}
-                        onClose={() => setEditMaterialOpen(false)}
-                        onUpdated={() => {
-                            refetch();
-                            setEditMaterialOpen(false);
-                        }}
-                    />
-                )}
-            </Modal>
-
-            {/* Add Material Modal */}
-            <Modal
-                isOpen={addMaterialOpen}
-                onClose={() => setAddMaterialOpen(false)}
-                title="Add New Material"
-                size="large"
-            >
-                <AddMaterialForm
-                    taskId={data.id}
-                    onAdded={() => {
-                        refetch();
-                        setAddMaterialOpen(false);
-                    }}
-                />
-            </Modal>
         </div>
     );
 }

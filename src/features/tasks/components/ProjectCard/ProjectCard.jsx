@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { highlightMatch } from "../../../../utils/highlightMatch";
 import ServiceCard from "../ServiceCard/ServiceCard";
 import Card from "../../../../components/common/Card/Card";
@@ -19,6 +18,8 @@ export default function ProjectCard({ project, expanded, onToggle, services, sea
             const status = task.taskStatus?.name?.toLowerCase() || "";
             return status === "in progress" || status === "pending";
         }).length, 0);
+
+    const completedTasksCount = tasksCount - activeTasksCount;
 
     // Create action buttons for card
     const cardActions = (
@@ -42,53 +43,58 @@ export default function ProjectCard({ project, expanded, onToggle, services, sea
     return (
         <Card
             className="project-card"
-            variant="primary"
+            variant={projectStatus === "completed" ? "success" : "primary"}
             title={highlightMatch(project.name, searchQuery)}
             actions={cardActions}
         >
             <div className="project-info">
-                <div className="project-info-grid">
-                    <div className="info-item">
-                        <div className="info-label">Type</div>
-                        <div className="info-value">{project.projectType?.name || "—"}</div>
-                    </div>
-
-                    <div className="info-item">
-                        <div className="info-label">Status</div>
-                        <div className="info-value">
-                            <Badge
-                                variant={
-                                    projectStatus === "completed" ? "success" :
-                                        projectStatus === "in progress" ? "primary" :
-                                            "default"
-                                }
-                            >
-                                {project.status?.name || "Unknown"}
-                            </Badge>
+                <div className="project-header">
+                    <div className="project-meta">
+                        <div className="meta-group">
+                            <div className="meta-item">
+                                <span className="meta-label">Type:</span>
+                                <span className="meta-value">{project.projectType?.name || "—"}</span>
+                            </div>
+                            <div className="meta-item">
+                                <span className="meta-label">Status:</span>
+                                <Badge
+                                    variant={
+                                        projectStatus === "completed" ? "success" :
+                                            projectStatus === "in progress" ? "primary" :
+                                                "default"
+                                    }
+                                >
+                                    {project.status?.name || "Unknown"}
+                                </Badge>
+                            </div>
+                        </div>
+                        <div className="meta-group">
+                            <div className="meta-item">
+                                <span className="meta-label">Client:</span>
+                                <span className="meta-value">{project.client?.name || "—"}</span>
+                            </div>
+                            <div className="meta-item">
+                                <span className="meta-label">Manager:</span>
+                                <span className="meta-value">
+                                    {project.manager ? `${project.manager.name} ${project.manager.surname}` : "—"}
+                                </span>
+                            </div>
                         </div>
                     </div>
 
-                    <div className="info-item">
-                        <div className="info-label">Client</div>
-                        <div className="info-value">{project.client?.name || "—"}</div>
-                    </div>
-
-                    <div className="info-item">
-                        <div className="info-label">Manager</div>
-                        <div className="info-value">
-                            {project.manager ? `${project.manager.name} ${project.manager.surname}` : "—"}
+                    <div className="project-stats">
+                        <div className="stat-item">
+                            <span className="stat-value">{tasksCount}</span>
+                            <span className="stat-label">Total</span>
                         </div>
-                    </div>
-                </div>
-
-                <div className="project-stats">
-                    <div className="stat-item">
-                        <span className="stat-value">{tasksCount}</span>
-                        <span className="stat-label">Total Tasks</span>
-                    </div>
-                    <div className="stat-item active">
-                        <span className="stat-value">{activeTasksCount}</span>
-                        <span className="stat-label">Active Tasks</span>
+                        <div className="stat-item active">
+                            <span className="stat-value">{activeTasksCount}</span>
+                            <span className="stat-label">Active</span>
+                        </div>
+                        <div className="stat-item completed">
+                            <span className="stat-value">{completedTasksCount}</span>
+                            <span className="stat-label">Done</span>
+                        </div>
                     </div>
                 </div>
             </div>

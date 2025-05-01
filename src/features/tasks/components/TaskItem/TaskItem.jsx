@@ -2,7 +2,7 @@ import { highlightMatch } from "../../../../utils/highlightMatch";
 import Badge from "../../../../components/common/Badge/Badge";
 import "./TaskItem.css";
 
-export default function TaskItem({ task, searchQuery, onSelect }) {
+export default function TaskItem({ task, searchQuery, onSelect, compact = false }) {
     function handleClick(event) {
         event.stopPropagation();
         onSelect({ type: "task", data: task });
@@ -41,27 +41,29 @@ export default function TaskItem({ task, searchQuery, onSelect }) {
     }
 
     return (
-        <div className="task-item" onClick={handleClick}>
+        <div className={`task-item ${compact ? 'compact' : ''}`} onClick={handleClick}>
             <div className="task-content">
                 <div className="task-name">
                     {highlightMatch(task.name, searchQuery)}
                 </div>
 
-                <div className="task-meta">
-                    <div className="meta-item">
-                        <span className="meta-label">Priority:</span>
-                        <Badge className={priorityClass} size="small">
-                            {task.priority || "—"}
-                        </Badge>
-                    </div>
+                {!compact && (
+                    <div className="task-meta">
+                        <div className="meta-item">
+                            <span className="meta-label">Priority:</span>
+                            <Badge className={priorityClass} size="small">
+                                {task.priority || "—"}
+                            </Badge>
+                        </div>
 
-                    <div className="meta-item">
-                        <span className="meta-label">Deadline:</span>
-                        <span className={`meta-value ${deadlineClass}`}>
-                            {formattedDeadline}
-                        </span>
+                        <div className="meta-item">
+                            <span className="meta-label">Deadline:</span>
+                            <span className={`meta-value ${deadlineClass}`}>
+                                {formattedDeadline}
+                            </span>
+                        </div>
                     </div>
-                </div>
+                )}
             </div>
 
             <div className="task-status">
@@ -73,8 +75,14 @@ export default function TaskItem({ task, searchQuery, onSelect }) {
                                 status === "pending" ? "danger" :
                                     "default"
                     }
+                    size={compact ? "small" : "medium"}
                 >
-                    {task.taskStatus?.name || "Unknown"}
+                    {compact ?
+                        (status === "in progress" ? "In Progress" :
+                            status === "completed" ? "Done" :
+                                status === "pending" ? "Pending" : task.taskStatus?.name || "Unknown") :
+                        task.taskStatus?.name || "Unknown"
+                    }
                 </Badge>
             </div>
         </div>

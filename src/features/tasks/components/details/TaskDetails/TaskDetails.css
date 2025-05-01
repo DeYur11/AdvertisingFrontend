@@ -1,21 +1,23 @@
 .task-details {
-    padding: 20px;
+    padding: 0;
 }
 
 /* Tabs */
 .task-tabs {
     display: flex;
     gap: 12px;
-    margin-bottom: 24px;
+    margin-bottom: 20px;
+    padding: 0 20px;
 }
 
 .tab-button {
-    min-width: 120px;
+    min-width: 100px;
 }
 
 /* Info tab */
 .info-tab {
     animation: fadeIn 0.3s ease;
+    padding: 0 20px 20px;
 }
 
 .info-card {
@@ -28,7 +30,7 @@
     display: flex;
     align-items: flex-start;
     justify-content: space-between;
-    margin-bottom: 24px;
+    margin-bottom: 20px;
 }
 
 .task-name {
@@ -96,13 +98,14 @@
 /* Materials tab */
 .materials-tab {
     animation: fadeIn 0.3s ease;
+    padding: 0 20px 20px;
 }
 
 .materials-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 24px;
+    margin-bottom: 20px;
 }
 
 .materials-header .section-title {
@@ -111,10 +114,17 @@
     border-bottom: none;
 }
 
+.add-material-btn {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
 .materials-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
     gap: 16px;
+    animation: fadeIn 0.3s ease;
 }
 
 .material-card {
@@ -199,7 +209,7 @@
 }
 
 .empty-icon {
-    font-size: 48px;
+    font-size: 36px;
     margin-bottom: 16px;
     color: #94a3b8;
 }
@@ -208,23 +218,6 @@
     color: #64748b;
     margin-bottom: 24px;
     font-size: 16px;
-}
-
-/* Status messages */
-.loading-indicator {
-    padding: 16px;
-    text-align: center;
-    color: #3b82f6;
-    font-style: italic;
-}
-
-.error-message {
-    padding: 16px;
-    text-align: center;
-    color: #dc2626;
-    background-color: #fee2e2;
-    border-radius: 6px;
-    margin-bottom: 16px;
 }
 
 /* Animation */
@@ -257,5 +250,12 @@
 
     .task-title-section .status-badge {
         align-self: flex-start;
+    }
+
+    .task-tabs,
+    .info-tab,
+    .materials-tab {
+        padding-left: 12px;
+        padding-right: 12px;
     }
 }

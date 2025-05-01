@@ -16,6 +16,21 @@
     transform: translateY(-1px);
 }
 
+/* Compact mode for task items in service cards */
+.task-item.compact {
+    padding: 6px 10px;
+    margin-bottom: 0;
+}
+
+.task-item.compact .task-name {
+    font-size: 13px;
+    margin-bottom: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 170px;
+}
+
 .task-content {
     flex: 1;
     min-width: 0; /* Prevents text overflow */
@@ -101,5 +116,14 @@
 
     .task-meta {
         width: 100%;
+    }
+
+    .task-item.compact {
+        flex-direction: row;
+        align-items: center;
+    }
+
+    .task-item.compact .task-status {
+        margin-left: 8px;
     }
 }
