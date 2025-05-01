@@ -10,11 +10,11 @@
 }
 
 /* Projects grid - updated for wider cards */
-.projects-grid {
-    display: grid;
-    grid-template-columns: 1fr;
+.projects-list {
+    display: flex;
+    flex-direction: column;
     gap: 16px;
-    margin-top: 20px;
+    margin-top: 16px;
 }
 
 /* Status messages */
@@ -108,19 +108,74 @@
     color: #7c3aed;
 }
 
-/* Highlight styling */
-.highlight {
-    background-color: #fef08a;
-    padding: 0 2px;
-    border-radius: 3px;
-    font-weight: bold;
-    color: #854d0e;
+/* Filter panel specific styles */
+.task-filter-panel-toggle {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background-color: white;
+    padding: 8px 0;
+    display: flex;
+    justify-content: flex-end;
+}
+
+/* Hover effects for project cards */
+.projects-list .compact-project-card {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.projects-list .compact-project-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Empty state improvements */
+.empty-state-card {
+    padding: 40px 20px;
+    text-align: center;
+    animation: fadeIn 0.3s ease;
+}
+
+.empty-state-card .no-projects-message {
+    padding: 0;
+    font-size: 16px;
+    color: #64748b;
+}
+
+/* Animations */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+/* Task item hover states */
+.task-item {
+    transition: background-color 0.2s ease, transform 0.2s ease;
+}
+
+.task-item:hover {
+    background-color: #f1f5f9;
+    transform: translateY(-1px);
 }
 
 /* Responsive adjustments */
 @media (min-width: 1024px) {
-    .projects-grid {
+    .projects-list {
         grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 768px) {
+    .task-list-container {
+        padding: 12px;
+    }
+
+    .projects-list {
+        gap: 12px;
     }
 }
 

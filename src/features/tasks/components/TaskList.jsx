@@ -1,11 +1,10 @@
 import { useState } from "react";
 import { useQuery } from "@apollo/client";
 import { useSelector } from "react-redux";
-import TaskFilterBar from "./TaskFilterBar/TaskFilterBar";
+import TaskFilterPanel from "./TaskFilterPanel/TaskFilterPanel";
 import Modal from "../../../components/common/Modal/Modal";
 import TaskDetails from "./details/TaskDetails/TaskDetails";
 import ServiceDetails from "./details/ServiceDetails/ServiceDetails";
-import Button from "../../../components/common/Button/Button";
 import Card from "../../../components/common/Card/Card";
 import "./TaskList.css";
 import {
@@ -25,6 +24,8 @@ export default function TaskList() {
     const [searchQuery, setSearchQuery] = useState("");
     const [activeProject, setActiveProject] = useState(null);
     const [activeService, setActiveService] = useState(null);
+    const [advancedFilters, setAdvancedFilters] = useState({});
+    const [filterPanelExpanded, setFilterPanelExpanded] = useState(false);
 
     const user = useSelector(state => state.user);
     const workerId = user.workerId;
@@ -33,42 +34,6 @@ export default function TaskList() {
         variables: { workerId: String(workerId) },
         skip: !workerId,
     });
-
-    // Helper function to create breadcrumbs info
-    const getBreadcrumbInfo = (type, data) => {
-        if (type === "service") {
-            // Find corresponding project
-            const projectName = Object.values(groupedProjects).find(
-                project => project.services.some(s => s.id === data.id)
-            )?.name || "Unknown Project";
-
-            return {
-                project: projectName,
-                service: data.serviceName
-            };
-        } else if (type === "task") {
-            // Find corresponding project and service
-            let projectName = "Unknown Project";
-            let serviceName = "Unknown Service";
-
-            Object.values(groupedProjects).forEach(project => {
-                project.services.forEach(service => {
-                    if (service.tasks.some(t => t.id === data.id)) {
-                        projectName = project.name;
-                        serviceName = service.serviceName;
-                    }
-                });
-            });
-
-            return {
-                project: projectName,
-                service: serviceName,
-                task: data.name
-            };
-        }
-
-        return {};
-    };
 
     if (!workerId) return <div className="no-worker-message">No worker selected.</div>;
     if (loading) return <div className="loading-message">Loading tasks...</div>;
@@ -125,7 +90,8 @@ export default function TaskList() {
 
         return projectsArray
             .map(project => chain.handle(project))
-            .filter(project => project !== null);
+            .filter(project => project !== null)
+            .filter(project => applyAdvancedFilters(project));
     }
 
     function getVisibleProjectsForAllTasks(projectsArray) {
@@ -139,7 +105,112 @@ export default function TaskList() {
 
         return projectsArray
             .map(project => chain.handle(project))
-            .filter(project => project !== null);
+            .filter(project => project !== null)
+            .filter(project => applyAdvancedFilters(project));
+    }
+
+    // Function to apply advanced filters
+    function applyAdvancedFilters(project) {
+        // If no advanced filters are set, return true (include all projects)
+        if (Object.keys(advancedFilters).length === 0) {
+            return true;
+        }
+
+        // Apply project type filter if set
+        if (advancedFilters.projectType && advancedFilters.projectType.length > 0) {
+            const projectTypeName = project.projectType?.name || "";
+            if (!advancedFilters.projectType.includes(projectTypeName)) {
+                return false;
+            }
+        }
+
+        // Apply client filter if set
+        if (advancedFilters.clientId && advancedFilters.clientId.length > 0) {
+            const clientId = project.client?.id;
+            if (!advancedFilters.clientId.includes(clientId)) {
+                return false;
+            }
+        }
+
+        // Create a modified project with only filtered services
+        const filteredProject = {
+            ...project,
+            services: []
+        };
+
+        // Filter services and tasks based on advanced filters
+        const filteredServices = project.services.filter(service => {
+            // Apply service type filter if set
+            if (advancedFilters.serviceType && advancedFilters.serviceType.length > 0) {
+                const serviceTypeName = service.serviceType?.name || "";
+                if (!advancedFilters.serviceType.includes(serviceTypeName)) {
+                    return false;
+                }
+            }
+
+            // Filter tasks within each service
+            const filteredTasks = service.filteredTasks ? service.filteredTasks.filter(task => {
+                // Apply status filter
+                if (advancedFilters.status && advancedFilters.status.length > 0) {
+                    const taskStatusName = task.taskStatus?.name?.toLowerCase() || "";
+                    if (!advancedFilters.status.includes(taskStatusName)) {
+                        return false;
+                    }
+                }
+
+                // Apply priority filter
+                if (advancedFilters.priority && advancedFilters.priority.length > 0) {
+                    const priority = parseInt(task.priority || "0");
+                    const priorityCategory =
+                        priority >= 8 ? "high" :
+                            priority >= 4 ? "medium" :
+                                "low";
+
+                    if (!advancedFilters.priority.includes(priorityCategory)) {
+                        return false;
+                    }
+                }
+
+                // Apply deadline filter
+                if (advancedFilters.deadline) {
+                    const taskDeadline = task.deadline ? new Date(task.deadline) : null;
+
+                    if (taskDeadline) {
+                        // Format dates for comparison (YYYY-MM-DD)
+                        const deadlineDate = taskDeadline.toISOString().split('T')[0];
+
+                        if (advancedFilters.deadline.from && deadlineDate < advancedFilters.deadline.from) {
+                            return false;
+                        }
+
+                        if (advancedFilters.deadline.to && deadlineDate > advancedFilters.deadline.to) {
+                            return false;
+                        }
+                    } else if (advancedFilters.deadline.from || advancedFilters.deadline.to) {
+                        // If deadline filter is active but task has no deadline
+                        return false;
+                    }
+                }
+
+                return true;
+            }) : [];
+
+            // Include service only if it has tasks after filtering
+            if (filteredTasks.length > 0) {
+                const filteredService = {
+                    ...service,
+                    filteredTasks: filteredTasks
+                };
+
+                filteredProject.services.push(filteredService);
+                return true;
+            }
+
+            return false;
+        });
+
+        // Check if project has any services after filtering
+        return filteredServices.length > 0;
     }
 
     function handleSelect(item) {
@@ -201,11 +272,15 @@ export default function TaskList() {
     return (
         <div className="task-list-wrapper">
             <div className="task-list-container">
-                <TaskFilterBar
+                <TaskFilterPanel
                     taskFilter={taskFilter}
                     setTaskFilter={setTaskFilter}
                     searchQuery={searchQuery}
                     setSearchQuery={setSearchQuery}
+                    filters={advancedFilters}
+                    setFilters={setAdvancedFilters}
+                    expanded={filterPanelExpanded}
+                    setExpanded={setFilterPanelExpanded}
                 />
 
                 {visibleProjects.length > 0 ? (
@@ -216,7 +291,7 @@ export default function TaskList() {
                                 project={project}
                                 expanded={expandedProjectId === project.id}
                                 onToggle={() => toggleProject(project.id)}
-                                services={project.servicesList || Object.values(project.services)}
+                                services={project.services}
                                 searchQuery={searchQuery}
                                 onSelect={handleSelect}
                             />
@@ -225,15 +300,15 @@ export default function TaskList() {
                 ) : (
                     <Card className="empty-state-card">
                         <div className="no-projects-message">
-                            {searchQuery
-                                ? `No projects found matching "${searchQuery}"`
+                            {searchQuery || Object.keys(advancedFilters).length > 0
+                                ? "No tasks match your current filters. Try adjusting your search or filters."
                                 : "No active projects found"}
                         </div>
                     </Card>
                 )}
             </div>
 
-            {/* Modal for task/service details instead of sidebar */}
+            {/* Modal for task/service details */}
             <Modal
                 isOpen={modalOpen}
                 onClose={handleCloseModal}
