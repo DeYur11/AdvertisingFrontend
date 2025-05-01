@@ -1,22 +1,7 @@
-import { gql, useQuery } from "@apollo/client";
+// src/features/tasks/components/details/TaskDetails/MaterialDetails.jsx
+import { useQuery } from "@apollo/client";
 import { Box, CircularProgress } from "@mui/material";
-
-const REVIEWS_BY_MATERIAL = gql`
-  query GetReviewsByMaterial($materialId: ID!) {
-    reviewsByMaterial(materialId: $materialId) {
-      id
-      comments
-      suggestedChange
-      reviewDate
-      createDatetime
-      reviewer {
-        id
-        name
-        surname
-      }
-    }
-  }
-`;
+import { REVIEWS_BY_MATERIAL } from "../../../graphql/queries";
 
 export default function MaterialDetails({ material, onBack }) {
     const { data, loading, error } = useQuery(REVIEWS_BY_MATERIAL, {
@@ -50,8 +35,8 @@ export default function MaterialDetails({ material, onBack }) {
                                 key={kw.id}
                                 className="badge bg-light border text-dark px-2 py-1"
                             >
-                #{kw.name}
-              </span>
+                                #{kw.name}
+                            </span>
                         ))}
                     </div>
                 </>

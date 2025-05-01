@@ -17,32 +17,61 @@
 }
 
 .service-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
     padding-bottom: 12px;
     border-bottom: 1px solid #e2e8f0;
     margin-bottom: 12px;
+}
+
+.service-info {
+    flex: 1;
+    min-width: 0;
 }
 
 .service-title {
     font-weight: 600;
     font-size: 16px;
     color: #1e3a8a;
-    margin-bottom: 6px;
+    margin-bottom: 4px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .service-type {
-    font-size: 14px;
-    color: #64748b;
     display: flex;
+}
+
+.service-type-badge {
+    background-color: #e0e7ff;
+    color: #4338ca;
+    font-size: 11px;
+}
+
+.task-counter {
+    display: flex;
+    flex-direction: column;
     align-items: center;
-    gap: 4px;
+    background: #f1f5f9;
+    border-radius: 8px;
+    padding: 4px 8px;
+    min-width: 40px;
+    margin-left: 8px;
 }
 
-.service-type-label {
-    font-weight: 500;
-}
-
-.service-type-value {
+.task-counter .count {
+    font-weight: 600;
+    font-size: 14px;
     color: #334155;
+}
+
+.task-counter .label {
+    font-size: 10px;
+    color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
 }
 
 /* Tasks list */
@@ -50,18 +79,15 @@
     flex-grow: 1;
     display: flex;
     flex-direction: column;
-    gap: 8px;
-    max-height: 250px;
+    max-height: 300px;
     overflow-y: auto;
-    padding-right: 6px;
-    margin-bottom: 12px;
+    padding-right: 4px;
 }
 
-.tasks-count {
-    font-size: 13px;
-    color: #64748b;
-    margin-bottom: 8px;
-    font-weight: 500;
+.tasks-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 8px;
 }
 
 /* Styling scrollbar */
@@ -89,26 +115,21 @@
     background-color: #f8fafc;
 }
 
-.service-card-footer {
-    margin-top: auto;
-    padding-top: 12px;
-    display: flex;
-    justify-content: flex-end;
+/* Responsive adjustments */
+@media (min-width: 1280px) {
+    .tasks-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
 }
 
-.view-details-btn {
-    background-color: transparent;
-    border: 1px solid #2563eb;
-    color: #2563eb;
-    padding: 6px 12px;
-    border-radius: 6px;
-    font-size: 13px;
-    font-weight: 500;
-    cursor: pointer;
-    transition: all 0.2s ease;
-}
+@media (max-width: 640px) {
+    .service-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+    }
 
-.view-details-btn:hover {
-    background-color: #2563eb;
-    color: white;
+    .task-counter {
+        margin-left: 0;
+    }
 }
