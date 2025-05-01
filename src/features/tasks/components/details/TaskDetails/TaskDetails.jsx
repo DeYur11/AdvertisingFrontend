@@ -1,35 +1,58 @@
 import { useState } from "react";
+import { useQuery, useMutation } from "@apollo/client";
 import Badge from "../../../../../components/common/Badge/Badge";
 import Button from "../../../../../components/common/Button/Button";
 import Card from "../../../../../components/common/Card/Card";
+import Modal from "../../../../../components/common/Modal/Modal";
+import { MATERIALS_BY_TASK, DELETE_MATERIAL } from "../../../../tasks/graphql/queries";
+import MaterialDetails from "../../../../materials/components/MaterialDetails/MaterialDetails";
+import AddMaterialForm from "../../../../materials/components/AddMaterialForm/AddMaterialForm";
+import EditMaterialModal from "../../../../materials/components/EditMaterialModal/EditMaterialModal";
 import "./TaskDetails.css";
 
 export default function TaskDetails({ data }) {
     const [activeTab, setActiveTab] = useState("info");
+    const [selectedMaterial, setSelectedMaterial] = useState(null);
+    const [showAddMaterial, setShowAddMaterial] = useState(false);
+    const [editingMaterial, setEditingMaterial] = useState(null);
+    const [deleteConfirmation, setDeleteConfirmation] = useState(null);
 
-    // Mock materials data for preview (in real app this would come from query)
-    const materials = [
-        {
-            id: 1,
-            name: "Homepage Mockup",
-            description: "High-fidelity mockup of the homepage design",
-            status: { name: "In Review" },
-            language: { name: "English" },
-            keywords: [{ name: "design" }, { name: "homepage" }, { name: "mockup" }]
+    // Check if task is completed to prevent CRUD operations
+    const isTaskCompleted = data.taskStatus?.name?.toLowerCase() === "completed";
+
+    // Fetch materials for the task
+    const { loading, error, data: materialsData, refetch } = useQuery(MATERIALS_BY_TASK, {
+        variables: { taskId: data.id },
+        fetchPolicy: "network-only",
+    });
+
+    // Delete material mutation
+    const [deleteMaterial] = useMutation(DELETE_MATERIAL, {
+        onCompleted: () => {
+            refetch();
         },
-        {
-            id: 2,
-            name: "Component Library Documentation",
-            description: "Documentation for all UI components used in the project",
-            status: { name: "Accepted" },
-            language: { name: "English" },
-            keywords: [{ name: "documentation" }, { name: "components" }]
-        }
-    ];
+    });
 
     const formatDate = (dateString) => {
         if (!dateString) return "—";
         return new Date(dateString).toLocaleDateString();
+    };
+
+    const handleDeleteMaterial = (materialId) => {
+        setDeleteConfirmation(materialId);
+    };
+
+    const confirmDelete = async () => {
+        try {
+            await deleteMaterial({
+                variables: { id: deleteConfirmation }
+            });
+            setDeleteConfirmation(null);
+        } catch (error) {
+            console.error("Error deleting material:", error);
+            // We'll show the error in the UI instead of using alert
+            setDeleteConfirmation(null);
+        }
     };
 
     // Determine status class
@@ -50,6 +73,8 @@ export default function TaskDetails({ data }) {
         }
     }
 
+    const materials = materialsData?.materialsByTask || [];
+
     return (
         <div className="task-details">
             {/* Tabs */}
@@ -68,7 +93,7 @@ export default function TaskDetails({ data }) {
                     onClick={() => setActiveTab("materials")}
                     className="tab-button"
                 >
-                    Materials ({materials.length})
+                    Materials ({loading ? "..." : materials.length})
                 </Button>
             </div>
 
@@ -156,23 +181,31 @@ export default function TaskDetails({ data }) {
                 <div className="materials-tab">
                     <div className="materials-header">
                         <h3 className="section-title">Attached Materials</h3>
-                        <Button
-                            variant="primary"
-                            size="small"
-                            icon="+"
-                            className="add-material-btn"
-                        >
-                            Add Material
-                        </Button>
+                        {!isTaskCompleted && (
+                            <Button
+                                variant="primary"
+                                size="small"
+                                icon="+"
+                                className="add-material-btn"
+                                onClick={() => setShowAddMaterial(true)}
+                            >
+                                Add Material
+                            </Button>
+                        )}
                     </div>
 
-                    {materials.length > 0 ? (
+                    {loading ? (
+                        <div className="loading-materials">Loading materials...</div>
+                    ) : error ? (
+                        <div className="error-message">Error loading materials: {error.message}</div>
+                    ) : materials.length > 0 ? (
                         <div className="materials-grid">
                             {materials.map((material) => (
                                 <Card
                                     key={material.id}
                                     className="material-card"
                                     hoverable
+                                    onClick={() => setSelectedMaterial(material)}
                                 >
                                     <div className="material-header">
                                         <div className="material-name">{material.name}</div>
@@ -221,12 +254,16 @@ export default function TaskDetails({ data }) {
                                         )}
                                     </div>
 
-                                    {material.status?.name !== "Accepted" && (
+                                    {!isTaskCompleted && (
                                         <div className="material-actions">
                                             <Button
                                                 variant="outline"
                                                 size="small"
                                                 icon="✏️"
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    setEditingMaterial(material.id);
+                                                }}
                                             >
                                                 Edit
                                             </Button>
@@ -234,6 +271,10 @@ export default function TaskDetails({ data }) {
                                                 variant="danger"
                                                 size="small"
                                                 icon="🗑"
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    handleDeleteMaterial(material.id);
+                                                }}
                                             >
                                                 Delete
                                             </Button>
@@ -247,14 +288,90 @@ export default function TaskDetails({ data }) {
                             <div className="no-materials">
                                 <div className="empty-icon">📄</div>
                                 <div className="empty-message">No materials attached to this task yet</div>
-                                <Button variant="primary">
-                                    Add First Material
-                                </Button>
+                                {!isTaskCompleted && (
+                                    <Button
+                                        variant="primary"
+                                        onClick={() => setShowAddMaterial(true)}
+                                    >
+                                        Add First Material
+                                    </Button>
+                                )}
                             </div>
                         </Card>
                     )}
                 </div>
             )}
+
+            {/* Material details modal */}
+            <Modal
+                isOpen={!!selectedMaterial}
+                onClose={() => setSelectedMaterial(null)}
+                title="Material Details"
+                size="medium"
+            >
+                {selectedMaterial && (
+                    <MaterialDetails
+                        material={selectedMaterial}
+                        onBack={() => setSelectedMaterial(null)}
+                    />
+                )}
+            </Modal>
+
+            {/* Add material modal */}
+            <Modal
+                isOpen={showAddMaterial}
+                onClose={() => setShowAddMaterial(false)}
+                title="Add New Material"
+                size="large"
+            >
+                <AddMaterialForm
+                    taskId={data.id}
+                    onAdded={() => {
+                        setShowAddMaterial(false);
+                        refetch();
+                    }}
+                />
+            </Modal>
+
+            {/* Edit material modal */}
+            {editingMaterial && (
+                <EditMaterialModal
+                    materialId={editingMaterial}
+                    onClose={() => setEditingMaterial(null)}
+                    onUpdated={() => {
+                        setEditingMaterial(null);
+                        refetch();
+                    }}
+                />
+            )}
+
+            {/* Delete confirmation modal */}
+            <Modal
+                isOpen={!!deleteConfirmation}
+                onClose={() => setDeleteConfirmation(null)}
+                title="Confirm Deletion"
+                size="small"
+            >
+                <div className="delete-confirmation">
+                    <p>Are you sure you want to delete this material?</p>
+                    <p>This action cannot be undone.</p>
+
+                    <div className="confirmation-actions">
+                        <Button
+                            variant="outline"
+                            onClick={() => setDeleteConfirmation(null)}
+                        >
+                            Cancel
+                        </Button>
+                        <Button
+                            variant="danger"
+                            onClick={confirmDelete}
+                        >
+                            Delete
+                        </Button>
+                    </div>
+                </div>
+            </Modal>
         </div>
     );
 }

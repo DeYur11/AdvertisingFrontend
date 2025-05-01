@@ -4,7 +4,9 @@ import Badge from "../../../../components/common/Badge/Badge";
 import "./ServiceCard.css";
 
 export default function ServiceCard({ service, searchQuery, onSelect }) {
-    const tasks = service.filteredTasks ?? [];
+    // The issue is likely here - we need to properly extract tasks from the service object
+    // Check if filteredTasks exists, otherwise use the regular tasks array
+    const tasks = service.filteredTasks || service.tasks || [];
 
     return (
         <div className="service-card" onClick={() => onSelect({ type: "service", data: service })}>
