@@ -8,7 +8,7 @@ const GET_MATERIAL_REFERENCE_DATA = gql`
   query GetMaterialReferenceData {
     materialTypes { id name }
     licenceTypes { id name }
-    usageRestrictions { id name  }
+    usageRestrictions { id name }
     targetAudiences { id name }
     languages { id name }
     keywords { id name }

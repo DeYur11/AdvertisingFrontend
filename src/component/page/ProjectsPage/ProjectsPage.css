@@ -1,0 +1,188 @@
+:root {
+    --sidebar-width: 480px;
+}
+
+.page {
+
+    width: 100%;
+    padding: 20px 60px;
+    font-family: 'Roboto', sans-serif;
+    background: #f8fafc;
+}
+
+.project-list {
+    flex-grow: 1;
+}
+
+/* Проєкт */
+.project-card {
+    background-color: #f8fafc;
+    border-radius: 12px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+    margin-bottom: 12px;
+    overflow: hidden;
+    transition: all 0.3s ease;
+}
+
+.project-header {
+    padding: 10px 20px;
+    font-size: 20px;
+    font-weight: bold;
+    cursor: pointer;
+    color: #1e3a8a;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: #e2e8f0;
+    transition: background-color 0.3s ease;
+}
+
+.project-header:hover {
+    background-color: #cbd5e1;
+}
+
+.project-meta {
+    font-size: 14px;
+    color: #64748b;
+    margin-top: 4px;
+}
+
+.toggle-icon {
+    font-size: 18px;
+    transition: transform 0.3s ease;
+}
+
+.toggle-icon.expanded {
+    transform: rotate(180deg);
+}
+
+/* Тіло проєкту */
+.project-body {
+    padding: 16px 24px;
+    background-color: #f1f5f9;
+}
+
+/* Секція сервісу */
+.service-section {
+    background-color: #ffffff;
+    padding: 16px;
+    border-radius: 10px;
+    margin-bottom: 16px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+    transition: box-shadow 0.3s ease;
+}
+
+.service-section:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.service-section h4 {
+    font-weight: 600;
+    font-size: 18px;
+    color: #334155;
+    margin-bottom: 12px;
+}
+
+/* Список ProjectService */
+.project-service-card {
+    background: #f8fafc;
+    padding: 10px 12px;
+    margin-top: 8px;
+    border-radius: 8px;
+    border: 1px solid #e2e8f0;
+    font-size: 14px;
+    color: #475569;
+}
+
+/* Підсвічування пошуку */
+.highlight {
+    background-color: #fde68a;
+    padding: 0 2px;
+    border-radius: 3px;
+    font-weight: bold;
+}
+
+/* Завантаження / помилка */
+.loading, .error {
+    font-size: 16px;
+    color: #64748b;
+    margin: 20px;
+}
+
+.sip-entry {
+    padding: 10px 0;
+    border-bottom: 1px solid #e2e8f0;
+    font-size: 14px;
+    color: #334155;
+}
+
+.sip-entry:last-child {
+    border-bottom: none;
+}
+
+.text-muted {
+    color: #94a3b8;
+    font-style: italic;
+}
+
+.service-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+}
+
+.service-header h4 {
+    margin: 0;
+}
+
+.custom-panel {
+    background-color: #ffffff;
+    box-shadow: -4px 0 20px rgba(0, 0, 0, 0.1);
+    padding: 24px;
+    height: 100%;
+    overflow-y: auto;
+    border-top-left-radius: 12px;
+    border-bottom-left-radius: 12px;
+}
+
+.panel-content h2 {
+    color: #1e3a8a;
+    font-size: 22px;
+    margin-bottom: 16px;
+}
+
+.primary-button {
+    background-color: #1e3a8a;
+    color: white;
+    padding: 10px 16px;
+    border-radius: 8px;
+    font-weight: 500;
+    border: none;
+    cursor: pointer;
+    transition: 0.3s ease;
+}
+
+.primary-button:hover {
+    background-color: #0f245c;
+}
+
+.cancel-button {
+    background-color: #e2e8f0;
+    color: #334155;
+    padding: 10px 16px;
+    border-radius: 8px;
+    font-weight: 500;
+    border: none;
+    cursor: pointer;
+    margin-left: 12px;
+}
+
+input, select {
+    width: 100%;
+    padding: 8px;
+    margin: 6px 0 12px;
+    border: 1px solid #cbd5e1;
+    border-radius: 6px;
+}
+

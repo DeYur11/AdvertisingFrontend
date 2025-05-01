@@ -2,6 +2,7 @@ import { NavLink } from "react-router-dom";
 import ProfileMenu from "./../ProfileMenu/ProfileMenu";
 import { useSelector } from "react-redux";
 import "./Header.css";
+import ProjectsPage from "../page/ProjectsPage/ProjectsPage";
 
 export default function Header() {
     const user = useSelector(state => state.user);
@@ -29,8 +30,8 @@ export default function Header() {
 
                 {/* Доступ до Admin Panel тільки для Project Manager */}
                 {user.mainRole === "ProjectManager" && (
-                    <NavLink to="/admin" className={({ isActive }) => isActive ? "nav-button active" : "nav-button"}>
-                        Admin Panel
+                    <NavLink to="/projectsDashboard" className={({ isActive }) => isActive ? "nav-button active" : "nav-button"}>
+                        Projects
                     </NavLink>
                 )}
 

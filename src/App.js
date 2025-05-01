@@ -8,6 +8,8 @@ import ProtectedRoute from "./component/ProtectedRoute";
 import "bootstrap/dist/css/bootstrap.min.css";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import ProjectsPage from "./component/page/ProjectsPage/ProjectsPage";
+import MaterialReviewPage from "./component/page/ai-chat-code-2025-04-30T23-04-59-621Z";
 
 function AppContent() {
     const location = useLocation();
@@ -37,6 +39,14 @@ function AppContent() {
                         }
                     />
                     <Route
+                        path="/projectsDashboard"
+                        element={
+                            <ProtectedRoute>
+                                <ProjectsPage />
+                            </ProtectedRoute>
+                        }
+                    />
+                    <Route
                         path="/dashboard"
                         element={
                             <ProtectedRoute>
@@ -49,6 +59,14 @@ function AppContent() {
                         element={
                             <ProtectedRoute>
                                 <Home />
+                            </ProtectedRoute>
+                        }
+                    />
+                    <Route
+                        path="/about"
+                        element={
+                            <ProtectedRoute>
+                                <MaterialReviewPage/>
                             </ProtectedRoute>
                         }
                     />
