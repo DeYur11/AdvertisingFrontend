@@ -1,0 +1,103 @@
+.button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 6px;
+    font-weight: 500;
+    transition: all 0.2s ease;
+    cursor: pointer;
+    border: none;
+    outline: none;
+    text-align: center;
+    font-size: 14px;
+}
+
+.button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+/* Button variants */
+.primary {
+    background-color: #2563eb;
+    color: white;
+}
+
+.primary:hover:not(:disabled) {
+    background-color: #1d4ed8;
+}
+
+.secondary {
+    background-color: #e2e8f0;
+    color: #1e293b;
+}
+
+.secondary:hover:not(:disabled) {
+    background-color: #cbd5e1;
+}
+
+.success {
+    background-color: #10b981;
+    color: white;
+}
+
+.success:hover:not(:disabled) {
+    background-color: #059669;
+}
+
+.danger {
+    background-color: #ef4444;
+    color: white;
+}
+
+.danger:hover:not(:disabled) {
+    background-color: #dc2626;
+}
+
+.outline {
+    background-color: transparent;
+    border: 1px solid #2563eb;
+    color: #2563eb;
+}
+
+.outline:hover:not(:disabled) {
+    background-color: rgba(37, 99, 235, 0.1);
+}
+
+.text {
+    background-color: transparent;
+    color: #2563eb;
+}
+
+.text:hover:not(:disabled) {
+    background-color: rgba(37, 99, 235, 0.1);
+}
+
+/* Button sizes */
+.small {
+    padding: 6px 12px;
+    font-size: 13px;
+}
+
+.medium {
+    padding: 8px 16px;
+    font-size: 14px;
+}
+
+.large {
+    padding: 10px 20px;
+    font-size: 15px;
+}
+
+/* Button with icon */
+.with-icon {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.button-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}

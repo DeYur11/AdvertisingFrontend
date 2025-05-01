@@ -1,0 +1,70 @@
+:root {
+    /* Color palette */
+    --color-primary-50: #e0e7ff;
+    --color-primary-100: #c7d2fe;
+    --color-primary-200: #a5b4fc;
+    --color-primary-300: #93c5fd;
+    --color-primary-400: #6366f1;
+    --color-primary-500: #4f46e5;
+    --color-primary-600: #2563eb;
+    --color-primary-700: #3730a3;
+    --color-primary-800: #312e81;
+    --color-primary-900: #1e3a8a;
+
+    --color-gray-50: #f8fafc;
+    --color-gray-100: #f1f5f9;
+    --color-gray-200: #e2e8f0;
+    --color-gray-300: #cbd5e1;
+    --color-gray-400: #94a3b8;
+    --color-gray-500: #64748b;
+    --color-gray-600: #475569;
+    --color-gray-700: #334155;
+    --color-gray-800: #1e293b;
+    --color-gray-900: #0f172a;
+
+    --color-success-100: #d1fae5;
+    --color-success-500: #059669;
+
+    --color-danger-100: #fee2e2;
+    --color-danger-500: #dc2626;
+    --color-danger-700: #b91c1c;
+
+    --color-warning-100: #fef08a;
+    --color-warning-700: #92400e;
+
+    /* Spacing */
+    --spacing-xs: 4px;
+    --spacing-sm: 8px;
+    --spacing-md: 16px;
+    --spacing-lg: 24px;
+    --spacing-xl: 32px;
+
+    /* Borders */
+    --border-radius-sm: 4px;
+    --border-radius-md: 8px;
+    --border-radius-lg: 12px;
+    --border-radius-full: 9999px;
+
+    /* Shadows */
+    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+    --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.1);
+    --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.1);
+
+    /* Layout */
+    --header-height: 56px;
+    --sidebar-width: 480px;
+
+    /* Z-indices */
+    --z-index-dropdown: 100;
+    --z-index-sticky: 200;
+    --z-index-fixed: 300;
+    --z-index-modal-backdrop: 400;
+    --z-index-modal: 500;
+    --z-index-popover: 600;
+    --z-index-tooltip: 700;
+
+    /* Transitions */
+    --transition-fast: 150ms ease;
+    --transition-normal: 300ms ease;
+    --transition-slow: 500ms ease;
+}

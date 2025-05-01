@@ -1,87 +1,41 @@
-import { BrowserRouter as Router, Route, Routes, useLocation } from "react-router-dom";
-import Header from "./component/Header/Header";
-import Login from "./component/Login/Login";
-import Settings from "./component/page/Settings/Settings";
-import Home from "./component/page/Home";
-import EmployeeDashboard from "./component/page/EmployeeDashboard/EmployeeDashboard";
-import ProtectedRoute from "./component/ProtectedRoute";
-import "bootstrap/dist/css/bootstrap.min.css";
-import { ToastContainer } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
-import ProjectsPage from "./component/page/ProjectsPage/ProjectsPage";
-import MaterialReviewPage from "./component/page/ai-chat-code-2025-04-30T23-04-59-621Z";
+// src/App.js
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+import 'bootstrap/dist/css/bootstrap.min.css';
+import './styles/global.css';
 
-function AppContent() {
-    const location = useLocation();
-
-    return (
-        <>
-            {/* Показуємо Header тільки якщо ми НЕ на /login */}
-            {location.pathname !== "/login" && <Header />}
-
-            <main>
-                <Routes>
-                    <Route path="/login" element={<Login />} />
-                    <Route
-                        path="/settings"
-                        element={
-                            <ProtectedRoute>
-                                <Settings />
-                            </ProtectedRoute>
-                        }
-                    />
-                    <Route
-                        path="/public"
-                        element={
-                            <ProtectedRoute>
-                                <Home />
-                            </ProtectedRoute>
-                        }
-                    />
-                    <Route
-                        path="/projectsDashboard"
-                        element={
-                            <ProtectedRoute>
-                                <ProjectsPage />
-                            </ProtectedRoute>
-                        }
-                    />
-                    <Route
-                        path="/dashboard"
-                        element={
-                            <ProtectedRoute>
-                                <EmployeeDashboard />
-                            </ProtectedRoute>
-                        }
-                    />
-                    <Route
-                        path="/"
-                        element={
-                            <ProtectedRoute>
-                                <Home />
-                            </ProtectedRoute>
-                        }
-                    />
-                    <Route
-                        path="/about"
-                        element={
-                            <ProtectedRoute>
-                                <MaterialReviewPage/>
-                            </ProtectedRoute>
-                        }
-                    />
-                </Routes>
-            </main>
-
-            <ToastContainer position="top-right" autoClose={3000} />
-        </>
-    );
-}
+import Layout from './components/layout/Layout';
+import ProtectedRoute from './components/common/ProtectedRoute';
+import Login from './pages/Login/Login';
+import Home from './pages/Home/Home';
+import Dashboard from './pages/Dashboard/Dashboard';
+import Settings from './pages/Settings/Settings';
 
 export default function App() {
     return (
-        <Router>
-            <AppContent />
-        </Router>
+        <BrowserRouter>
+            <Routes>
+                <Route path="/login" element={<Login />} />
+                <Route element={<Layout />}>
+                    <Route path="/" element={
+                        <ProtectedRoute>
+                            <Home />
+                        </ProtectedRoute>
+                    } />
+                    <Route path="/dashboard" element={
+                        <ProtectedRoute>
+                            <Dashboard />
+                        </ProtectedRoute>
+                    } />
+                    <Route path="/settings" element={
+                        <ProtectedRoute>
+                            <Settings />
+                        </ProtectedRoute>
+                    } />
+                </Route>
+            </Routes>
+            <ToastContainer position="top-right" autoClose={3000} />
+        </BrowserRouter>
     );
 }

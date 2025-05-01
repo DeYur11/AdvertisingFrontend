@@ -1,0 +1,80 @@
+.header {
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+    background-color: #1e3a8a; /* Dark blue */
+    color: white;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 56px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.left-section {
+    flex: 1;
+    padding-left: 24px;
+}
+
+.logo {
+    font-size: 22px;
+    font-weight: bold;
+    letter-spacing: 0.5px;
+    background: linear-gradient(90deg, #ffffff, #e0e7ff);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.nav {
+    flex: 2;
+    display: flex;
+    height: 100%;
+    align-items: stretch;
+    justify-content: center;
+}
+
+.nav-button {
+    background-color: transparent;
+    color: white;
+    border: none;
+    padding: 0 24px;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 15px;
+    text-decoration: none;
+    transition: all 0.3s;
+    position: relative;
+}
+
+.nav-button:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+    color: #ffffff;
+}
+
+.nav-button.active {
+    background-color: rgba(255, 255, 255, 0.15);
+    color: #ffffff;
+    font-weight: 500;
+}
+
+.nav-button.active::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 3px;
+    background-color: #93c5fd;
+}
+
+.right-section {
+    flex: 1;
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    padding-right: 24px;
+}

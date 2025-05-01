@@ -1,0 +1,137 @@
+:root {
+    --sidebar-width: 480px;
+    --sidebar-z-index: 1050;
+    --backdrop-z-index: 1049;
+    --sidebar-transition: 0.35s ease;
+}
+
+/* Sidebar */
+.sidebar {
+    position: fixed;
+    top: 0;
+    right: 0;
+    width: var(--sidebar-width);
+    height: 100vh;
+    background: #ffffff;
+    box-shadow: -2px 0 12px rgba(0, 0, 0, 0.15);
+    transform: translateX(100%);
+    transition: transform var(--sidebar-transition);
+    overflow-y: auto;
+    z-index: var(--sidebar-z-index);
+    display: flex;
+    flex-direction: column;
+}
+
+.employee-tasks-wrapper.sidebar-open #taskSidebar,
+.employee-dashboard.sidebar-open #taskSidebar,
+.sidebar-open #taskSidebar {
+    transform: translateX(0);
+}
+
+/* Sidebar header */
+.sidebar-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px 20px;
+    border-bottom: 1px solid #e2e8f0;
+    background-color: #f8fafc;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+
+.sidebar-title {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 600;
+    color: #1e293b;
+}
+
+.close-button {
+    background: none;
+    border: none;
+    font-size: 18px;
+    cursor: pointer;
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #64748b;
+    border-radius: 4px;
+    transition: all 0.2s;
+}
+
+.close-button:hover {
+    background-color: #e2e8f0;
+    color: #1e293b;
+}
+
+/* Sidebar content */
+.sidebar-content {
+    padding: 20px;
+    overflow-y: auto;
+    flex-grow: 1;
+}
+
+/* Backdrop for mobile */
+#sidebarBackdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: rgba(0, 0, 0, 0.25);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity var(--sidebar-transition);
+    z-index: var(--backdrop-z-index);
+}
+
+.employee-tasks-wrapper.sidebar-open #sidebarBackdrop,
+.employee-dashboard.sidebar-open #sidebarBackdrop,
+.sidebar-open #sidebarBackdrop {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+/* Tab styling for task/service details */
+.tab-buttons {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 16px;
+}
+
+.tab-btn {
+    padding: 8px 14px;
+    border: 1px solid #cbd5e1;
+    border-radius: 6px;
+    background-color: #f1f5f9;
+    cursor: pointer;
+    font-weight: 500;
+    font-size: 14px;
+    transition: all 0.2s;
+    color: #475569;
+}
+
+.tab-btn:hover {
+    background-color: #e2e8f0;
+}
+
+.tab-btn.active {
+    background-color: #e0e7ff;
+    border-color: #2563eb;
+    color: #1e3a8a;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .sidebar {
+        width: 100%;
+    }
+
+    :root {
+        --sidebar-width: 100%;
+    }
+}
