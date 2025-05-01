@@ -55,3 +55,23 @@ export const GET_TASKS_BY_WORKER = gql`
         }
     }
 `;
+
+
+export const MATERIALS_BY_TASK = gql`
+    query MaterialsByTask($taskId: ID!) {
+        materials(taskId: $taskId) {
+            id
+            name
+            type
+        }
+    }
+`;
+
+export const DELETE_MATERIAL = gql`
+    mutation DeleteMaterial($id: ID!) {
+        deleteMaterial(id: $id) {
+            success
+            message
+        }
+    }
+`;

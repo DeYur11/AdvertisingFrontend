@@ -2,7 +2,6 @@ import { useState } from "react";
 import { useQuery } from "@apollo/client";
 import { useSelector } from "react-redux";
 import TaskFilterBar from "./TaskFilterBar/TaskFilterBar";
-import ProjectCard from "./ProjectCard/ProjectCard";
 import Modal from "../../../components/common/Modal/Modal";
 import TaskDetails from "./details/TaskDetails/TaskDetails";
 import ServiceDetails from "./details/ServiceDetails/ServiceDetails";
@@ -16,6 +15,7 @@ import {
     ActiveServiceExistenceHandler
 } from "../../../utils/filterHandlers";
 import { GET_TASKS_BY_WORKER } from "../graphql/queries";
+import CompactProjectCard from "./CompactProjectCard/CompactProjectCard";
 
 export default function TaskList() {
     const [expandedProjectId, setExpandedProjectId] = useState(null);
@@ -209,9 +209,9 @@ export default function TaskList() {
                 />
 
                 {visibleProjects.length > 0 ? (
-                    <div className="projects-grid">
+                    <div className="projects-list">
                         {visibleProjects.map(project => (
-                            <ProjectCard
+                            <CompactProjectCard
                                 key={project.id}
                                 project={project}
                                 expanded={expandedProjectId === project.id}
