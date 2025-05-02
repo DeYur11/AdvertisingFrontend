@@ -1,0 +1,200 @@
+.sip-item {
+    background-color: #ffffff;
+    border-radius: 8px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    border: 1px solid #e2e8f0;
+    overflow: hidden;
+    transition: all 0.2s ease;
+}
+
+.sip-item:hover {
+    box-shadow: 0 3px 6px rgba(0, 0, 0, 0.1);
+}
+
+/* Status-based styling */
+.sip-item.status-completed {
+    border-left: 3px solid #10b981;
+}
+
+.sip-item.status-in-progress,
+.sip-item.status-in\\ progress {
+    border-left: 3px solid #2563eb;
+}
+
+.sip-item.status-pending {
+    border-left: 3px solid #f59e0b;
+}
+
+.sip-item.status-cancelled,
+.sip-item.status-on-hold {
+    border-left: 3px solid #ef4444;
+}
+
+.sip-main-info {
+    display: flex;
+    justify-content: space-between;
+    padding: 12px;
+}
+
+.sip-left {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.sip-dates {
+    display: flex;
+    gap: 12px;
+}
+
+.sip-date-item {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 12px;
+}
+
+.date-label {
+    color: #64748b;
+    font-weight: 500;
+}
+
+.date-value {
+    color: #334155;
+    font-family: monospace;
+}
+
+.sip-right {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.sip-cost {
+    text-align: right;
+}
+
+.cost-value {
+    font-size: 14px;
+    font-weight: 600;
+    color: #047857;
+}
+
+.sip-tasks-count {
+    text-align: center;
+    position: relative;
+    background-color: #f8fafc;
+    padding: 4px 8px;
+    border-radius: 6px;
+    min-width: 50px;
+}
+
+.tasks-count {
+    font-size: 14px;
+    font-weight: 600;
+    color: #334155;
+    display: block;
+    line-height: 1;
+}
+
+.tasks-label {
+    font-size: 10px;
+    color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.active-tasks-badge {
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    font-size: 10px;
+    padding: 1px 5px;
+}
+
+.sip-actions {
+    display: flex;
+    gap: 6px;
+}
+
+.sip-action-btn {
+    padding: 4px 8px;
+    font-size: 12px;
+}
+
+/* Task section */
+.sip-tasks {
+    background-color: #f8fafc;
+    padding: 12px;
+    border-top: 1px solid #e2e8f0;
+    animation: fadeIn 0.3s ease;
+}
+
+.tasks-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.tasks-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: #1e293b;
+    margin: 0;
+}
+
+.add-task-btn {
+    font-size: 12px;
+    padding: 4px 8px;
+}
+
+.tasks-list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    max-height: 200px;
+    overflow-y: auto;
+    padding-right: 4px;
+}
+
+.no-tasks-message {
+    padding: 10px;
+    text-align: center;
+    color: #64748b;
+    background-color: #ffffff;
+    border-radius: 6px;
+    border: 1px dashed #cbd5e1;
+    font-style: italic;
+    font-size: 12px;
+}
+
+/* Animation */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(5px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Responsive adjustments */
+@media (max-width: 640px) {
+    .sip-main-info {
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .sip-right {
+        justify-content: space-between;
+        width: 100%;
+    }
+
+    .sip-dates {
+        flex-direction: column;
+        gap: 4px;
+    }
+}

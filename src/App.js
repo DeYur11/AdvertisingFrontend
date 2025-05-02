@@ -11,6 +11,7 @@ import Login from './pages/Login/Login';
 import Home from './pages/Home/Home';
 import Dashboard from './pages/Dashboard/Dashboard';
 import Settings from './pages/Settings/Settings';
+import ProjectManagement from "./pages/ProjectManagement/ProjectManagement";
 
 export default function App() {
     return (
@@ -31,6 +32,11 @@ export default function App() {
                     <Route path="/settings" element={
                         <ProtectedRoute>
                             <Settings />
+                        </ProtectedRoute>
+                    } />
+                    <Route path="/projects" element={
+                        <ProtectedRoute>
+                            <ProjectManagement />
                         </ProtectedRoute>
                     } />
                 </Route>

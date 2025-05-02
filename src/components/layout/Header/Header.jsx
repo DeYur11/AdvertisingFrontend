@@ -30,8 +30,8 @@ export default function Header() {
 
                 {/* Access to Admin Panel only for Project Manager */}
                 {user.mainRole === "ProjectManager" && (
-                    <NavLink to="/admin" className={({ isActive }) => isActive ? "nav-button active" : "nav-button"}>
-                        Admin Panel
+                    <NavLink to="/projects" className={({ isActive }) => isActive ? "nav-button active" : "nav-button"}>
+                        Project Management
                     </NavLink>
                 )}
 
