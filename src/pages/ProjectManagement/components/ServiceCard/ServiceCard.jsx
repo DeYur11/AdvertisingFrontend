@@ -1,152 +1,75 @@
-import { useState } from "react";
-import { highlightMatch } from "../../../../utils/highlightMatch";
-import Card from "../../../../components/common/Card/Card";
-import Badge from "../../../../components/common/Badge/Badge";
-import Button from "../../../../components/common/Button/Button";
-import ServiceInProgressItem from "../ServiceInProgressItem/ServiceInProgressItem";
-import "./ServiceCard.css";
+// ServiceCard.jsx
+import { useState, useEffect } from "react";
+import { useLazyQuery } from "@apollo/client";
+import { GET_SERVICES_IN_PROGRESS_BY_PS } from "../../graphql/projects.gql";
+import {
+    Card,
+    CardHeader,
+    CardContent,
+    Collapse,
+    Typography,
+    Button,
+    Badge
+} from "../../../../components/common";
+import { ChevronDown, ChevronUp } from "lucide-react";
 
-export default function ServiceCard({
-                                        projectService,
-                                        searchQuery,
-                                        onEdit,
-                                        onDelete
-                                    }) {
-    const [expanded, setExpanded] = useState(false);
-    const service = projectService.service;
+export default function ServiceCard({ projectService }) {
+    const [open, setOpen] = useState(false);
+    const [loaded, setLoaded] = useState(false);
+    const [fetchSIPs, { data, loading }] = useLazyQuery(GET_SERVICES_IN_PROGRESS_BY_PS, {
+        variables: { projectServiceId: projectService.id },
+        fetchPolicy: "cache-first"
+    });
 
-    // Count active services in progress
-    const activeCount = projectService.servicesInProgress?.filter(sip => {
-        const status = sip.status?.name?.toLowerCase() || "";
-        return status === "in progress" || status === "pending";
-    }).length || 0;
+    useEffect(() => {
+        if (open && !loaded) {
+            fetchSIPs();
+            setLoaded(true);
+        }
+    }, [open, loaded, fetchSIPs]);
 
-    // Total services in progress
-    const totalCount = projectService.servicesInProgress?.length || 0;
-
-    // Format cost
-    const formatCost = (cost) => {
-        if (!cost) return "—";
-        return `$${parseFloat(cost).toFixed(2)}`;
-    };
+    const sips = data?.servicesInProgressByProjectService ?? [];
+    const svc = projectService.service;
+    const qty = projectService.amount ?? 1;
+    const estCost = svc.estimateCost * qty;
+    const actCost = sips.reduce((sum, s) => sum + (+s.cost || 0), 0);
 
     return (
-        <Card className="service-card">
-            <div className="service-header">
-                <div className="service-info">
-                    <div className="service-title">
-                        {highlightMatch(service.serviceName, searchQuery)}
-                    </div>
-                    <div className="service-type">
-                        {service.serviceType?.name && (
-                            <Badge size="small" className="service-type-badge">
-                                {service.serviceType.name}
-                            </Badge>
-                        )}
-                    </div>
+        <Card className="w-full">
+            <CardHeader className="flex flex-row justify-between items-start gap-4 cursor-pointer" onClick={() => setOpen(!open)}>
+                <div>
+                    <Typography variant="h6">{svc.serviceName}</Typography>
+                    <Typography variant="muted" className="text-sm">
+                        Estimate: ₴{svc.estimateCost} × {qty} = <strong>₴{estCost}</strong><br />
+                        Actual: <strong>₴{actCost}</strong>
+                    </Typography>
                 </div>
+                <Button variant="ghost" size="icon" className="shrink-0">
+                    {open ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
+                </Button>
+            </CardHeader>
 
-                <div className="service-meta">
-                    <div className="meta-item">
-                        <span className="meta-label">Est. Cost:</span>
-                        <span className="meta-value cost">{formatCost(service.estimateCost)}</span>
-                    </div>
-
-                    <div className="meta-item">
-                        <span className="meta-label">Duration:</span>
-                        <span className="meta-value">{service.duration ? `${service.duration} days` : "—"}</span>
-                    </div>
-                </div>
-
-                <div className="service-counter">
-                    <span className="count">{totalCount}</span>
-                    <span className="label">{totalCount === 1 ? 'order' : 'orders'}</span>
-                    {activeCount > 0 && (
-                        <Badge className="active-badge" size="small">
-                            {activeCount} active
-                        </Badge>
+            <Collapse in={open}>
+                <CardContent>
+                    {loading && <Typography variant="muted">Loading...</Typography>}
+                    {!loading && sips.length === 0 && (
+                        <Typography variant="muted">No executions found.</Typography>
                     )}
-                </div>
-            </div>
-
-            {service.description && (
-                <div className="service-description">
-                    {service.description.length > 150
-                        ? `${service.description.substring(0, 150)}...`
-                        : service.description}
-                </div>
-            )}
-
-            <div className="service-actions">
-                <Button
-                    variant="outline"
-                    size="small"
-                    icon="✏️"
-                    onClick={(e) => {
-                        e.stopPropagation();
-                        onEdit(service);
-                    }}
-                >
-                    Edit
-                </Button>
-
-                <Button
-                    variant="danger"
-                    size="small"
-                    icon="🗑"
-                    onClick={(e) => {
-                        e.stopPropagation();
-                        onDelete(service);
-                    }}
-                >
-                    Delete
-                </Button>
-
-                <Button
-                    variant={expanded ? "primary" : "outline"}
-                    size="small"
-                    icon={expanded ? "🔽" : "🔼"}
-                    className="expand-button"
-                    onClick={(e) => {
-                        e.stopPropagation();
-                        setExpanded(!expanded);
-                    }}
-                >
-                    {expanded ? "Hide Orders" : "Show Orders"}
-                </Button>
-            </div>
-
-            {expanded && projectService.servicesInProgress && (
-                <div className="services-in-progress">
-                    <div className="sip-header">
-                        <h5 className="sip-title">Service Orders</h5>
-                        <Button
-                            variant="primary"
-                            size="small"
-                            icon="➕"
-                            className="add-sip-button"
-                        >
-                            Add Order
-                        </Button>
-                    </div>
-
-                    {projectService.servicesInProgress.length > 0 ? (
-                        <div className="sip-list">
-                            {projectService.servicesInProgress.map(sip => (
-                                <ServiceInProgressItem
+                    {!loading && sips.length > 0 && (
+                        <div className="space-y-2">
+                            {sips.map((sip) => (
+                                <div
                                     key={sip.id}
-                                    serviceInProgress={sip}
-                                    searchQuery={searchQuery}
-                                />
+                                    className="flex items-center justify-between rounded-md border p-2"
+                                >
+                                    <Badge variant="outline">{sip.status.name}</Badge>
+                                    <Typography className="font-medium">₴{sip.cost}</Typography>
+                                </div>
                             ))}
                         </div>
-                    ) : (
-                        <div className="no-sip-message">
-                            No service orders found. Click "Add Order" to create a new service order.
-                        </div>
                     )}
-                </div>
-            )}
+                </CardContent>
+            </Collapse>
         </Card>
     );
 }

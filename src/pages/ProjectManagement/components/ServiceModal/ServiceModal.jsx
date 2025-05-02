@@ -17,6 +17,7 @@ const CREATE_SERVICE = gql`
         createService(input: $input) {
             id
             serviceName
+            estimateCost
         }
     }
 `;
@@ -26,6 +27,7 @@ const UPDATE_SERVICE = gql`
         updateService(id: $id, input: $input) {
             id
             serviceName
+            estimateCost
         }
     }
 `;

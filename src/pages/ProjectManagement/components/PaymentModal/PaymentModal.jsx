@@ -7,9 +7,9 @@ const CREATE_PAYMENT = gql`
     mutation CreatePayment($input: CreatePaymentInput!) {
         createPayment(input: $input) {
             id
-            amount
-            date
-            description
+            transactionNumber
+            paymentSum
+            paymentDate
         }
     }
 `;
@@ -18,9 +18,9 @@ const UPDATE_PAYMENT = gql`
     mutation UpdatePayment($id: ID!, $input: UpdatePaymentInput!) {
         updatePayment(id: $id, input: $input) {
             id
-            amount
-            date
-            description
+            transactionNumber
+            paymentSum
+            paymentDate
         }
     }
 `;

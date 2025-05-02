@@ -1,42 +1,33 @@
-import { useState, useEffect } from "react";
-import { useSelector } from "react-redux";
-import { useQuery, useMutation, gql } from "@apollo/client";
+import { useState } from "react";
+import { useQuery, gql, ApolloClient, InMemoryCache } from "@apollo/client";
 import "./ProjectManagement.css";
 
-// UI Components
+// Components
 import Card from "../../components/common/Card/Card";
 import Button from "../../components/common/Button/Button";
-import Modal from "../../components/common/Modal/Modal";
+import Badge from "../../components/common/Badge/Badge";
 
-// Project-specific components
-import ProjectFilterPanel from "./components/ProjectFilterPanel/ProjectFilterPanel";
-import CompactProjectCard from "./components/CompactProjectCard/CompactProjectCard";
-import ClientModal from "./components/ClientModal/ClientModal";
-import ProjectModal from "./components/ProjectModal/ProjectModal";
-import ServiceModal from "./components/ServiceModal/ServiceModal";
-import PaymentModal from "./components/PaymentModal/PaymentModal";
-import ConfirmationModal from "./components/ConfirmationModal/ConfirmationModal";
-import PaymentsList from "./components/PaymentsList/PaymentsList";
-
-// GraphQL queries and mutations
+// GraphQL query to fetch projects without detailed task data
 const GET_PROJECTS = gql`
     query GetProjects {
         projects {
             id
             name
-            description
+            registrationDate
             startDate
             endDate
+            cost
+            estimateCost
             status {
                 id
                 name
             }
-            client {
+            projectType {
                 id
                 name
-                email
             }
-            projectType {
+            paymentDeadline
+            client {
                 id
                 name
             }
@@ -45,14 +36,15 @@ const GET_PROJECTS = gql`
                 name
                 surname
             }
+            description
             projectServices {
                 id
+                amount
                 service {
                     id
                     serviceName
-                    description
-                    estimateCost
                     duration
+                    estimateCost
                     serviceType {
                         id
                         name
@@ -67,474 +59,458 @@ const GET_PROJECTS = gql`
                         id
                         name
                     }
-                    tasks {
-                        id
-                        name
-                        description
-                        priority
-                        deadline
-                        taskStatus {
-                            id
-                            name
-                        }
-                    }
                 }
             }
         }
     }
 `;
 
-const GET_PAYMENTS_BY_PROJECT = gql`
-    query GetPaymentsByProject($projectId: ID!) {
-        paymentsByProject(projectId: $projectId) {
+// GraphQL query to fetch detailed task data for a specific service in progress
+const GET_SERVICE_TASKS = gql`
+    query GetServiceTasks($serviceInProgressId: ID!) {
+        serviceInProgress(id: $serviceInProgressId) {
             id
-            amount
-            date
-            description
-            purpose {
+            tasks {
                 id
                 name
+                description
+                priority
+                startDate
+                endDate
+                deadline
+                taskStatus {
+                    id
+                    name
+                }
             }
         }
-    }
-`;
-
-const GET_PAYMENT_PURPOSES = gql`
-    query GetPaymentPurposes {
-        paymentPurposes {
-            id
-            name
-        }
-    }
-`;
-
-const DELETE_PROJECT = gql`
-    mutation DeleteProject($id: ID!) {
-        deleteProject(id: $id)
-    }
-`;
-
-const DELETE_SERVICE = gql`
-    mutation DeleteService($id: ID!) {
-        deleteService(id: $id)
-    }
-`;
-
-const DELETE_CLIENT = gql`
-    mutation DeleteClient($id: ID!) {
-        deleteClient(id: $id)
-    }
-`;
-
-const DELETE_PAYMENT = gql`
-    mutation DeletePayment($id: ID!) {
-        deletePayment(id: $id)
     }
 `;
 
 export default function ProjectManagement() {
-    const user = useSelector(state => state.user);
     const [expandedProjectId, setExpandedProjectId] = useState(null);
-    const [searchQuery, setSearchQuery] = useState("");
-    const [filters, setFilters] = useState({});
-    const [filterPanelExpanded, setFilterPanelExpanded] = useState(false);
-    const [selectedProject, setSelectedProject] = useState(null);
-    const [selectedService, setSelectedService] = useState(null);
-    const [selectedClient, setSelectedClient] = useState(null);
-    const [selectedPayment, setSelectedPayment] = useState(null);
-    const [showPayments, setShowPayments] = useState(false);
-
-    // Modals state
-    const [showProjectModal, setShowProjectModal] = useState(false);
-    const [showServiceModal, setShowServiceModal] = useState(false);
-    const [showClientModal, setShowClientModal] = useState(false);
-    const [showPaymentModal, setShowPaymentModal] = useState(false);
-    const [deleteConfirmation, setDeleteConfirmation] = useState(null);
-    const [editMode, setEditMode] = useState(false);
+    const [expandedServiceId, setExpandedServiceId] = useState(null);
+    const [selectedServiceInProgressId, setSelectedServiceInProgressId] = useState(null);
+    const [tasksData, setTasksData] = useState({});
+    const [loadingTasks, setLoadingTasks] = useState(false);
 
     // Fetch projects data
-    const { loading, error, data, refetch } = useQuery(GET_PROJECTS);
+    const { loading, error, data } = useQuery(GET_PROJECTS);
 
-    // Fetch payments data for selected project
-    const { data: paymentsData, loading: paymentsLoading, error: paymentsError, refetch: refetchPayments } = useQuery(
-        GET_PAYMENTS_BY_PROJECT,
-        {
-            variables: { projectId: selectedProject?.id },
-            skip: !selectedProject?.id || !showPayments
-        }
-    );
+    // Function to fetch task data for a specific service in progress
+    const fetchTasksData = async (serviceInProgressId) => {
+        if (tasksData[serviceInProgressId]) return; // Skip if already loaded
 
-    // Fetch payment purposes data
-    const { data: purposesData } = useQuery(GET_PAYMENT_PURPOSES, {
-        skip: !showPaymentModal
-    });
-
-    // Mutations
-    const [deleteProject] = useMutation(DELETE_PROJECT);
-    const [deleteService] = useMutation(DELETE_SERVICE);
-    const [deleteClient] = useMutation(DELETE_CLIENT);
-    const [deletePayment] = useMutation(DELETE_PAYMENT);
-
-    // Check if user is a Project Manager
-    const isProjectManager = user.mainRole === "ProjectManager";
-
-    if (!isProjectManager) {
-        return (
-            <div className="project-management-container">
-                <Card className="access-denied">
-                    <div className="access-denied-icon">⚠️</div>
-                    <h2>Access Denied</h2>
-                    <p>This page is only accessible to Project Managers.</p>
-                </Card>
-            </div>
-        );
-    }
-
-    const toggleProject = (id) => {
-        setExpandedProjectId(prev => (prev === id ? null : id));
-    };
-
-    const handleAddProject = () => {
-        setEditMode(false);
-        setSelectedProject(null);
-        setShowProjectModal(true);
-    };
-
-    const handleEditProject = (project) => {
-        setEditMode(true);
-        setSelectedProject(project);
-        setShowProjectModal(true);
-    };
-
-    const handleDeleteProject = (project) => {
-        setSelectedProject(project);
-        setDeleteConfirmation({
-            type: "project",
-            id: project.id,
-            name: project.name
-        });
-    };
-
-    const handleAddService = (projectId) => {
-        setEditMode(false);
-        setSelectedProject({ id: projectId });
-        setSelectedService(null);
-        setShowServiceModal(true);
-    };
-
-    const handleEditService = (service, projectId) => {
-        setEditMode(true);
-        setSelectedProject({ id: projectId });
-        setSelectedService(service);
-        setShowServiceModal(true);
-    };
-
-    const handleDeleteService = (service) => {
-        setSelectedService(service);
-        setDeleteConfirmation({
-            type: "service",
-            id: service.id,
-            name: service.serviceName
-        });
-    };
-
-    const handleAddClient = () => {
-        setEditMode(false);
-        setSelectedClient(null);
-        setShowClientModal(true);
-    };
-
-    const handleEditClient = (client) => {
-        setEditMode(true);
-        setSelectedClient(client);
-        setShowClientModal(true);
-    };
-
-    const handleDeleteClient = (client) => {
-        setSelectedClient(client);
-        setDeleteConfirmation({
-            type: "client",
-            id: client.id,
-            name: client.name
-        });
-    };
-
-    const handleViewPayments = (project) => {
-        setSelectedProject(project);
-        setShowPayments(true);
-    };
-
-    const handleAddPayment = () => {
-        setEditMode(false);
-        setSelectedPayment(null);
-        setShowPaymentModal(true);
-    };
-
-    const handleEditPayment = (payment) => {
-        setEditMode(true);
-        setSelectedPayment(payment);
-        setShowPaymentModal(true);
-    };
-
-    const handleDeletePayment = (payment) => {
-        setSelectedPayment(payment);
-        setDeleteConfirmation({
-            type: "payment",
-            id: payment.id,
-            name: `${payment.amount} (${new Date(payment.date).toLocaleDateString()})`
-        });
-    };
-
-    const confirmDelete = async () => {
+        setLoadingTasks(true);
         try {
-            if (deleteConfirmation.type === "project") {
-                await deleteProject({ variables: { id: deleteConfirmation.id }});
-                refetch();
-            } else if (deleteConfirmation.type === "service") {
-                await deleteService({ variables: { id: deleteConfirmation.id }});
-                refetch();
-            } else if (deleteConfirmation.type === "client") {
-                await deleteClient({ variables: { id: deleteConfirmation.id }});
-                refetch();
-            } else if (deleteConfirmation.type === "payment") {
-                await deletePayment({ variables: { id: deleteConfirmation.id }});
-                refetchPayments();
-            }
+            // Using Apollo client directly for more control
+            const client = new ApolloClient({
+                uri: process.env.REACT_APP_API_URL || 'http://localhost:8080/graphql',
+                cache: new InMemoryCache(),
+            });
 
-            setDeleteConfirmation(null);
-        } catch (error) {
-            console.error(`Error deleting ${deleteConfirmation.type}:`, error);
+            const response = await client.query({
+                query: GET_SERVICE_TASKS,
+                variables: { serviceInProgressId }
+            });
+
+            // Update tasks data state with the fetched tasks
+            setTasksData(prev => ({
+                ...prev,
+                [serviceInProgressId]: response.data.serviceInProgress.tasks
+            }));
+        } catch (err) {
+            console.error("Error fetching tasks:", err);
+        } finally {
+            setLoadingTasks(false);
         }
     };
 
-    // Filter projects based on search query and filters
-    const getFilteredProjects = () => {
-        if (!data?.projects) return [];
+    // Toggle project expansion
+    const toggleProject = (id) => {
+        setExpandedProjectId(prev => prev === id ? null : id);
+        // Close any expanded service when toggling project
+        setExpandedServiceId(null);
+        setSelectedServiceInProgressId(null);
+    };
 
-        return data.projects.filter(project => {
-            // Search query filter
-            const matchesSearch =
-                searchQuery === "" ||
-                project.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                project.client?.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                project.projectServices?.some(projectService =>
-                    projectService.service.serviceName.toLowerCase().includes(searchQuery.toLowerCase()));
+    // Toggle service expansion
+    const toggleService = (id, event) => {
+        // Prevent project toggle when clicking on service
+        event.stopPropagation();
+        setExpandedServiceId(prev => prev === id ? null : id);
+        setSelectedServiceInProgressId(null);
+    };
 
-            if (!matchesSearch) return false;
+    // Handle clicking on a service in progress to load its tasks
+    const handleServiceInProgressClick = (serviceInProgressId, event) => {
+        event.stopPropagation();
+        setSelectedServiceInProgressId(serviceInProgressId);
+        fetchTasksData(serviceInProgressId);
+    };
 
-            // Apply additional filters
-            if (filters.status && filters.status.length > 0) {
-                if (!project.status || !filters.status.includes(project.status.name.toLowerCase())) {
-                    return false;
-                }
-            }
+    // Format date
+    const formatDate = (dateString) => {
+        if (!dateString) return "—";
+        return new Date(dateString).toLocaleDateString();
+    };
 
-            if (filters.projectType && filters.projectType.length > 0) {
-                if (!project.projectType || !filters.projectType.includes(project.projectType.name)) {
-                    return false;
-                }
-            }
+    // Format cost/currency
+    const formatCurrency = (amount) => {
+        if (amount === null || amount === undefined) return "—";
+        return `$${parseFloat(amount).toFixed(2)}`;
+    };
 
-            if (filters.clientId && filters.clientId.length > 0) {
-                if (!project.client || !filters.clientId.includes(project.client.id)) {
-                    return false;
-                }
-            }
+    // Calculate project completion percentage
+    const calculateCompletion = (project) => {
+        if (!project.projectServices || project.projectServices.length === 0) return 0;
 
-            if (filters.date) {
-                const projectStartDate = project.startDate ? new Date(project.startDate) : null;
-                const projectEndDate = project.endDate ? new Date(project.endDate) : null;
+        let completedServices = 0;
+        let totalServices = 0;
 
-                if (filters.date.from) {
-                    const fromDate = new Date(filters.date.from);
-                    if (!projectStartDate || projectStartDate < fromDate) {
-                        return false;
+        project.projectServices.forEach(ps => {
+            if (ps.servicesInProgress && ps.servicesInProgress.length > 0) {
+                ps.servicesInProgress.forEach(sip => {
+                    totalServices++;
+                    if (sip.status && sip.status.name.toLowerCase() === "completed") {
+                        completedServices++;
                     }
-                }
-
-                if (filters.date.to) {
-                    const toDate = new Date(filters.date.to);
-                    if (!projectEndDate || projectEndDate > toDate) {
-                        return false;
-                    }
-                }
+                });
             }
-
-            return true;
         });
+
+        return totalServices > 0 ? Math.floor((completedServices / totalServices) * 100) : 0;
+    };
+
+    // Count active and completed tasks for a specific service in progress
+    const countTasks = (sipId) => {
+        if (!tasksData[sipId]) return { active: 0, completed: 0, total: 0 };
+
+        let active = 0;
+        let completed = 0;
+        const tasks = tasksData[sipId];
+
+        tasks.forEach(task => {
+            if (task.taskStatus) {
+                if (task.taskStatus.name.toLowerCase() === "completed") {
+                    completed++;
+                } else {
+                    active++;
+                }
+            }
+        });
+
+        return { active, completed, total: tasks.length };
     };
 
     return (
         <div className="project-management-container">
-            {/* Main Projects View */}
-            {!showPayments ? (
-                <>
-                    <div className="project-management-header">
-                        <div className="header-left">
-                            <h1>Project Management</h1>
-                            <p className="subtitle">Manage your projects, services, and clients</p>
-                        </div>
-                        <div className="header-actions">
-                            <Button
-                                variant="outline"
-                                size="medium"
-                                icon="👤"
-                                onClick={handleAddClient}
-                            >
-                                New Client
-                            </Button>
-                            <Button
-                                variant="primary"
-                                size="medium"
-                                icon="📂"
-                                onClick={handleAddProject}
-                            >
-                                New Project
-                            </Button>
-                        </div>
-                    </div>
+            <div className="page-header">
+                <h1>Project Management</h1>
+                <p className="subtitle">View and manage your projects</p>
+            </div>
 
-                    <ProjectFilterPanel
-                        searchQuery={searchQuery}
-                        setSearchQuery={setSearchQuery}
-                        filters={filters}
-                        setFilters={setFilters}
-                        expanded={filterPanelExpanded}
-                        setExpanded={setFilterPanelExpanded}
-                    />
-
-                    {loading ? (
-                        <div className="loading-message">Loading projects...</div>
-                    ) : error ? (
-                        <div className="error-message">Error loading projects: {error.message}</div>
-                    ) : (
-                        <div className="projects-list">
-                            {getFilteredProjects().length > 0 ? (
-                                getFilteredProjects().map(project => (
-                                    <CompactProjectCard
-                                        key={project.id}
-                                        project={project}
-                                        expanded={expandedProjectId === project.id}
-                                        onToggle={() => toggleProject(project.id)}
-                                        searchQuery={searchQuery}
-                                        onAddService={() => handleAddService(project.id)}
-                                        onEditProject={() => handleEditProject(project)}
-                                        onDeleteProject={() => handleDeleteProject(project)}
-                                        onEditService={(service) => handleEditService(service, project.id)}
-                                        onDeleteService={handleDeleteService}
-                                        onEditClient={() => handleEditClient(project.client)}
-                                        onViewPayments={() => handleViewPayments(project)}
-                                    />
-                                ))
-                            ) : (
-                                <Card className="empty-state-card">
-                                    <div className="no-projects-message">
-                                        {searchQuery || Object.keys(filters).length > 0
-                                            ? "No projects match your current filters. Try adjusting your search or filters."
-                                            : "No projects found. Click 'New Project' to create your first project."}
+            {loading ? (
+                <div className="loading-indicator">Loading projects...</div>
+            ) : error ? (
+                <div className="error-message">Error loading projects: {error.message}</div>
+            ) : (
+                <div className="projects-list">
+                    {data && data.projects && data.projects.length > 0 ? (
+                        data.projects.map(project => (
+                            <Card
+                                key={project.id}
+                                className={`project-card ${expandedProjectId === project.id ? 'expanded' : ''}`}
+                                onClick={() => toggleProject(project.id)}
+                            >
+                                <div className="project-header">
+                                    <div className="project-title">
+                                        <h2>{project.name}</h2>
+                                        {project.status && (
+                                            <Badge variant={
+                                                project.status.name.toLowerCase() === "completed" ? "success" :
+                                                    project.status.name.toLowerCase() === "in progress" ? "primary" :
+                                                        "default"
+                                            }>
+                                                {project.status.name}
+                                            </Badge>
+                                        )}
                                     </div>
-                                </Card>
-                            )}
+
+                                    <div className="project-meta">
+                                        <div className="meta-item">
+                                            <span className="meta-label">Client:</span>
+                                            <span className="meta-value">{project.client?.name || "—"}</span>
+                                        </div>
+
+                                        <div className="meta-item">
+                                            <span className="meta-label">Project Type:</span>
+                                            <span className="meta-value">{project.projectType?.name || "—"}</span>
+                                        </div>
+
+                                        <div className="meta-item">
+                                            <span className="meta-label">Manager:</span>
+                                            <span className="meta-value">
+                        {project.manager ? `${project.manager.name} ${project.manager.surname}` : "—"}
+                      </span>
+                                        </div>
+                                    </div>
+
+                                    <div className="project-stats">
+                                        <div className="stat-item">
+                                            <div className="stat-value">{formatCurrency(project.estimateCost)}</div>
+                                            <div className="stat-label">Estimated</div>
+                                        </div>
+
+                                        <div className="stat-item">
+                                            <div className="stat-value">{formatCurrency(project.cost)}</div>
+                                            <div className="stat-label">Actual</div>
+                                        </div>
+
+                                        <div className="stat-item">
+                                            <div className="stat-value">{calculateCompletion(project)}%</div>
+                                            <div className="stat-label">Completed</div>
+                                        </div>
+                                    </div>
+
+                                    <div className="project-dates">
+                                        <div className="date-item">
+                                            <span className="date-label">Start:</span>
+                                            <span className="date-value">{formatDate(project.startDate)}</span>
+                                        </div>
+
+                                        <div className="date-item">
+                                            <span className="date-label">End:</span>
+                                            <span className="date-value">{formatDate(project.endDate)}</span>
+                                        </div>
+
+                                        <div className="date-item">
+                                            <span className="date-label">Payment Due:</span>
+                                            <span className="date-value">{formatDate(project.paymentDeadline)}</span>
+                                        </div>
+                                    </div>
+
+                                    <Button
+                                        variant={expandedProjectId === project.id ? "primary" : "outline"}
+                                        icon={expandedProjectId === project.id ? "▲" : "▼"}
+                                        size="small"
+                                    >
+                                        {expandedProjectId === project.id ? "Collapse" : "Expand"}
+                                    </Button>
+                                </div>
+
+                                {/* Project Description - visible only when expanded */}
+                                {expandedProjectId === project.id && project.description && (
+                                    <div className="project-description">
+                                        <h3>Description</h3>
+                                        <p>{project.description}</p>
+                                    </div>
+                                )}
+
+                                {/* Services List - visible only when expanded */}
+                                {expandedProjectId === project.id && (
+                                    <div className="services-section">
+                                        <h3>Services</h3>
+
+                                        {project.projectServices && project.projectServices.length > 0 ? (
+                                            <div className="services-list">
+                                                {project.projectServices.map(projectService => (
+                                                    <Card
+                                                        key={projectService.id}
+                                                        className={`service-card ${expandedServiceId === projectService.id ? 'expanded' : ''}`}
+                                                        onClick={(e) => toggleService(projectService.id, e)}
+                                                    >
+                                                        <div className="service-header">
+                                                            <div className="service-title">
+                                                                <h4>{projectService.service?.serviceName || "Unnamed Service"}</h4>
+                                                                <Badge size="small">
+                                                                    {projectService.service?.serviceType?.name || "—"}
+                                                                </Badge>
+                                                            </div>
+
+                                                            <div className="service-meta">
+                                                                <div className="meta-item">
+                                                                    <span className="meta-label">Duration:</span>
+                                                                    <span className="meta-value">
+                                    {projectService.service?.duration ? `${projectService.service.duration} days` : "—"}
+                                  </span>
+                                                                </div>
+
+                                                                <div className="meta-item">
+                                                                    <span className="meta-label">Estimated Cost:</span>
+                                                                    <span className="meta-value">
+                                    {formatCurrency(projectService.service?.estimateCost)}
+                                  </span>
+                                                                </div>
+
+                                                                <div className="meta-item">
+                                                                    <span className="meta-label">Amount:</span>
+                                                                    <span className="meta-value">{projectService.amount || "—"}</span>
+                                                                </div>
+                                                            </div>
+
+                                                            <div className="service-stats">
+                                                                {projectService.servicesInProgress && (
+                                                                    <div className="counter-badge">
+                                                                        {projectService.servicesInProgress.length} orders
+                                                                    </div>
+                                                                )}
+                                                            </div>
+
+                                                            <Button
+                                                                variant={expandedServiceId === projectService.id ? "primary" : "outline"}
+                                                                icon={expandedServiceId === projectService.id ? "▲" : "▼"}
+                                                                size="small"
+                                                                onClick={(e) => toggleService(projectService.id, e)}
+                                                            >
+                                                                {expandedServiceId === projectService.id ? "Hide Orders" : "Show Orders"}
+                                                            </Button>
+                                                        </div>
+
+                                                        {/* Services in Progress - visible only when service is expanded */}
+                                                        {expandedServiceId === projectService.id && projectService.servicesInProgress && (
+                                                            <div className="services-in-progress-section">
+                                                                <h5>Service Orders</h5>
+
+                                                                {projectService.servicesInProgress.length > 0 ? (
+                                                                    <div className="services-in-progress-list">
+                                                                        {projectService.servicesInProgress.map(sip => {
+                                                                            const taskCount = countTasks(sip);
+
+                                                                            return (
+                                                                                <Card
+                                                                                    key={sip.id}
+                                                                                    className={`service-in-progress-card ${selectedServiceInProgressId === sip.id ? 'selected' : ''}`}
+                                                                                    onClick={(e) => handleServiceInProgressClick(sip.id, e)}
+                                                                                >
+                                                                                    <div className="sip-header">
+                                                                                        <div className="sip-status">
+                                                                                            <Badge
+                                                                                                variant={
+                                                                                                    sip.status?.name.toLowerCase() === "completed" ? "success" :
+                                                                                                        sip.status?.name.toLowerCase() === "in progress" ? "primary" :
+                                                                                                            "default"
+                                                                                                }
+                                                                                            >
+                                                                                                {sip.status?.name || "Unknown"}
+                                                                                            </Badge>
+                                                                                        </div>
+
+                                                                                        <div className="sip-dates">
+                                                                                            <div className="date-item">
+                                                                                                <span className="date-label">Start:</span>
+                                                                                                <span className="date-value">{formatDate(sip.startDate)}</span>
+                                                                                            </div>
+
+                                                                                            <div className="date-item">
+                                                                                                <span className="date-label">End:</span>
+                                                                                                <span className="date-value">{formatDate(sip.endDate)}</span>
+                                                                                            </div>
+                                                                                        </div>
+
+                                                                                        <div className="sip-cost">
+                                                                                            <span className="cost-label">Cost:</span>
+                                                                                            <span className="cost-value">{formatCurrency(sip.cost)}</span>
+                                                                                        </div>
+
+                                                                                        <Button
+                                                                                            variant={selectedServiceInProgressId === sip.id ? "primary" : "outline"}
+                                                                                            size="small"
+                                                                                            icon={selectedServiceInProgressId === sip.id ? "📃" : "📋"}
+                                                                                            onClick={(e) => handleServiceInProgressClick(sip.id, e)}
+                                                                                        >
+                                                                                            {selectedServiceInProgressId === sip.id ? "Hide Tasks" : "View Tasks"}
+                                                                                        </Button>
+                                                                                    </div>
+
+                                                                                    {/* Tasks list - loaded on demand */}
+                                                                                    {selectedServiceInProgressId === sip.id && (
+                                                                                        <div className="tasks-section">
+                                                                                            <div className="tasks-header">
+                                                                                                <h6>Tasks</h6>
+                                                                                            </div>
+
+                                                                                            {loadingTasks ? (
+                                                                                                <div className="tasks-loading">Loading tasks...</div>
+                                                                                            ) : tasksData[sip.id] && tasksData[sip.id].length > 0 ? (
+                                                                                                <div className="tasks-list">
+                                                                                                    {tasksData[sip.id].map(task => (
+                                                                                                        <div key={task.id} className="task-item">
+                                                                                                            <div className="task-header">
+                                                                                                                <div className="task-name">{task.name}</div>
+                                                                                                                <Badge
+                                                                                                                    size="small"
+                                                                                                                    variant={
+                                                                                                                        task.taskStatus?.name.toLowerCase() === "completed" ? "success" :
+                                                                                                                            task.taskStatus?.name.toLowerCase() === "in progress" ? "primary" :
+                                                                                                                                "default"
+                                                                                                                    }
+                                                                                                                >
+                                                                                                                    {task.taskStatus?.name || "Unknown"}
+                                                                                                                </Badge>
+                                                                                                            </div>
+
+                                                                                                            {task.description && (
+                                                                                                                <div className="task-description">
+                                                                                                                    {task.description}
+                                                                                                                </div>
+                                                                                                            )}
+
+                                                                                                            <div className="task-meta">
+                                                                                                                {task.priority && (
+                                                                                                                    <div className="meta-item">
+                                                                                                                        <span className="meta-label">Priority:</span>
+                                                                                                                        <span className="meta-value">{task.priority}</span>
+                                                                                                                    </div>
+                                                                                                                )}
+
+                                                                                                                {task.deadline && (
+                                                                                                                    <div className="meta-item">
+                                                                                                                        <span className="meta-label">Deadline:</span>
+                                                                                                                        <span className="meta-value">{formatDate(task.deadline)}</span>
+                                                                                                                    </div>
+                                                                                                                )}
+                                                                                                            </div>
+                                                                                                        </div>
+                                                                                                    ))}
+                                                                                                </div>
+                                                                                            ) : (
+                                                                                                <div className="no-items-message">
+                                                                                                    No tasks found for this service.
+                                                                                                </div>
+                                                                                            )}
+                                                                                        </div>
+                                                                                    )}
+                                                                                </Card>
+                                                                            );
+                                                                        })}
+                                                                    </div>
+                                                                ) : (
+                                                                    <div className="no-items-message">
+                                                                        No service orders found for this service.
+                                                                    </div>
+                                                                )}
+                                                            </div>
+                                                        )}
+                                                    </Card>
+                                                ))}
+                                            </div>
+                                        ) : (
+                                            <div className="no-items-message">
+                                                No services found for this project.
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
+                            </Card>
+                        ))
+                    ) : (
+                        <div className="no-items-message">
+                            No projects found.
                         </div>
                     )}
-                </>
-            ) : (
-                /* Payments View */
-                <PaymentsList
-                    project={selectedProject}
-                    payments={paymentsData?.paymentsByProject || []}
-                    loading={paymentsLoading}
-                    error={paymentsError}
-                    onBack={() => setShowPayments(false)}
-                    onAddPayment={handleAddPayment}
-                    onEditPayment={handleEditPayment}
-                    onDeletePayment={handleDeletePayment}
-                />
+                </div>
             )}
-
-            {/* Project Modal - Add/Edit */}
-            <Modal
-                isOpen={showProjectModal}
-                onClose={() => setShowProjectModal(false)}
-                title={editMode ? "Edit Project" : "Add New Project"}
-                size="large"
-            >
-                <ProjectModal
-                    project={selectedProject}
-                    editMode={editMode}
-                    onSave={() => {
-                        setShowProjectModal(false);
-                        refetch();
-                    }}
-                    onCancel={() => setShowProjectModal(false)}
-                />
-            </Modal>
-
-            {/* Service Modal - Add/Edit */}
-            <Modal
-                isOpen={showServiceModal}
-                onClose={() => setShowServiceModal(false)}
-                title={editMode ? "Edit Service" : "Add New Service"}
-                size="large"
-            >
-                <ServiceModal
-                    service={selectedService}
-                    projectId={selectedProject?.id}
-                    editMode={editMode}
-                    onSave={() => {
-                        setShowServiceModal(false);
-                        refetch();
-                    }}
-                    onCancel={() => setShowServiceModal(false)}
-                />
-            </Modal>
-
-            {/* Client Modal - Add/Edit */}
-            <Modal
-                isOpen={showClientModal}
-                onClose={() => setShowClientModal(false)}
-                title={editMode ? "Edit Client" : "Add New Client"}
-                size="medium"
-            >
-                <ClientModal
-                    client={selectedClient}
-                    editMode={editMode}
-                    onSave={() => {
-                        setShowClientModal(false);
-                        refetch();
-                    }}
-                    onCancel={() => setShowClientModal(false)}
-                />
-            </Modal>
-
-            {/* Payment Modal - Add/Edit */}
-            <Modal
-                isOpen={showPaymentModal}
-                onClose={() => setShowPaymentModal(false)}
-                title={editMode ? "Edit Payment" : "Add New Payment"}
-                size="medium"
-            >
-                <PaymentModal
-                    payment={selectedPayment}
-                    projectId={selectedProject?.id}
-                    purposes={purposesData?.paymentPurposes || []}
-                    editMode={editMode}
-                    onSave={() => {
-                        setShowPaymentModal(false);
-                        refetchPayments();
-                    }}
-                    onCancel={() => setShowPaymentModal(false)}
-                />
-            </Modal>
-
-            {/* Confirmation Modal - Delete */}
-            <ConfirmationModal
-                isOpen={!!deleteConfirmation}
-                onClose={() => setDeleteConfirmation(null)}
-                onConfirm={confirmDelete}
-                type={deleteConfirmation?.type}
-                name={deleteConfirmation?.name}
-            />
         </div>
     );
 }

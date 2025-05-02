@@ -19,7 +19,8 @@ export default function PaymentsList({
         let expenses = 0;
 
         payments.forEach(payment => {
-            const amount = parseFloat(payment.amount);
+            // Use paymentSum instead of amount
+            const amount = parseFloat(payment.paymentSum);
             if (amount > 0) {
                 income += amount;
             } else {
@@ -131,55 +132,55 @@ export default function PaymentsList({
 
                     {sortedPayments.length > 0 ? (
                         sortedPayments.map(payment => (
-                            <div
-                                key={payment.id}
-                                className={`payment-row ${parseFloat(payment.amount) < 0 ? 'expense' : 'income'}`}
-                            >
-                                <div className="payment-date-col">
-                                    {formatDate(payment.date)}
-                                </div>
+                                <div
+                                    key={payment.id}
+                                    className={`payment-row ${parseFloat(payment.paymentSum) < 0 ? 'expense' : 'income'}`}
+                                >
+                                    <div className="payment-date-col">
+                                        {formatDate(payment.paymentDate)}
+                                    </div>
 
-                                <div className="payment-purpose-col">
-                                    <Badge
-                                        variant={parseFloat(payment.amount) < 0 ? 'warning' : 'success'}
-                                        size="small"
-                                    >
-                                        {payment.purpose?.name || "—"}
-                                    </Badge>
-                                </div>
+                                    <div className="payment-purpose-col">
+                                        <Badge
+                                            variant={parseFloat(payment.paymentSum) < 0 ? 'warning' : 'success'}
+                                            size="small"
+                                        >
+                                            {payment.paymentPurpose?.name || "—"}
+                                        </Badge>
+                                    </div>
 
-                                <div className="payment-description-col">
-                                    {payment.description || "—"}
-                                </div>
+                                    <div className="payment-description-col">
+                                        {payment.transactionNumber || "—"}
+                                    </div>
 
-                                <div className="payment-amount-col">
-                                    <span className={parseFloat(payment.amount) < 0 ? 'negative' : 'positive'}>
-                                        ${Math.abs(parseFloat(payment.amount)).toFixed(2)}
-                                    </span>
-                                </div>
+                                    <div className="payment-amount-col">
+            <span className={parseFloat(payment.paymentSum) < 0 ? 'negative' : 'positive'}>
+                ${Math.abs(parseFloat(payment.paymentSum)).toFixed(2)}
+            </span>
+                                    </div>
 
-                                <div className="payment-actions-col">
-                                    <Button
-                                        variant="outline"
-                                        size="small"
-                                        icon="✏️"
-                                        onClick={() => onEditPayment(payment)}
-                                        className="edit-button"
-                                    >
-                                        Edit
-                                    </Button>
-                                    <Button
-                                        variant="danger"
-                                        size="small"
-                                        icon="🗑"
-                                        onClick={() => onDeletePayment(payment)}
-                                        className="delete-button"
-                                    >
-                                        Delete
-                                    </Button>
+                                    <div className="payment-actions-col">
+                                        <Button
+                                            variant="outline"
+                                            size="small"
+                                            icon="✏️"
+                                            onClick={() => onEditPayment(payment)}
+                                            className="edit-button"
+                                        >
+                                            Edit
+                                        </Button>
+                                        <Button
+                                            variant="danger"
+                                            size="small"
+                                            icon="🗑"
+                                            onClick={() => onDeletePayment(payment)}
+                                            className="delete-button"
+                                        >
+                                            Delete
+                                        </Button>
+                                    </div>
                                 </div>
-                            </div>
-                        ))
+                            ))
                     ) : (
                         <Card className="empty-state-card">
                             <div className="no-payments-message">
