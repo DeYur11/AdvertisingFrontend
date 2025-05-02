@@ -6,12 +6,13 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 import './styles/global.css';
 
 import Layout from './components/layout/Layout';
-import ProtectedRoute from './components/common/ProtectedRoute';
 import Login from './pages/Login/Login';
-import Home from './pages/Home/Home';
+import Home from './pages/Home/Home'
 import Dashboard from './pages/Dashboard/Dashboard';
 import Settings from './pages/Settings/Settings';
 import ProjectManagement from "./pages/ProjectManagement/ProjectManagement";
+import ReviewerDashboard from './pages/ReviewerDashboard/ReviewerDashboard';
+import ProtectedRoute from "./components/common/ProtectedRoute";
 
 export default function App() {
     return (
@@ -37,6 +38,11 @@ export default function App() {
                     <Route path="/projects" element={
                         <ProtectedRoute>
                             <ProjectManagement />
+                        </ProtectedRoute>
+                    } />
+                    <Route path="/reviewer" element={
+                        <ProtectedRoute>
+                            <ReviewerDashboard />
                         </ProtectedRoute>
                     } />
                 </Route>

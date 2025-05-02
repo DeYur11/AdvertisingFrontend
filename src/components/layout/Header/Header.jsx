@@ -13,20 +13,9 @@ export default function Header() {
             </div>
 
             <nav className="nav">
-                <NavLink to="/public" end className={({ isActive }) => isActive ? "nav-button active" : "nav-button"}>
+                <NavLink to="/" end className={({ isActive }) => isActive ? "nav-button active" : "nav-button"}>
                     Home
                 </NavLink>
-
-                <NavLink to="/about" className={({ isActive }) => isActive ? "nav-button active" : "nav-button"}>
-                    About
-                </NavLink>
-
-                {/* Access to Services for Project Manager or Scrum Master */}
-                {(user.mainRole === "ProjectManager" || user.mainRole === "ScrumMaster") && (
-                    <NavLink to="/services" className={({ isActive }) => isActive ? "nav-button active" : "nav-button"}>
-                        Services
-                    </NavLink>
-                )}
 
                 {/* Access to Admin Panel only for Project Manager */}
                 {user.mainRole === "ProjectManager" && (
@@ -39,6 +28,13 @@ export default function Header() {
                 {user.mainRole === "Worker" && (
                     <NavLink to="/dashboard" className={({ isActive }) => isActive ? "nav-button active" : "nav-button"}>
                         My Tasks
+                    </NavLink>
+                )}
+
+                {/* Access to Reviewer Dashboard only for Reviewers */}
+                {user.isReviewer && (
+                    <NavLink to="/reviewer" className={({ isActive }) => isActive ? "nav-button active" : "nav-button"}>
+                        Review Materials
                     </NavLink>
                 )}
             </nav>
