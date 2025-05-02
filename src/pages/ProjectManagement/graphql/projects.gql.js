@@ -59,3 +59,24 @@ export const GET_SERVICES_IN_PROGRESS = gql`
         }
     }
 `;
+
+export const GET_SERVICE_TASKS = gql`
+query GetServiceTasks($serviceInProgressId: ID!) {
+    serviceInProgress(id: $serviceInProgressId) {
+        id
+        tasks {
+            id
+            name
+            description
+            priority
+            startDate
+            endDate
+            deadline
+            taskStatus {
+                id
+                name
+            }
+        }
+    }
+}
+`;

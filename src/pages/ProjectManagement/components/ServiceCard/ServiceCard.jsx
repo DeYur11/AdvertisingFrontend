@@ -1,75 +1,45 @@
-// ServiceCard.jsx
 import { useState, useEffect } from "react";
 import { useLazyQuery } from "@apollo/client";
-import { GET_SERVICES_IN_PROGRESS_BY_PS } from "../../graphql/projects.gql";
-import {
-    Card,
-    CardHeader,
-    CardContent,
-    Collapse,
-    Typography,
-    Button,
-    Badge
-} from "../../../../components/common";
-import { ChevronDown, ChevronUp } from "lucide-react";
+import {GET_SERVICES_IN_PROGRESS_BY_PS} from "../../graphql/projects.gql";
+
+import Button from "../../../../components/common/Button/Button";
+import Card from "../../../../components/common/Card/Card";
+import Badge from "../../../../components/common/Badge/Badge";
+import ServiceOrderCard from "../ServiceOrderCard/ServiceOrderCard";
+
 
 export default function ServiceCard({ projectService }) {
     const [open, setOpen] = useState(false);
-    const [loaded, setLoaded] = useState(false);
-    const [fetchSIPs, { data, loading }] = useLazyQuery(GET_SERVICES_IN_PROGRESS_BY_PS, {
-        variables: { projectServiceId: projectService.id },
-        fetchPolicy: "cache-first"
-    });
-
-    useEffect(() => {
-        if (open && !loaded) {
-            fetchSIPs();
-            setLoaded(true);
-        }
-    }, [open, loaded, fetchSIPs]);
+    const [fetchSIP, { data, loading }] = useLazyQuery(
+        GET_SERVICES_IN_PROGRESS_BY_PS,
+        { variables:{ projectServiceId: projectService.id }, fetchPolicy:"cache-first" }
+    );
+    useEffect(()=>{ if(open) fetchSIP(); },[open,fetchSIP]);
 
     const sips = data?.servicesInProgressByProjectService ?? [];
-    const svc = projectService.service;
-    const qty = projectService.amount ?? 1;
-    const estCost = svc.estimateCost * qty;
-    const actCost = sips.reduce((sum, s) => sum + (+s.cost || 0), 0);
+    const svc  = projectService.service;
+    const qty  = projectService.amount ?? 1;
+    const est  = (svc.estimateCost*qty).toFixed(2);
 
     return (
-        <Card className="w-full">
-            <CardHeader className="flex flex-row justify-between items-start gap-4 cursor-pointer" onClick={() => setOpen(!open)}>
-                <div>
-                    <Typography variant="h6">{svc.serviceName}</Typography>
-                    <Typography variant="muted" className="text-sm">
-                        Estimate: ₴{svc.estimateCost} × {qty} = <strong>₴{estCost}</strong><br />
-                        Actual: <strong>₴{actCost}</strong>
-                    </Typography>
-                </div>
-                <Button variant="ghost" size="icon" className="shrink-0">
-                    {open ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
-                </Button>
-            </CardHeader>
+        <Card className={`service-card ${open?"expanded":""}`} onClick={(e)=>{e.stopPropagation(); setOpen(!open);}}>
+            <div className="service-header">
+                <h5>{svc.serviceName}</h5>
+                <Badge size="small">{svc.serviceType?.name}</Badge>
+                <span className="ml-auto">{qty}× · est. ${est}</span>
+                <Button
+                    variant={open?"primary":"outline"} size="small"
+                    icon={open?"▲":"▼"} onClick={(e)=>{e.stopPropagation(); setOpen(!open);}}
+                />
+            </div>
 
-            <Collapse in={open}>
-                <CardContent>
-                    {loading && <Typography variant="muted">Loading...</Typography>}
-                    {!loading && sips.length === 0 && (
-                        <Typography variant="muted">No executions found.</Typography>
-                    )}
-                    {!loading && sips.length > 0 && (
-                        <div className="space-y-2">
-                            {sips.map((sip) => (
-                                <div
-                                    key={sip.id}
-                                    className="flex items-center justify-between rounded-md border p-2"
-                                >
-                                    <Badge variant="outline">{sip.status.name}</Badge>
-                                    <Typography className="font-medium">₴{sip.cost}</Typography>
-                                </div>
-                            ))}
-                        </div>
-                    )}
-                </CardContent>
-            </Collapse>
+            {open && (
+                <>
+                    {loading && <div className="loading-indicator">Loading orders...</div>}
+                    {!loading && !sips.length && <div className="no-items-message">No orders.</div>}
+                    {sips.map(sip => <ServiceOrderCard key={sip.id} sip={sip} />)}
+                </>
+            )}
         </Card>
     );
 }
