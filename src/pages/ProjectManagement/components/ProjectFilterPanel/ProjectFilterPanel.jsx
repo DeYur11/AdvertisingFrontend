@@ -24,6 +24,11 @@ const GET_FILTER_REFERENCE_DATA = gql`
             id
             name
         }
+        users: workersByPosition(position: "Project Manager") {
+            id
+            name
+            surname
+        }
     }
 `;
 
@@ -33,20 +38,21 @@ export default function ProjectFilterPanel({
                                                filters = {},
                                                setFilters,
                                                expanded,
-                                               setExpanded
+                                               setExpanded,
+                                               onSortChange,
+                                               currentSortField = "name",
+                                               currentSortDirection = "ASC"
                                            }) {
     // Fetch reference data from database
     const { data: refData, loading } = useQuery(GET_FILTER_REFERENCE_DATA);
 
     // Local state for filter values
-    const [localFilters, setLocalFilters] = useState(filters);
     const [activeFilterCount, setActiveFilterCount] = useState(0);
     const [clientSearchQuery, setClientSearchQuery] = useState("");
+    const [managerSearchQuery, setManagerSearchQuery] = useState("");
 
-    // Update active filter count and local filters when filters change
+    // Update active filter count when filters change
     useEffect(() => {
-        setLocalFilters(filters);
-
         // Count active filters
         let count = 0;
         Object.keys(filters).forEach(key => {
@@ -73,6 +79,14 @@ export default function ProjectFilterPanel({
         // Handle date ranges
         else if (filterType === 'date') {
             if (!value.from && !value.to) {
+                delete newFilters[filterType];
+            } else {
+                newFilters[filterType] = value;
+            }
+        }
+        // Handle cost ranges
+        else if (filterType === 'cost') {
+            if (!value.min && !value.max) {
                 delete newFilters[filterType];
             } else {
                 newFilters[filterType] = value;
@@ -113,10 +127,21 @@ export default function ProjectFilterPanel({
         });
     };
 
+    // Handle changes to cost ranges
+    const handleCostChange = (type, value) => {
+        const currentCost = filters.cost || {};
+        applyFilter('cost', {
+            ...currentCost,
+            [type]: value ? parseFloat(value) : null
+        });
+    };
+
     // Reset all filters
     const handleResetFilters = () => {
         setFilters({});
+        setSearchQuery("");
         setClientSearchQuery("");
+        setManagerSearchQuery("");
     };
 
     // Helper to apply quick date filters
@@ -125,13 +150,13 @@ export default function ProjectFilterPanel({
         const targetDate = new Date();
 
         if (days === 'overdue') {
-            // For overdue, we set "to" as today
+            // For overdue, we set "endDateTo" as today
             applyFilter('date', {
                 from: null,
                 to: today.toISOString().split('T')[0]
             });
         } else if (days === 'active') {
-            // For active projects, we set "from" before today
+            // For active projects, we set "startDateFrom" before today
             const pastDate = new Date();
             pastDate.setDate(pastDate.getDate() - 7);
             applyFilter('date', {
@@ -139,12 +164,23 @@ export default function ProjectFilterPanel({
                 to: null
             });
         } else {
-            // For future dates, we set "from" as today and "to" as X days from now
+            // For future dates, we set date range
             targetDate.setDate(today.getDate() + days);
             applyFilter('date', {
                 from: today.toISOString().split('T')[0],
                 to: targetDate.toISOString().split('T')[0]
             });
+        }
+    };
+
+    // Handle sort change
+    const handleSortChange = (field) => {
+        // If clicking the same field, toggle direction
+        if (field === currentSortField) {
+            onSortChange(field, currentSortDirection === "ASC" ? "DESC" : "ASC");
+        } else {
+            // New field, default to ASC
+            onSortChange(field, "ASC");
         }
     };
 
@@ -167,6 +203,36 @@ export default function ProjectFilterPanel({
         return sortedClients;
     };
 
+    // Get sorted managers with filtered search
+    const getSortedManagers = () => {
+        if (!refData?.users) return [];
+
+        // Sort alphabetically by name
+        const sortedManagers = [...refData.users].sort((a, b) =>
+            a.name.localeCompare(b.name)
+        );
+
+        // Filter by search query if it exists
+        if (managerSearchQuery) {
+            return sortedManagers.filter(manager =>
+                `${manager.name} ${manager.surname}`.toLowerCase().includes(managerSearchQuery.toLowerCase())
+            );
+        }
+
+        return sortedManagers;
+    };
+
+    // Render sort indicator based on current sort state
+    const renderSortIndicator = (field) => {
+        if (field !== currentSortField) return null;
+
+        return (
+            <span className="sort-indicator">
+                {currentSortDirection === "ASC" ? "↑" : "↓"}
+            </span>
+        );
+    };
+
     return (
         <div className="project-filter-panel-container">
             {/* Search and Basic Filters Bar */}
@@ -187,7 +253,7 @@ export default function ProjectFilterPanel({
                     <input
                         type="text"
                         className="search-input"
-                        placeholder="Search projects, services, or clients..."
+                        placeholder="Search projects by name or description..."
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
                         aria-label="Search projects"
@@ -203,6 +269,31 @@ export default function ProjectFilterPanel({
                     )}
                     <span className="search-icon">🔍</span>
                 </div>
+
+                {/* Sort Controls */}
+                <div className="sort-controls">
+                    <span className="sort-label">Sort by:</span>
+                    <div className="sort-options">
+                        <button
+                            className={`sort-option ${currentSortField === "name" ? "active" : ""}`}
+                            onClick={() => handleSortChange("name")}
+                        >
+                            Name {renderSortIndicator("name")}
+                        </button>
+                        <button
+                            className={`sort-option ${currentSortField === "startDate" ? "active" : ""}`}
+                            onClick={() => handleSortChange("startDate")}
+                        >
+                            Start Date {renderSortIndicator("startDate")}
+                        </button>
+                        <button
+                            className={`sort-option ${currentSortField === "cost" ? "active" : ""}`}
+                            onClick={() => handleSortChange("cost")}
+                        >
+                            Cost {renderSortIndicator("cost")}
+                        </button>
+                    </div>
+                </div>
             </div>
 
             {/* Active Filters Display */}
@@ -214,8 +305,8 @@ export default function ProjectFilterPanel({
                             <div className="active-filter">
                                 <span className="filter-name">Status:</span>
                                 <span className="filter-value">
-                  {filters.status.join(', ')}
-                </span>
+                                    {filters.status.length} selected
+                                </span>
                                 <button
                                     className="remove-filter"
                                     onClick={() => applyFilter('status', [])}
@@ -230,8 +321,8 @@ export default function ProjectFilterPanel({
                             <div className="active-filter">
                                 <span className="filter-name">Project Type:</span>
                                 <span className="filter-value">
-                  {filters.projectType.join(', ')}
-                </span>
+                                    {filters.projectType.length} selected
+                                </span>
                                 <button
                                     className="remove-filter"
                                     onClick={() => applyFilter('projectType', [])}
@@ -246,12 +337,12 @@ export default function ProjectFilterPanel({
                             <div className="active-filter">
                                 <span className="filter-name">Date Range:</span>
                                 <span className="filter-value">
-                  {filters.date.from &&
-                      `From: ${new Date(filters.date.from).toLocaleDateString()}`}
+                                    {filters.date.from &&
+                                        `From: ${new Date(filters.date.from).toLocaleDateString()}`}
                                     {filters.date.from && filters.date.to && ' - '}
                                     {filters.date.to &&
                                         `To: ${new Date(filters.date.to).toLocaleDateString()}`}
-                </span>
+                                </span>
                                 <button
                                     className="remove-filter"
                                     onClick={() => applyFilter('date', {})}
@@ -262,15 +353,32 @@ export default function ProjectFilterPanel({
                             </div>
                         )}
 
+                        {filters.cost && (
+                            <div className="active-filter">
+                                <span className="filter-name">Cost Range:</span>
+                                <span className="filter-value">
+                                    {filters.cost.min !== undefined &&
+                                        `Min: $${filters.cost.min}`}
+                                    {filters.cost.min !== undefined && filters.cost.max !== undefined && ' - '}
+                                    {filters.cost.max !== undefined &&
+                                        `Max: $${filters.cost.max}`}
+                                </span>
+                                <button
+                                    className="remove-filter"
+                                    onClick={() => applyFilter('cost', {})}
+                                    aria-label="Remove cost filter"
+                                >
+                                    ✕
+                                </button>
+                            </div>
+                        )}
+
                         {filters.clientId?.length > 0 && (
                             <div className="active-filter">
                                 <span className="filter-name">Client:</span>
                                 <span className="filter-value">
-                  {refData?.clients
-                      .filter(c => filters.clientId.includes(c.id))
-                      .map(c => c.name)
-                      .join(', ')}
-                </span>
+                                    {filters.clientId.length} selected
+                                </span>
                                 <button
                                     className="remove-filter"
                                     onClick={() => applyFilter('clientId', [])}
@@ -280,18 +388,32 @@ export default function ProjectFilterPanel({
                                 </button>
                             </div>
                         )}
+
+                        {filters.managerId?.length > 0 && (
+                            <div className="active-filter">
+                                <span className="filter-name">Manager:</span>
+                                <span className="filter-value">
+                                    {filters.managerId.length} selected
+                                </span>
+                                <button
+                                    className="remove-filter"
+                                    onClick={() => applyFilter('managerId', [])}
+                                    aria-label="Remove manager filter"
+                                >
+                                    ✕
+                                </button>
+                            </div>
+                        )}
                     </div>
 
-                    {activeFilterCount > 0 && (
-                        <Button
-                            variant="outline"
-                            size="small"
-                            className="clear-filters-btn"
-                            onClick={handleResetFilters}
-                        >
-                            Clear All
-                        </Button>
-                    )}
+                    <Button
+                        variant="outline"
+                        size="small"
+                        className="clear-filters-btn"
+                        onClick={handleResetFilters}
+                    >
+                        Clear All
+                    </Button>
                 </div>
             )}
 
@@ -310,8 +432,8 @@ export default function ProjectFilterPanel({
                                         {refData?.projectStatuses.map(status => (
                                             <div
                                                 key={status.id}
-                                                className={`filter-chip ${(filters.status || []).includes(status.name.toLowerCase()) ? 'selected' : ''}`}
-                                                onClick={() => handleOptionToggle('status', status.name.toLowerCase())}
+                                                className={`filter-chip ${(filters.status || []).includes(status.id) ? 'selected' : ''}`}
+                                                onClick={() => handleOptionToggle('status', status.id)}
                                             >
                                                 {status.name}
                                             </div>
@@ -326,8 +448,8 @@ export default function ProjectFilterPanel({
                                         {refData?.projectTypes.map(type => (
                                             <div
                                                 key={type.id}
-                                                className={`filter-chip ${(filters.projectType || []).includes(type.name) ? 'selected' : ''}`}
-                                                onClick={() => handleOptionToggle('projectType', type.name)}
+                                                className={`filter-chip ${(filters.projectType || []).includes(type.id) ? 'selected' : ''}`}
+                                                onClick={() => handleOptionToggle('projectType', type.id)}
                                             >
                                                 {type.name}
                                             </div>
@@ -384,6 +506,39 @@ export default function ProjectFilterPanel({
                                     </div>
                                 </div>
 
+                                {/* Cost Range Filters */}
+                                <div className="filter-section">
+                                    <h3 className="filter-section-title">Cost Range</h3>
+                                    <div className="cost-filter-grid">
+                                        <div className="cost-inputs">
+                                            <div className="cost-range-input">
+                                                <label>Min:</label>
+                                                <div className="input-with-prefix">
+                                                    <span className="input-prefix">$</span>
+                                                    <input
+                                                        type="number"
+                                                        value={filters.cost?.min || ""}
+                                                        onChange={(e) => handleCostChange("min", e.target.value)}
+                                                        placeholder="0"
+                                                    />
+                                                </div>
+                                            </div>
+                                            <div className="cost-range-input">
+                                                <label>Max:</label>
+                                                <div className="input-with-prefix">
+                                                    <span className="input-prefix">$</span>
+                                                    <input
+                                                        type="number"
+                                                        value={filters.cost?.max || ""}
+                                                        onChange={(e) => handleCostChange("max", e.target.value)}
+                                                        placeholder="∞"
+                                                    />
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
                                 {/* Client Filters */}
                                 <div className="filter-section">
                                     <h3 className="filter-section-title">Client</h3>
@@ -424,6 +579,50 @@ export default function ProjectFilterPanel({
                                         ))}
                                         {getSortedClients().length === 0 && (
                                             <div className="no-clients-found">No clients found</div>
+                                        )}
+                                    </div>
+                                </div>
+
+                                {/* Manager Filters */}
+                                <div className="filter-section">
+                                    <h3 className="filter-section-title">Project Manager</h3>
+
+                                    {/* Search bar for managers */}
+                                    <div className="manager-search-container">
+                                        <input
+                                            type="text"
+                                            className="manager-search-input"
+                                            placeholder="Search project managers..."
+                                            value={managerSearchQuery}
+                                            onChange={(e) => setManagerSearchQuery(e.target.value)}
+                                            aria-label="Search project managers"
+                                        />
+                                        {managerSearchQuery && (
+                                            <button
+                                                className="clear-manager-search"
+                                                onClick={() => setManagerSearchQuery("")}
+                                                aria-label="Clear manager search"
+                                            >
+                                                ✕
+                                            </button>
+                                        )}
+                                    </div>
+
+                                    <div className="manager-list">
+                                        {getSortedManagers().map(manager => (
+                                            <div
+                                                key={manager.id}
+                                                className={`manager-item ${(filters.managerId || []).includes(manager.id) ? 'selected' : ''}`}
+                                                onClick={() => handleOptionToggle('managerId', manager.id)}
+                                            >
+                                                {manager.name} {manager.surname}
+                                                {(filters.managerId || []).includes(manager.id) && (
+                                                    <span className="manager-selected-check">✓</span>
+                                                )}
+                                            </div>
+                                        ))}
+                                        {getSortedManagers().length === 0 && (
+                                            <div className="no-managers-found">No project managers found</div>
                                         )}
                                     </div>
                                 </div>

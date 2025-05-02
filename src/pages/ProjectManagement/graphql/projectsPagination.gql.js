@@ -1,15 +1,19 @@
+// src/pages/ProjectManagement/graphql/projectsPagination.gql.js
 import { gql } from "@apollo/client";
 
 export const GET_PAGINATED_PROJECTS_WITH_TOTAL = gql`
-    query GetPaginatedProjectsWithTotal($page: Int!, $size: Int!) {
-        paginatedProjects(page: $page, size: $size) {
+    query GetPaginatedProjectsWithTotal($input: PaginatedProjectsInput!) {
+        paginatedProjects(input: $input) {
             content {
                 id
                 name
+                description
+                registrationDate
                 startDate
                 endDate
                 cost
                 estimateCost
+                paymentDeadline
                 status {
                     id
                     name
@@ -18,7 +22,6 @@ export const GET_PAGINATED_PROJECTS_WITH_TOTAL = gql`
                     id
                     name
                 }
-                paymentDeadline
                 client {
                     id
                     name
@@ -28,7 +31,6 @@ export const GET_PAGINATED_PROJECTS_WITH_TOTAL = gql`
                     name
                     surname
                 }
-                description
             }
             pageInfo {
                 totalElements
@@ -39,6 +41,40 @@ export const GET_PAGINATED_PROJECTS_WITH_TOTAL = gql`
                 last
                 numberOfElements
             }
+        }
+    }
+`;
+
+// This mutation will be used for deleting projects
+export const DELETE_PROJECT = gql`
+    mutation DeleteProject($id: ID!) {
+        deleteProject(id: $id)
+    }
+`;
+
+// Used to get reference data for filters
+export const GET_FILTER_REFERENCE_DATA = gql`
+    query GetFilterReferenceData {
+        projectTypes {
+            id
+            name
+        }
+        projectStatuses {
+            id
+            name
+        }
+        serviceTypes {
+            id
+            name
+        }
+        clients {
+            id
+            name
+        }
+        users(role: "ProjectManager") {
+            id
+            name
+            surname
         }
     }
 `;

@@ -4,7 +4,8 @@ import { useQuery, useMutation, gql } from "@apollo/client";
 import { GET_PAGINATED_PROJECTS_WITH_TOTAL } from "./graphql/projectsPagination.gql";
 import "./ProjectManagement.css";
 import ProjectCard from "./components/ProjectCard/ProjectCard";
-import Pagination from "../../components/common/Pagination/Pagination"
+import ProjectFilterPanel from "./components/ProjectFilterPanel/ProjectFilterPanel";
+import Pagination from "../../components/common/Pagination/Pagination";
 import Button from "../../components/common/Button/Button";
 import AddProjectModal from "./components/AddProjectModal";
 import EditProjectModal from "./components/EditProjectModal";
@@ -18,16 +19,92 @@ const DELETE_PROJECT = gql`
 `;
 
 export default function ProjectManagement() {
-    const [page, setPage] = useState(1);      // 1-based
+    // Pagination state
+    const [page, setPage] = useState(1);
     const [size, setSize] = useState(10);
+
+    // Sorting state
+    const [sortField, setSortField] = useState("name");
+    const [sortDirection, setSortDirection] = useState("ASC");
+
+    // Filter state
+    const [searchQuery, setSearchQuery] = useState("");
+    const [filters, setFilters] = useState({});
+    const [filterPanelExpanded, setFilterPanelExpanded] = useState(false);
+
+    // Modal states
     const [showAddProject, setShowAddProject] = useState(false);
     const [editProjectId, setEditProjectId] = useState(null);
     const [deleteProjectId, setDeleteProjectId] = useState(null);
     const [deleteProjectName, setDeleteProjectName] = useState("");
 
+    // Convert UI filters to GraphQL filter input
+    const buildFilterInput = () => {
+        const filterInput = {};
+
+        // Add search query to name and description filters
+        if (searchQuery) {
+            filterInput.nameContains = searchQuery;
+            filterInput.descriptionContains = searchQuery;
+        }
+
+        // Add status filters
+        if (filters.status && filters.status.length > 0) {
+            filterInput.statusIds = filters.status;
+        }
+
+        // Add project type filters
+        if (filters.projectType && filters.projectType.length > 0) {
+            filterInput.projectTypeIds = filters.projectType;
+        }
+
+        // Add client filters
+        if (filters.clientId && filters.clientId.length > 0) {
+            filterInput.clientIds = filters.clientId;
+        }
+
+        // Add manager filters
+        if (filters.managerId && filters.managerId.length > 0) {
+            filterInput.managerIds = filters.managerId;
+        }
+
+        // Add date range filters
+        if (filters.date) {
+            if (filters.date.from) {
+                filterInput.startDateFrom = filters.date.from;
+            }
+            if (filters.date.to) {
+                filterInput.startDateTo = filters.date.to;
+            }
+        }
+
+        // Add cost range filters
+        if (filters.cost) {
+            if (filters.cost.min !== undefined) {
+                filterInput.costMin = filters.cost.min;
+            }
+            if (filters.cost.max !== undefined) {
+                filterInput.costMax = filters.cost.max;
+            }
+        }
+
+        return filterInput;
+    };
+
     const { data, loading, error, refetch } = useQuery(
         GET_PAGINATED_PROJECTS_WITH_TOTAL,
-        { variables: { page: page - 1, size }, fetchPolicy: "network-only" }
+        {
+            variables: {
+                input: {
+                    page: page - 1, // Convert to 0-based for backend
+                    size,
+                    sortField,
+                    sortDirection,
+                    filter: buildFilterInput()
+                }
+            },
+            fetchPolicy: "network-only"
+        }
     );
 
     // Delete project mutation
@@ -37,6 +114,12 @@ export default function ProjectManagement() {
     const pageInfo = data?.paginatedProjects?.pageInfo;
     const total    = pageInfo?.totalElements ?? 0;
     const pages    = pageInfo?.totalPages ?? 1;
+
+    // Handle sort change
+    const handleSortChange = (field, direction) => {
+        setSortField(field);
+        setSortDirection(direction);
+    };
 
     const handleEditProject = (projectId) => {
         setEditProjectId(projectId);
@@ -89,14 +172,27 @@ export default function ProjectManagement() {
                 </Button>
             </header>
 
+            {/* Filter panel */}
+            <ProjectFilterPanel
+                searchQuery={searchQuery}
+                setSearchQuery={setSearchQuery}
+                filters={filters}
+                setFilters={setFilters}
+                expanded={filterPanelExpanded}
+                setExpanded={setFilterPanelExpanded}
+                onSortChange={handleSortChange}
+                currentSortField={sortField}
+                currentSortDirection={sortDirection}
+            />
+
             {loading && <div className="loading-indicator">Loading projects...</div>}
             {error   && <div className="error-message">Error: {error.message}</div>}
 
             {!loading && !error && (
                 <>
                     <div className="projects-list">
-                        {projects.length
-                            ? projects.map(p => (
+                        {projects.length > 0 ? (
+                            projects.map(p => (
                                 <ProjectCard
                                     key={p.id}
                                     project={p}
@@ -104,7 +200,13 @@ export default function ProjectManagement() {
                                     onDelete={() => handleDeleteProject(p.id, p.name)}
                                 />
                             ))
-                            : <div className="no-items-message">No projects found.</div>}
+                        ) : (
+                            <div className="no-items-message">
+                                {Object.keys(filters).length > 0 || searchQuery
+                                    ? "No projects match your search criteria. Try adjusting your filters."
+                                    : "No projects found. Click 'Add Project' to create your first project."}
+                            </div>
+                        )}
                     </div>
 
                     {pages > 1 && (
@@ -113,9 +215,12 @@ export default function ProjectManagement() {
                             totalPages={pages}
                             onPageChange={setPage}
                             pageSize={size}
-                            onPageSizeChange={(s) => {setPage(1); setSize(s);}}
+                            onPageSizeChange={(s) => {
+                                setPage(1);
+                                setSize(s);
+                            }}
                             totalItems={total}
-                            pageSizeOptions={[5,10,25,50]}
+                            pageSizeOptions={[5, 10, 25, 50]}
                         />
                     )}
                 </>
