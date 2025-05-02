@@ -7,21 +7,22 @@ import ServiceInProgressItem from "../ServiceInProgressItem/ServiceInProgressIte
 import "./ServiceCard.css";
 
 export default function ServiceCard({
-                                        service,
+                                        projectService,
                                         searchQuery,
                                         onEdit,
                                         onDelete
                                     }) {
     const [expanded, setExpanded] = useState(false);
+    const service = projectService.service;
 
     // Count active services in progress
-    const activeCount = service.servicesInProgress.filter(sip => {
+    const activeCount = projectService.servicesInProgress?.filter(sip => {
         const status = sip.status?.name?.toLowerCase() || "";
         return status === "in progress" || status === "pending";
-    }).length;
+    }).length || 0;
 
     // Total services in progress
-    const totalCount = service.servicesInProgress.length;
+    const totalCount = projectService.servicesInProgress?.length || 0;
 
     // Format cost
     const formatCost = (cost) => {
@@ -115,7 +116,7 @@ export default function ServiceCard({
                 </Button>
             </div>
 
-            {expanded && (
+            {expanded && projectService.servicesInProgress && (
                 <div className="services-in-progress">
                     <div className="sip-header">
                         <h5 className="sip-title">Service Orders</h5>
@@ -129,9 +130,9 @@ export default function ServiceCard({
                         </Button>
                     </div>
 
-                    {service.servicesInProgress.length > 0 ? (
+                    {projectService.servicesInProgress.length > 0 ? (
                         <div className="sip-list">
-                            {service.servicesInProgress.map(sip => (
+                            {projectService.servicesInProgress.map(sip => (
                                 <ServiceInProgressItem
                                     key={sip.id}
                                     serviceInProgress={sip}

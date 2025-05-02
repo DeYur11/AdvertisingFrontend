@@ -14,7 +14,9 @@ import CompactProjectCard from "./components/CompactProjectCard/CompactProjectCa
 import ClientModal from "./components/ClientModal/ClientModal";
 import ProjectModal from "./components/ProjectModal/ProjectModal";
 import ServiceModal from "./components/ServiceModal/ServiceModal";
+import PaymentModal from "./components/PaymentModal/PaymentModal";
 import ConfirmationModal from "./components/ConfirmationModal/ConfirmationModal";
+import PaymentsList from "./components/PaymentsList/PaymentsList";
 
 // GraphQL queries and mutations
 const GET_PROJECTS = gql`
@@ -25,7 +27,6 @@ const GET_PROJECTS = gql`
             description
             startDate
             endDate
-            budget
             status {
                 id
                 name
@@ -34,7 +35,6 @@ const GET_PROJECTS = gql`
                 id
                 name
                 email
-                phone
             }
             projectType {
                 id
@@ -45,15 +45,18 @@ const GET_PROJECTS = gql`
                 name
                 surname
             }
-            services {
+            projectServices {
                 id
-                serviceName
-                description
-                estimateCost
-                duration
-                serviceType {
+                service {
                     id
-                    name
+                    serviceName
+                    description
+                    estimateCost
+                    duration
+                    serviceType {
+                        id
+                        name
+                    }
                 }
                 servicesInProgress {
                     id
@@ -81,6 +84,30 @@ const GET_PROJECTS = gql`
     }
 `;
 
+const GET_PAYMENTS_BY_PROJECT = gql`
+    query GetPaymentsByProject($projectId: ID!) {
+        paymentsByProject(projectId: $projectId) {
+            id
+            amount
+            date
+            description
+            purpose {
+                id
+                name
+            }
+        }
+    }
+`;
+
+const GET_PAYMENT_PURPOSES = gql`
+    query GetPaymentPurposes {
+        paymentPurposes {
+            id
+            name
+        }
+    }
+`;
+
 const DELETE_PROJECT = gql`
     mutation DeleteProject($id: ID!) {
         deleteProject(id: $id)
@@ -99,6 +126,12 @@ const DELETE_CLIENT = gql`
     }
 `;
 
+const DELETE_PAYMENT = gql`
+    mutation DeletePayment($id: ID!) {
+        deletePayment(id: $id)
+    }
+`;
+
 export default function ProjectManagement() {
     const user = useSelector(state => state.user);
     const [expandedProjectId, setExpandedProjectId] = useState(null);
@@ -108,21 +141,39 @@ export default function ProjectManagement() {
     const [selectedProject, setSelectedProject] = useState(null);
     const [selectedService, setSelectedService] = useState(null);
     const [selectedClient, setSelectedClient] = useState(null);
+    const [selectedPayment, setSelectedPayment] = useState(null);
+    const [showPayments, setShowPayments] = useState(false);
 
     // Modals state
     const [showProjectModal, setShowProjectModal] = useState(false);
     const [showServiceModal, setShowServiceModal] = useState(false);
     const [showClientModal, setShowClientModal] = useState(false);
+    const [showPaymentModal, setShowPaymentModal] = useState(false);
     const [deleteConfirmation, setDeleteConfirmation] = useState(null);
     const [editMode, setEditMode] = useState(false);
 
     // Fetch projects data
     const { loading, error, data, refetch } = useQuery(GET_PROJECTS);
 
+    // Fetch payments data for selected project
+    const { data: paymentsData, loading: paymentsLoading, error: paymentsError, refetch: refetchPayments } = useQuery(
+        GET_PAYMENTS_BY_PROJECT,
+        {
+            variables: { projectId: selectedProject?.id },
+            skip: !selectedProject?.id || !showPayments
+        }
+    );
+
+    // Fetch payment purposes data
+    const { data: purposesData } = useQuery(GET_PAYMENT_PURPOSES, {
+        skip: !showPaymentModal
+    });
+
     // Mutations
     const [deleteProject] = useMutation(DELETE_PROJECT);
     const [deleteService] = useMutation(DELETE_SERVICE);
     const [deleteClient] = useMutation(DELETE_CLIENT);
+    const [deletePayment] = useMutation(DELETE_PAYMENT);
 
     // Check if user is a Project Manager
     const isProjectManager = user.mainRole === "ProjectManager";
@@ -208,17 +259,48 @@ export default function ProjectManagement() {
         });
     };
 
+    const handleViewPayments = (project) => {
+        setSelectedProject(project);
+        setShowPayments(true);
+    };
+
+    const handleAddPayment = () => {
+        setEditMode(false);
+        setSelectedPayment(null);
+        setShowPaymentModal(true);
+    };
+
+    const handleEditPayment = (payment) => {
+        setEditMode(true);
+        setSelectedPayment(payment);
+        setShowPaymentModal(true);
+    };
+
+    const handleDeletePayment = (payment) => {
+        setSelectedPayment(payment);
+        setDeleteConfirmation({
+            type: "payment",
+            id: payment.id,
+            name: `${payment.amount} (${new Date(payment.date).toLocaleDateString()})`
+        });
+    };
+
     const confirmDelete = async () => {
         try {
             if (deleteConfirmation.type === "project") {
                 await deleteProject({ variables: { id: deleteConfirmation.id }});
+                refetch();
             } else if (deleteConfirmation.type === "service") {
                 await deleteService({ variables: { id: deleteConfirmation.id }});
+                refetch();
             } else if (deleteConfirmation.type === "client") {
                 await deleteClient({ variables: { id: deleteConfirmation.id }});
+                refetch();
+            } else if (deleteConfirmation.type === "payment") {
+                await deletePayment({ variables: { id: deleteConfirmation.id }});
+                refetchPayments();
             }
 
-            refetch();
             setDeleteConfirmation(null);
         } catch (error) {
             console.error(`Error deleting ${deleteConfirmation.type}:`, error);
@@ -234,9 +316,9 @@ export default function ProjectManagement() {
             const matchesSearch =
                 searchQuery === "" ||
                 project.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                project.client.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                project.services.some(service =>
-                    service.serviceName.toLowerCase().includes(searchQuery.toLowerCase()));
+                project.client?.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                project.projectServices?.some(projectService =>
+                    projectService.service.serviceName.toLowerCase().includes(searchQuery.toLowerCase()));
 
             if (!matchesSearch) return false;
 
@@ -284,72 +366,90 @@ export default function ProjectManagement() {
 
     return (
         <div className="project-management-container">
-            <div className="project-management-header">
-                <div className="header-left">
-                    <h1>Project Management</h1>
-                    <p className="subtitle">Manage your projects, services, and clients</p>
-                </div>
-                <div className="header-actions">
-                    <Button
-                        variant="outline"
-                        size="medium"
-                        icon="👤"
-                        onClick={handleAddClient}
-                    >
-                        New Client
-                    </Button>
-                    <Button
-                        variant="primary"
-                        size="medium"
-                        icon="📂"
-                        onClick={handleAddProject}
-                    >
-                        New Project
-                    </Button>
-                </div>
-            </div>
+            {/* Main Projects View */}
+            {!showPayments ? (
+                <>
+                    <div className="project-management-header">
+                        <div className="header-left">
+                            <h1>Project Management</h1>
+                            <p className="subtitle">Manage your projects, services, and clients</p>
+                        </div>
+                        <div className="header-actions">
+                            <Button
+                                variant="outline"
+                                size="medium"
+                                icon="👤"
+                                onClick={handleAddClient}
+                            >
+                                New Client
+                            </Button>
+                            <Button
+                                variant="primary"
+                                size="medium"
+                                icon="📂"
+                                onClick={handleAddProject}
+                            >
+                                New Project
+                            </Button>
+                        </div>
+                    </div>
 
-            <ProjectFilterPanel
-                searchQuery={searchQuery}
-                setSearchQuery={setSearchQuery}
-                filters={filters}
-                setFilters={setFilters}
-                expanded={filterPanelExpanded}
-                setExpanded={setFilterPanelExpanded}
-            />
+                    <ProjectFilterPanel
+                        searchQuery={searchQuery}
+                        setSearchQuery={setSearchQuery}
+                        filters={filters}
+                        setFilters={setFilters}
+                        expanded={filterPanelExpanded}
+                        setExpanded={setFilterPanelExpanded}
+                    />
 
-            {loading ? (
-                <div className="loading-message">Loading projects...</div>
-            ) : error ? (
-                <div className="error-message">Error loading projects: {error.message}</div>
-            ) : (
-                <div className="projects-list">
-                    {getFilteredProjects().length > 0 ? (
-                        getFilteredProjects().map(project => (
-                            <CompactProjectCard
-                                key={project.id}
-                                project={project}
-                                expanded={expandedProjectId === project.id}
-                                onToggle={() => toggleProject(project.id)}
-                                searchQuery={searchQuery}
-                                onAddService={() => handleAddService(project.id)}
-                                onEditProject={() => handleEditProject(project)}
-                                onDeleteProject={() => handleDeleteProject(project)}
-                                onEditService={(service) => handleEditService(service, project.id)}
-                                onDeleteService={handleDeleteService}
-                                onEditClient={() => handleEditClient(project.client)}
-                            />
-                        ))
+                    {loading ? (
+                        <div className="loading-message">Loading projects...</div>
+                    ) : error ? (
+                        <div className="error-message">Error loading projects: {error.message}</div>
                     ) : (
-                        <Card className="empty-state-card">
-                            <div className="no-projects-message">
-                                {searchQuery || Object.keys(filters).length > 0
-                                    ? "No projects match your current filters. Try adjusting your search or filters."
-                                    : "No projects found. Click 'New Project' to create your first project."}
-                            </div>
-                        </Card>
+                        <div className="projects-list">
+                            {getFilteredProjects().length > 0 ? (
+                                getFilteredProjects().map(project => (
+                                    <CompactProjectCard
+                                        key={project.id}
+                                        project={project}
+                                        expanded={expandedProjectId === project.id}
+                                        onToggle={() => toggleProject(project.id)}
+                                        searchQuery={searchQuery}
+                                        onAddService={() => handleAddService(project.id)}
+                                        onEditProject={() => handleEditProject(project)}
+                                        onDeleteProject={() => handleDeleteProject(project)}
+                                        onEditService={(service) => handleEditService(service, project.id)}
+                                        onDeleteService={handleDeleteService}
+                                        onEditClient={() => handleEditClient(project.client)}
+                                        onViewPayments={() => handleViewPayments(project)}
+                                    />
+                                ))
+                            ) : (
+                                <Card className="empty-state-card">
+                                    <div className="no-projects-message">
+                                        {searchQuery || Object.keys(filters).length > 0
+                                            ? "No projects match your current filters. Try adjusting your search or filters."
+                                            : "No projects found. Click 'New Project' to create your first project."}
+                                    </div>
+                                </Card>
+                            )}
+                        </div>
                     )}
-                </div>
+                </>
+            ) : (
+                /* Payments View */
+                <PaymentsList
+                    project={selectedProject}
+                    payments={paymentsData?.paymentsByProject || []}
+                    loading={paymentsLoading}
+                    error={paymentsError}
+                    onBack={() => setShowPayments(false)}
+                    onAddPayment={handleAddPayment}
+                    onEditPayment={handleEditPayment}
+                    onDeletePayment={handleDeletePayment}
+                />
             )}
 
             {/* Project Modal - Add/Edit */}
@@ -404,6 +504,26 @@ export default function ProjectManagement() {
                         refetch();
                     }}
                     onCancel={() => setShowClientModal(false)}
+                />
+            </Modal>
+
+            {/* Payment Modal - Add/Edit */}
+            <Modal
+                isOpen={showPaymentModal}
+                onClose={() => setShowPaymentModal(false)}
+                title={editMode ? "Edit Payment" : "Add New Payment"}
+                size="medium"
+            >
+                <PaymentModal
+                    payment={selectedPayment}
+                    projectId={selectedProject?.id}
+                    purposes={purposesData?.paymentPurposes || []}
+                    editMode={editMode}
+                    onSave={() => {
+                        setShowPaymentModal(false);
+                        refetchPayments();
+                    }}
+                    onCancel={() => setShowPaymentModal(false)}
                 />
             </Modal>
 

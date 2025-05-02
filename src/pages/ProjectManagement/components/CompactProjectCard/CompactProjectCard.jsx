@@ -15,7 +15,8 @@ export default function CompactProjectCard({
                                                onDeleteProject,
                                                onEditService,
                                                onDeleteService,
-                                               onEditClient
+                                               onEditClient,
+                                               onViewPayments
                                            }) {
     // Get project status for styling
     const projectStatus = project.status?.name?.toLowerCase() || "";
@@ -101,15 +102,15 @@ export default function CompactProjectCard({
                                     onEditClient(project.client);
                                 }}
                             >
-                {highlightMatch(project.client?.name || "—", searchQuery)}
-              </span>
+                                {highlightMatch(project.client?.name || "—", searchQuery)}
+                            </span>
                         </div>
 
                         <div className="meta-item">
                             <span className="meta-label">Manager:</span>
                             <span className="meta-value">
-                {project.manager ? `${project.manager.name} ${project.manager.surname}` : "—"}
-              </span>
+                                {project.manager ? `${project.manager.name} ${project.manager.surname}` : "—"}
+                            </span>
                         </div>
 
                         <div className="meta-item date-item">
@@ -157,6 +158,18 @@ export default function CompactProjectCard({
                     </div>
 
                     <div className="project-actions">
+                        <Button
+                            variant="outline"
+                            size="small"
+                            icon="💰"
+                            className="action-button"
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                onViewPayments(project);
+                            }}
+                        >
+                            Payments
+                        </Button>
                         <Button
                             variant="outline"
                             size="small"
