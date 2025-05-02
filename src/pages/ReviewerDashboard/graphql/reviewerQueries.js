@@ -44,6 +44,10 @@ export const GET_PAGINATED_MATERIALS_WITH_TOTAL = gql`
                     suggestedChange
                     createDatetime
                     reviewDate
+                    materialSummary{
+                        id
+                        name
+                    }
                     reviewer {
                         id
                         name
@@ -122,5 +126,11 @@ export const UPDATE_MATERIAL_REVIEW = gql`
                 surname
             }
         }
+    }
+`;
+
+export const DELETE_MATERIAL_REVIEW = gql`
+    mutation DeleteMaterialReview($id: ID!) {
+        deleteMaterialReview(id: $id)
     }
 `;

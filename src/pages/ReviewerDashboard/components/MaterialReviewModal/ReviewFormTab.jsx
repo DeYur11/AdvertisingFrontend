@@ -8,7 +8,10 @@ export default function ReviewFormTab({
                                           submitting,
                                           onClose,
                                           onSubmit,
-                                          materialSummaries
+                                          materialSummaries,
+                                          isEditing,
+                                          setIsEditing,
+                                          setExistingReview // додаємо для скидання відгуку при скасуванні
                                       }) {
     if (!formData) return null;
 
@@ -17,11 +20,22 @@ export default function ReviewFormTab({
         setFormData((prev) => ({ ...prev, [name]: value }));
     };
 
+    const handleCancelEdit = () => {
+        setIsEditing(false);
+        setExistingReview(null);
+        setFormData({
+            comments: "",
+            suggestedChange: "",
+            reviewDate: "",
+            materialSummaryId: null
+        });
+    };
+
     return (
         <div className="review-form-tab">
             <form onSubmit={onSubmit}>
                 <div className="review-header">
-                    <h3>Нова рецензія</h3>
+                    <h3>{isEditing ? "Редагування рецензії" : "Нова рецензія"}</h3>
                 </div>
 
                 <div className="form-group">
@@ -91,6 +105,11 @@ export default function ReviewFormTab({
                     <Button variant="outline" onClick={onClose} type="button">
                         Скасувати
                     </Button>
+                    {isEditing && (
+                        <Button variant="outline" onClick={handleCancelEdit} type="button">
+                            Вийти з редагування
+                        </Button>
+                    )}
                     <Button variant="primary" type="submit" disabled={submitting}>
                         {submitting ? "Збереження..." : "Надіслати рецензію"}
                     </Button>

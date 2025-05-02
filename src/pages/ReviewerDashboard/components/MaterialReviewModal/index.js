@@ -1,14 +1,15 @@
 import { useState, useEffect } from "react";
 import { useSelector } from "react-redux";
-import {useMutation, useQuery} from "@apollo/client";
+import { useMutation, useQuery } from "@apollo/client";
 import Modal from "../../../../components/common/Modal/Modal";
 import Button from "../../../../components/common/Button/Button";
 import {
     GET_MATERIAL_SUMMARIES,
     SUBMIT_MATERIAL_REVIEW,
-    UPDATE_MATERIAL_REVIEW
+    UPDATE_MATERIAL_REVIEW,
+    DELETE_MATERIAL_REVIEW
 } from "../../graphql/reviewerQueries";
-import { formatDate } from "../../utils/reviewerUtils";
+
 
 import ReviewTabs from "./ReviewTabs";
 import MaterialDetailsTab from "./MaterialDetailsTab";
@@ -24,6 +25,17 @@ export default function MaterialReviewModal({
                                                 onReviewSubmitted
                                             }) {
     const user = useSelector((state) => state.user);
+    const [deleteReview, { loading: deleting }] = useMutation(DELETE_MATERIAL_REVIEW, {
+        refetchQueries: ["GetMaterialById"], // or whatever query you use to fetch the material details
+        onCompleted: () => {
+            // Success notification if needed
+        },
+        onError: (error) => {
+            console.error("Error deleting review:", error);
+            // Error notification if needed
+        }
+    });
+
 
     // ---------------- state ----------------
     const [activeTab, setActiveTab] = useState("material");
@@ -47,38 +59,63 @@ export default function MaterialReviewModal({
 
     // ------------- effects -----------------
     useEffect(() => {
-        if (!material?.reviews?.length) return;
-
-        const myReview = material.reviews.find(
-            (r) => r.reviewer?.id === user.workerId.toString()
-        );
-
-        if (myReview) {
-            setExistingReview(myReview);
-            setFormData({
-                comments: myReview.comments || "",
-                suggestedChange: myReview.suggestedChange || "",
-                reviewDate: myReview.reviewDate || "",
-                materialSummaryId: null // або визначити з material, якщо доступно
-            });
-        } else {
-            setExistingReview(null);
-            setFormData({
-                comments: "",
-                suggestedChange: "",
-                reviewDate: "",
-                materialSummaryId: null
-            });
-        }
-    }, [material, user.workerId]);
+        // при відкритті форми — завжди готувати до додавання
+        setExistingReview(null);
+        setIsEditing(false);
+        setFormData({
+            comments: "",
+            suggestedChange: "",
+            reviewDate: "",
+            materialSummaryId: null
+        });
+    }, [material?.id, isOpen]);
 
 
     // ------------- helpers -----------------
     const validate = () => {
         const errs = {};
-        if (!formData.comments.trim()) errs.comments = "Поле обов’язкове";
+        if (!formData.comments.trim()) errs.comments = "Поле обов'язкове";
         setErrors(errs);
         return !Object.keys(errs).length;
+    };
+
+    const handleDeleteReview = async (reviewId) => {
+        try {
+            console.log(reviewId);
+            await deleteReview({
+                variables: {
+                    id: reviewId
+                }
+            });
+
+            // If the deleted review was the one being edited, clear the form
+            if (existingReview && existingReview.id === reviewId) {
+                setExistingReview(null);
+                setIsEditing(false);
+                setFormData({
+                    comments: "",
+                    suggestedChange: "",
+                    reviewDate: "",
+                    materialSummaryId: null
+                });
+            }
+            onReviewSubmitted?.();
+        } catch (error) {
+            console.error("Failed to delete review:", error);
+        }
+    };
+
+    const handleEditReview = (review) => {
+        console.log(review)
+        setExistingReview(review);
+        setFormData({
+            comments: review.comments || "",
+            suggestedChange: review.suggestedChange || "",
+            reviewDate: review.reviewDate || "",
+            materialSummaryId: review.materialSummary?.id || null
+        });
+        setIsEditing(true);
+        setActiveTab("review");
     };
 
 
@@ -94,11 +131,12 @@ export default function MaterialReviewModal({
             reviewDate: formData.reviewDate || null,
             materialSummaryId: formData.materialSummaryId || null
         };
-
         try {
             if (existingReview && !isEditing) return onClose();
 
             if (existingReview && isEditing) {
+                input.id = existingReview.id;
+                console.log(input);
                 await updateReview({
                     variables: {
                         id: existingReview.id,
@@ -118,7 +156,6 @@ export default function MaterialReviewModal({
             setErrors((p) => ({ ...p, submit: err.message }));
         }
     };
-
 
     // ---------------------------------------
     return (
@@ -152,17 +189,18 @@ export default function MaterialReviewModal({
                         onClose={onClose}
                         onSubmit={handleSubmit}
                         materialSummaries={materialSummaries}
+                        // ❌ ⛔️ тут бракує:
+                        setExistingReview={setExistingReview}
                     />
                 )}
+
 
                 {activeTab === "all-reviews" && (
                     <AllReviewsTab
                         reviews={material.reviews}
                         workerId={user.workerId}
-                        onEditOwn={() => {
-                            setActiveTab("review");
-                            setIsEditing(true);
-                        }}
+                        onEditOwn={handleEditReview}
+                        onDeleteOwn={handleDeleteReview}
                     />
                 )}
             </div>
