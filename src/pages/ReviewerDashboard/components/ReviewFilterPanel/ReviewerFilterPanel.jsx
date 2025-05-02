@@ -1,27 +1,11 @@
 import { useState, useEffect } from "react";
-import { useQuery, gql } from "@apollo/client";
-
+import { useQuery } from "@apollo/client";
 import "./ReviewerFilterPanel.css";
 import Button from "../../../../components/common/Button/Button";
 import Badge from "../../../../components/common/Badge/Badge";
 import Card from "../../../../components/common/Card/Card";
-// GraphQL query for filter reference data
-const GET_FILTER_REFERENCE_DATA = gql`
-    query GetFilterReferenceData {
-        materialStatuses {
-            id
-            name
-        }
-        materialTypes {
-            id
-            name
-        }
-        languages {
-            id
-            name
-        }
-    }
-`;
+// Import queries from the new file
+import { GET_FILTER_REFERENCE_DATA } from "../../graphql/reviewerQueries";
 
 export default function ReviewerFilterPanel({
                                                 searchQuery,
@@ -29,7 +13,10 @@ export default function ReviewerFilterPanel({
                                                 filters = {},
                                                 setFilters,
                                                 expanded,
-                                                setExpanded
+                                                setExpanded,
+                                                onSortChange,
+                                                currentSortField = "createDatetime",
+                                                currentSortDirection = "DESC"
                                             }) {
     // Fetch reference data from database
     const { data: refData, loading } = useQuery(GET_FILTER_REFERENCE_DATA);
@@ -137,6 +124,29 @@ export default function ReviewerFilterPanel({
         }
     };
 
+    // Handle sort change
+    const handleSortChange = (field) => {
+        // If clicking the same field, toggle direction
+        if (field === currentSortField) {
+            onSortChange(field, currentSortDirection === "ASC" ? "DESC" : "ASC");
+        } else {
+            // New field, default to DESC for createDatetime, ASC for others
+            const defaultDirection = field === "createDatetime" ? "DESC" : "ASC";
+            onSortChange(field, defaultDirection);
+        }
+    };
+
+    // Render sort indicator based on current sort state
+    const renderSortIndicator = (field) => {
+        if (field !== currentSortField) return null;
+
+        return (
+            <span className="sort-indicator">
+                {currentSortDirection === "ASC" ? "↑" : "↓"}
+            </span>
+        );
+    };
+
     return (
         <div className="reviewer-filter-panel-container">
             {/* Search and Basic Filters Bar */}
@@ -200,6 +210,31 @@ export default function ReviewerFilterPanel({
                     )}
                     <span className="search-icon">🔍</span>
                 </div>
+
+                {/* Sort Controls */}
+                <div className="sort-controls">
+                    <span className="sort-label">Sort by:</span>
+                    <div className="sort-options">
+                        <button
+                            className={`sort-option ${currentSortField === "name" ? "active" : ""}`}
+                            onClick={() => handleSortChange("name")}
+                        >
+                            Name {renderSortIndicator("name")}
+                        </button>
+                        <button
+                            className={`sort-option ${currentSortField === "createDatetime" ? "active" : ""}`}
+                            onClick={() => handleSortChange("createDatetime")}
+                        >
+                            Creation Date {renderSortIndicator("createDatetime")}
+                        </button>
+                        <button
+                            className={`sort-option ${currentSortField === "status" ? "active" : ""}`}
+                            onClick={() => handleSortChange("status")}
+                        >
+                            Status {renderSortIndicator("status")}
+                        </button>
+                    </div>
+                </div>
             </div>
 
             {/* Active Filters Display */}
@@ -211,8 +246,8 @@ export default function ReviewerFilterPanel({
                             <div className="active-filter">
                                 <span className="filter-name">Status:</span>
                                 <span className="filter-value">
-                  {filters.status.length} selected
-                </span>
+                                    {filters.status.length} selected
+                                </span>
                                 <button
                                     className="remove-filter"
                                     onClick={() => applyFilter('status', [])}
@@ -223,15 +258,15 @@ export default function ReviewerFilterPanel({
                             </div>
                         )}
 
-                        {filters.materialType?.length > 0 && (
+                        {filters.type?.length > 0 && (
                             <div className="active-filter">
                                 <span className="filter-name">Material Type:</span>
                                 <span className="filter-value">
-                  {filters.materialType.length} selected
-                </span>
+                                    {filters.type.length} selected
+                                </span>
                                 <button
                                     className="remove-filter"
-                                    onClick={() => applyFilter('materialType', [])}
+                                    onClick={() => applyFilter('type', [])}
                                     aria-label="Remove material type filter"
                                 >
                                     ✕
@@ -243,8 +278,8 @@ export default function ReviewerFilterPanel({
                             <div className="active-filter">
                                 <span className="filter-name">Language:</span>
                                 <span className="filter-value">
-                  {filters.language.length} selected
-                </span>
+                                    {filters.language.length} selected
+                                </span>
                                 <button
                                     className="remove-filter"
                                     onClick={() => applyFilter('language', [])}
@@ -259,12 +294,12 @@ export default function ReviewerFilterPanel({
                             <div className="active-filter">
                                 <span className="filter-name">Date Range:</span>
                                 <span className="filter-value">
-                  {filters.dateRange.from &&
-                      `From: ${new Date(filters.dateRange.from).toLocaleDateString()}`}
+                                    {filters.dateRange.from &&
+                                        `From: ${new Date(filters.dateRange.from).toLocaleDateString()}`}
                                     {filters.dateRange.from && filters.dateRange.to && ' - '}
                                     {filters.dateRange.to &&
                                         `To: ${new Date(filters.dateRange.to).toLocaleDateString()}`}
-                </span>
+                                </span>
                                 <button
                                     className="remove-filter"
                                     onClick={() => applyFilter('dateRange', {})}
@@ -279,8 +314,8 @@ export default function ReviewerFilterPanel({
                             <div className="active-filter">
                                 <span className="filter-name">Review Status:</span>
                                 <span className="filter-value">
-                  {filters.reviewStatus === 'pending' ? 'Pending Review' : 'Reviewed by Me'}
-                </span>
+                                    {filters.reviewStatus === 'pending' ? 'Pending Review' : 'Reviewed by Me'}
+                                </span>
                                 <button
                                     className="remove-filter"
                                     onClick={() => applyFilter('reviewStatus', 'all')}
@@ -334,8 +369,8 @@ export default function ReviewerFilterPanel({
                                         {refData?.materialTypes.map(type => (
                                             <div
                                                 key={type.id}
-                                                className={`filter-chip ${(filters.materialType || []).includes(type.id) ? 'selected' : ''}`}
-                                                onClick={() => handleOptionToggle('materialType', type.id)}
+                                                className={`filter-chip ${(filters.type || []).includes(type.id) ? 'selected' : ''}`}
+                                                onClick={() => handleOptionToggle('type', type.id)}
                                             >
                                                 {type.name}
                                             </div>

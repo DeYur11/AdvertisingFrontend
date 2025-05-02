@@ -1,72 +1,32 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useSelector } from "react-redux";
-import { useQuery, gql } from "@apollo/client";
+import { useQuery } from "@apollo/client";
 import Card from "../../components/common/Card/Card";
 import Badge from "../../components/common/Badge/Badge";
 import Button from "../../components/common/Button/Button";
+import Pagination from "../../components/common/Pagination/Pagination";
 
-import { filterMaterials, hasBeenReviewedBy, getStatusBadgeVariant, formatDate } from "./utils/reviewerUtils";
+import { formatDate, getStatusBadgeVariant } from "./utils/reviewerUtils";
 import "./ReviewerDashboard.css";
 import MaterialReviewModal from "./components/MaterialReviewModal/MaterialReviewModal";
 import ReviewerFilterPanel from "./components/ReviewFilterPanel/ReviewerFilterPanel";
-
-// GraphQL queries
-const GET_MATERIALS_FOR_REVIEW = gql`
-    query GetMaterialsForReview {
-        materials {
-            id
-            name
-            description
-            createDatetime
-            task {
-                id
-                name
-                priority
-                serviceInProgress {
-                    projectService {
-                        project {
-                            id
-                            name
-                        }
-                    }
-                }
-            }
-            status {
-                id
-                name
-            }
-            type {
-                name
-            }
-            language {
-                name
-            }
-            keywords {
-                id
-                name
-            }
-            reviews{
-                id
-                suggestedChange
-                comments
-                createDatetime
-                reviewer {
-                    id
-                    name
-                    surname
-                }
-            }
-        }
-    }
-`;
+import { GET_PAGINATED_MATERIALS_WITH_TOTAL } from "./graphql/reviewerQueries";
 
 export default function ReviewerDashboard() {
     const user = useSelector(state => state.user);
     const [selectedMaterial, setSelectedMaterial] = useState(null);
     const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
-    const [filters, setFilters] = useState({});
+
+    // Filter and pagination state
+    const [filters, setFilters] = useState({
+        reviewStatus: 'all'
+    });
     const [searchQuery, setSearchQuery] = useState("");
     const [filterPanelExpanded, setFilterPanelExpanded] = useState(false);
+    const [page, setPage] = useState(1);
+    const [size, setSize] = useState(12);
+    const [sortField, setSortField] = useState("createDatetime");
+    const [sortDirection, setSortDirection] = useState("DESC");
 
     // Convert UI filters to GraphQL filter input
     const buildFilterInput = () => {
@@ -84,8 +44,8 @@ export default function ReviewerDashboard() {
         }
 
         // Add material type filters
-        if (filters.materialType && filters.materialType.length > 0) {
-            filterInput.materialTypeIds = filters.materialType;
+        if (filters.type && filters.type.length > 0) {
+            filterInput.typeIds = filters.type;
         }
 
         // Add language filters
@@ -93,31 +53,24 @@ export default function ReviewerDashboard() {
             filterInput.languageIds = filters.language;
         }
 
-        // Add review status filter
-        if (filters.reviewStatus) {
-            filterInput.reviewStatus = filters.reviewStatus; // "reviewed", "pending", "all"
-        }
-
-        // Add date range filter
-        if (filters.dateRange) {
-            if (filters.dateRange.from) {
-                filterInput.createdFrom = filters.dateRange.from;
-            }
-            if (filters.dateRange.to) {
-                filterInput.createdTo = filters.dateRange.to;
-            }
-        }
+        // Add date range filter - handled in post-query filtering
 
         return filterInput;
     };
 
-    // Query for materials to review
-    const { loading, error, data, refetch } = useQuery(GET_MATERIALS_FOR_REVIEW, {
+    // Query for materials with pagination
+    const { loading, error, data, refetch } = useQuery(GET_PAGINATED_MATERIALS_WITH_TOTAL, {
         variables: {
-            reviewerId: user.workerId.toString(),
+            input: {
+                page: page - 1, // Convert to 0-based for backend
+                size,
+                sortField,
+                sortDirection,
+                filter: buildFilterInput()
+            }
         },
         fetchPolicy: "network-only",
-        skip: !user.workerId || !user.isReviewer
+        skip: !user.isReviewer
     });
 
     // Handle refresh after review submission
@@ -134,16 +87,59 @@ export default function ReviewerDashboard() {
         );
     };
 
-    // Get review status badge variant
-    const getStatusBadgeVariant = (material) => {
-        if (!material.status) return "default";
-
-        const statusName = material.status.name.toLowerCase();
-        if (statusName === "accepted") return "success";
-        if (statusName === "rejected") return "danger";
-        if (statusName === "pending review") return "warning";
-        return "default";
+    // Handle sort change
+    const handleSortChange = (field, direction) => {
+        setSortField(field);
+        setSortDirection(direction);
     };
+
+    // Post-filter materials based on review status and date range
+    const filterMaterials = (materials) => {
+        if (!materials) return [];
+
+        return materials.filter(material => {
+            // Filter by review status
+            if (filters.reviewStatus && filters.reviewStatus !== 'all') {
+                const reviewed = hasBeenReviewedByMe(material);
+
+                if (filters.reviewStatus === 'reviewed' && !reviewed) {
+                    return false;
+                }
+
+                if (filters.reviewStatus === 'pending' && reviewed) {
+                    return false;
+                }
+            }
+
+            // Filter by date range
+            if (filters.dateRange) {
+                const materialDate = new Date(material.createDatetime);
+
+                if (filters.dateRange.from) {
+                    const fromDate = new Date(filters.dateRange.from);
+                    if (materialDate < fromDate) {
+                        return false;
+                    }
+                }
+
+                if (filters.dateRange.to) {
+                    const toDate = new Date(filters.dateRange.to);
+                    // Set time to end of day for the to date
+                    toDate.setHours(23, 59, 59, 999);
+                    if (materialDate > toDate) {
+                        return false;
+                    }
+                }
+            }
+
+            return true;
+        });
+    };
+
+    const materials = data?.paginatedMaterials?.content ? filterMaterials(data.paginatedMaterials.content) : [];
+    const pageInfo = data?.paginatedMaterials?.pageInfo;
+    const total = pageInfo?.totalElements ?? 0;
+    const pages = pageInfo?.totalPages ?? 1;
 
     // If user is not a reviewer, show message
     if (!user.isReviewer) {
@@ -173,6 +169,9 @@ export default function ReviewerDashboard() {
                 setFilters={setFilters}
                 expanded={filterPanelExpanded}
                 setExpanded={setFilterPanelExpanded}
+                onSortChange={handleSortChange}
+                currentSortField={sortField}
+                currentSortDirection={sortDirection}
             />
 
             {loading ? (
@@ -180,102 +179,120 @@ export default function ReviewerDashboard() {
             ) : error ? (
                 <div className="error-message">Error: {error.message}</div>
             ) : (
-                <div className="materials-grid">
-                    {data?.materials?.length ? (
-                        filterMaterials(data.materials, filters, searchQuery, user.workerId).map((material) => (
-                            <Card
-                                key={material.id}
-                                className={`material-card ${hasBeenReviewedByMe(material) ? 'reviewed' : ''}`}
-                                hoverable
-                            >
-                                <div className="material-header">
-                                    <h3 className="material-name">{material.name}</h3>
-                                    <Badge
-                                        variant={getStatusBadgeVariant(material)}
-                                        size="small"
-                                    >
-                                        {material.status?.name || "Unknown"}
-                                    </Badge>
-                                </div>
+                <>
+                    <div className="materials-grid">
+                        {materials.length ? (
+                            materials.map(material => (
+                                <Card
+                                    key={material.id}
+                                    className={`material-card ${hasBeenReviewedByMe(material) ? 'reviewed' : ''}`}
+                                    hoverable
+                                >
+                                    <div className="material-header">
+                                        <h3 className="material-name">{material.name}</h3>
+                                        <Badge
+                                            variant={getStatusBadgeVariant(material)}
+                                            size="small"
+                                        >
+                                            {material.status?.name || "Unknown"}
+                                        </Badge>
+                                    </div>
 
-                                <div className="material-meta">
-                                    <div className="meta-group">
-                                        <div className="meta-item">
-                                            <span className="meta-label">Type:</span>
-                                            <span className="meta-value">{material.type?.name || "—"}</span>
-                                        </div>
-                                        {material.language && (
+                                    <div className="material-meta">
+                                        <div className="meta-group">
                                             <div className="meta-item">
-                                                <span className="meta-label">Language:</span>
-                                                <span className="meta-value">{material.language.name}</span>
+                                                <span className="meta-label">Type:</span>
+                                                <span className="meta-value">{material.type?.name || "—"}</span>
                                             </div>
-                                        )}
-                                    </div>
-
-                                    <div className="meta-group">
-                                        <div className="meta-item">
-                                            <span className="meta-label">Project:</span>
-                                            <span className="meta-value">
-                        {material.task?.serviceInProgress?.projectService?.project?.name || "—"}
-                      </span>
+                                            {material.language && (
+                                                <div className="meta-item">
+                                                    <span className="meta-label">Language:</span>
+                                                    <span className="meta-value">{material.language.name}</span>
+                                                </div>
+                                            )}
                                         </div>
-                                        <div className="meta-item">
-                                            <span className="meta-label">Task:</span>
-                                            <span className="meta-value">{material.task?.name || "—"}</span>
+
+                                        <div className="meta-group">
+                                            <div className="meta-item">
+                                                <span className="meta-label">Project:</span>
+                                                <span className="meta-value">
+                                                    {material.task?.serviceInProgress?.projectService?.project?.name || "—"}
+                                                </span>
+                                            </div>
+                                            <div className="meta-item">
+                                                <span className="meta-label">Task:</span>
+                                                <span className="meta-value">{material.task?.name || "—"}</span>
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
 
-                                {material.description && (
-                                    <div className="material-description">
-                                        {material.description.length > 150
-                                            ? `${material.description.substring(0, 150)}...`
-                                            : material.description}
+                                    {material.description && (
+                                        <div className="material-description">
+                                            {material.description.length > 150
+                                                ? `${material.description.substring(0, 150)}...`
+                                                : material.description}
+                                        </div>
+                                    )}
+
+                                    {material.keywords?.length > 0 && (
+                                        <div className="material-keywords">
+                                            {material.keywords.slice(0, 5).map(keyword => (
+                                                <span key={keyword.id} className="keyword-tag">
+                                                    #{keyword.name}
+                                                </span>
+                                            ))}
+                                            {material.keywords.length > 5 && (
+                                                <span className="more-keywords">+{material.keywords.length - 5} more</span>
+                                            )}
+                                        </div>
+                                    )}
+
+                                    <div className="material-footer">
+                                        <span className="created-date">
+                                            Created: {formatDate(material.createDatetime)}
+                                        </span>
+
+                                        <Button
+                                            variant={hasBeenReviewedByMe(material) ? "outline" : "primary"}
+                                            size="small"
+                                            onClick={() => {
+                                                setSelectedMaterial(material);
+                                                setIsReviewModalOpen(true);
+                                            }}
+                                        >
+                                            {hasBeenReviewedByMe(material) ? "View Review" : "Review Material"}
+                                        </Button>
                                     </div>
-                                )}
+                                </Card>
+                            ))
+                        ) : (
+                            <div className="no-materials">
+                                <h3>No materials found</h3>
+                                <p>
+                                    {Object.keys(filters).length > 0 || searchQuery
+                                        ? "No materials match your current filters. Try adjusting your search criteria."
+                                        : "There are no materials available for review at this time."}
+                                </p>
+                            </div>
+                        )}
+                    </div>
 
-                                {material.keywords?.length > 0 && (
-                                    <div className="material-keywords">
-                                        {material.keywords.slice(0, 5).map(keyword => (
-                                            <span key={keyword.id} className="keyword-tag">
-                        #{keyword.name}
-                      </span>
-                                        ))}
-                                        {material.keywords.length > 5 && (
-                                            <span className="more-keywords">+{material.keywords.length - 5} more</span>
-                                        )}
-                                    </div>
-                                )}
-
-                                <div className="material-footer">
-                  <span className="created-date">
-                    Created: {new Date(material.createDatetime).toLocaleDateString()}
-                  </span>
-
-                                    <Button
-                                        variant={hasBeenReviewedByMe(material) ? "outline" : "primary"}
-                                        size="small"
-                                        onClick={() => {
-                                            setSelectedMaterial(material);
-                                            setIsReviewModalOpen(true);
-                                        }}
-                                    >
-                                        {hasBeenReviewedByMe(material) ? "View Review" : "Review Material"}
-                                    </Button>
-                                </div>
-                            </Card>
-                        ))
-                    ) : (
-                        <div className="no-materials">
-                            <h3>No materials found</h3>
-                            <p>
-                                {Object.keys(filters).length > 0 || searchQuery
-                                    ? "No materials match your current filters. Try adjusting your search criteria."
-                                    : "There are no materials available for review at this time."}
-                            </p>
-                        </div>
+                    {/* Pagination */}
+                    {pages > 1 && (
+                        <Pagination
+                            currentPage={page}
+                            totalPages={pages}
+                            onPageChange={setPage}
+                            pageSize={size}
+                            onPageSizeChange={(s) => {
+                                setPage(1);
+                                setSize(s);
+                            }}
+                            totalItems={total}
+                            pageSizeOptions={[6, 12, 24, 48]}
+                        />
                     )}
-                </div>
+                </>
             )}
 
             {/* Material Review Modal */}

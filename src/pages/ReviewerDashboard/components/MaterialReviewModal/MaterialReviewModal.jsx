@@ -1,44 +1,13 @@
 import { useState, useEffect } from "react";
 import { useSelector } from "react-redux";
-import { useMutation, gql } from "@apollo/client";
+import { useMutation } from "@apollo/client";
 import "./MaterialReviewModal.css";
 import Button from "../../../../components/common/Button/Button";
 import Modal from "../../../../components/common/Modal/Modal";
 import Badge from "../../../../components/common/Badge/Badge";
 import Card from "../../../../components/common/Card/Card";
-import {formatDate} from "../../utils/reviewerUtils";
-
-// GraphQL mutation to submit a review
-const SUBMIT_MATERIAL_REVIEW = gql`
-    mutation SubmitMaterialReview($input: CreateMaterialReviewInput!) {
-        createMaterialReview(input: $input) {
-            id
-            feedback
-            rating
-            reviewer {
-                id
-                name
-                surname
-            }
-        }
-    }
-`;
-
-// GraphQL mutation to update an existing review
-const UPDATE_MATERIAL_REVIEW = gql`
-    mutation UpdateMaterialReview($id: ID!, $input: UpdateMaterialReviewInput!) {
-        updateMaterialReview(id: $id, input: $input) {
-            id
-            feedback
-            rating
-            reviewer {
-                id
-                name
-                surname
-            }
-        }
-    }
-`;
+import { formatDate } from "../../utils/reviewerUtils";
+import { SUBMIT_MATERIAL_REVIEW, UPDATE_MATERIAL_REVIEW } from "../../graphql/reviewerQueries";
 
 export default function MaterialReviewModal({
                                                 isOpen,
@@ -49,8 +18,8 @@ export default function MaterialReviewModal({
     const user = useSelector(state => state.user);
     const [activeTab, setActiveTab] = useState("material");
     const [formData, setFormData] = useState({
-        feedback: "",
-        rating: 0
+        comments: "",
+        suggestedChange: ""
     });
     const [errors, setErrors] = useState({});
     const [isEditing, setIsEditing] = useState(false);
@@ -70,14 +39,14 @@ export default function MaterialReviewModal({
             if (myReview) {
                 setExistingReview(myReview);
                 setFormData({
-                    feedback: myReview.feedback || "",
-                    rating: myReview.rating || 0
+                    comments: myReview.comments || "",
+                    suggestedChange: myReview.suggestedChange || ""
                 });
             } else {
                 setExistingReview(null);
                 setFormData({
-                    feedback: "",
-                    rating: 0
+                    comments: "",
+                    suggestedChange: ""
                 });
             }
         }
@@ -90,6 +59,7 @@ export default function MaterialReviewModal({
             ...prev,
             [name]: value
         }));
+
         // Clear any error for this field
         if (errors[name]) {
             setErrors(prev => ({
@@ -103,12 +73,8 @@ export default function MaterialReviewModal({
     const validateForm = () => {
         const newErrors = {};
 
-        if (!formData.feedback.trim()) {
-            newErrors.feedback = "Please provide feedback for your review";
-        }
-
-        if (formData.rating < 1 || formData.rating > 10) {
-            newErrors.rating = "Rating must be between 1 and 10";
+        if (!formData.comments.trim()) {
+            newErrors.comments = "Please provide comments for your review";
         }
 
         setErrors(newErrors);
@@ -143,8 +109,8 @@ export default function MaterialReviewModal({
                         input: {
                             materialId: parseInt(material.id),
                             reviewerId: parseInt(user.workerId),
-                            feedback: formData.feedback,
-                            rating: parseInt(formData.rating)
+                            comments: formData.comments,
+                            suggestedChange: formData.suggestedChange
                         }
                     }
                 });
@@ -155,8 +121,8 @@ export default function MaterialReviewModal({
                         input: {
                             materialId: parseInt(material.id),
                             reviewerId: parseInt(user.workerId),
-                            feedback: formData.feedback,
-                            rating: parseInt(formData.rating)
+                            comments: formData.comments,
+                            suggestedChange: formData.suggestedChange
                         }
                     }
                 });
@@ -172,13 +138,6 @@ export default function MaterialReviewModal({
                 submit: error.message
             }));
         }
-    };
-
-    // Get badge variant based on rating
-    const getRatingVariant = (rating) => {
-        if (rating >= 7) return "success";
-        if (rating >= 4) return "warning";
-        return "danger";
     };
 
     return (
@@ -263,8 +222,8 @@ export default function MaterialReviewModal({
                                 <div className="detail-item">
                                     <span className="detail-label">Project:</span>
                                     <span className="detail-value">
-                    {material.task?.serviceInProgress?.projectService?.project?.name || "—"}
-                  </span>
+                                        {material.task?.serviceInProgress?.projectService?.project?.name || "—"}
+                                    </span>
                                 </div>
 
                                 <div className="detail-item">
@@ -275,19 +234,19 @@ export default function MaterialReviewModal({
                                 <div className="detail-item">
                                     <span className="detail-label">Task Priority:</span>
                                     <span className="detail-value">
-                    {material.task?.priority ?
-                        <Badge
-                            className={
-                                parseInt(material.task.priority) >= 8 ? "priority-high" :
-                                    parseInt(material.task.priority) >= 4 ? "priority-medium" :
-                                        "priority-low"
-                            }
-                            size="small"
-                        >
-                            {material.task.priority}
-                        </Badge> : "—"
-                    }
-                  </span>
+                                        {material.task?.priority ?
+                                            <Badge
+                                                className={
+                                                    parseInt(material.task.priority) >= 8 ? "priority-high" :
+                                                        parseInt(material.task.priority) >= 4 ? "priority-medium" :
+                                                            "priority-low"
+                                                }
+                                                size="small"
+                                            >
+                                                {material.task.priority}
+                                            </Badge> : "—"
+                                        }
+                                    </span>
                                 </div>
                             </div>
                         </div>
@@ -298,8 +257,8 @@ export default function MaterialReviewModal({
                                 <div className="keywords-container">
                                     {material.keywords.map(keyword => (
                                         <span key={keyword.id} className="keyword-tag">
-                      #{keyword.name}
-                    </span>
+                                            #{keyword.name}
+                                        </span>
                                     ))}
                                 </div>
                             </div>
@@ -325,24 +284,21 @@ export default function MaterialReviewModal({
                                     <div className="review-header">
                                         <h3>Your Review</h3>
                                         <span className="review-date">
-                      Submitted on: {formatDate(existingReview.createDatetime)}
-                    </span>
+                                            Submitted on: {formatDate(existingReview.createDatetime)}
+                                        </span>
                                     </div>
 
                                     <div className="detail-section">
-                                        <h4>Rating</h4>
-                                        <Badge
-                                            variant={getRatingVariant(existingReview.rating)}
-                                            size="medium"
-                                        >
-                                            {existingReview.rating}/10
-                                        </Badge>
+                                        <h4>Comments</h4>
+                                        <p className="review-text">{existingReview.comments || "No comments provided."}</p>
                                     </div>
 
-                                    <div className="detail-section">
-                                        <h4>Feedback</h4>
-                                        <p className="review-text">{existingReview.feedback || "No feedback provided."}</p>
-                                    </div>
+                                    {existingReview.suggestedChange && (
+                                        <div className="detail-section">
+                                            <h4>Suggested Changes</h4>
+                                            <p className="review-text">{existingReview.suggestedChange}</p>
+                                        </div>
+                                    )}
 
                                     <div className="action-buttons">
                                         <Button
@@ -366,36 +322,31 @@ export default function MaterialReviewModal({
                                     </div>
 
                                     <div className="form-group">
-                                        <label htmlFor="rating">Rating (1-10)*</label>
-                                        <input
-                                            id="rating"
-                                            name="rating"
-                                            type="number"
-                                            min="1"
-                                            max="10"
-                                            value={formData.rating}
+                                        <label htmlFor="comments">Comments*</label>
+                                        <textarea
+                                            id="comments"
+                                            name="comments"
+                                            value={formData.comments}
                                             onChange={handleInputChange}
-                                            className={errors.rating ? "has-error" : ""}
-                                        />
-                                        {errors.rating && (
-                                            <div className="error-message">{errors.rating}</div>
+                                            rows="4"
+                                            className={errors.comments ? "has-error" : ""}
+                                            placeholder="Provide your feedback on this material..."
+                                        ></textarea>
+                                        {errors.comments && (
+                                            <div className="error-message">{errors.comments}</div>
                                         )}
                                     </div>
 
                                     <div className="form-group">
-                                        <label htmlFor="feedback">Feedback*</label>
+                                        <label htmlFor="suggestedChange">Suggested Changes</label>
                                         <textarea
-                                            id="feedback"
-                                            name="feedback"
-                                            value={formData.feedback}
+                                            id="suggestedChange"
+                                            name="suggestedChange"
+                                            value={formData.suggestedChange}
                                             onChange={handleInputChange}
                                             rows="4"
-                                            className={errors.feedback ? "has-error" : ""}
-                                            placeholder="Provide your feedback on this material..."
+                                            placeholder="Suggest any changes or improvements to this material..."
                                         ></textarea>
-                                        {errors.feedback && (
-                                            <div className="error-message">{errors.feedback}</div>
-                                        )}
                                     </div>
 
                                     {errors.submit && (
@@ -454,30 +405,31 @@ export default function MaterialReviewModal({
                                     >
                                         <div className="review-card-header">
                                             <div className="reviewer-info">
-                        <span className="reviewer-name">
-                          {review.reviewer
-                              ? `${review.reviewer.name} ${review.reviewer.surname}`
-                              : "Unknown Reviewer"
-                          }
-                            {isCurrentUserReview && " (You)"}
-                        </span>
+                                                <span className="reviewer-name">
+                                                    {review.reviewer
+                                                        ? `${review.reviewer.name} ${review.reviewer.surname}`
+                                                        : "Unknown Reviewer"
+                                                    }
+                                                    {isCurrentUserReview && " (You)"}
+                                                </span>
                                                 <span className="review-date">
-                          {formatDate(review.createDatetime)}
-                        </span>
+                                                    {formatDate(review.createDatetime)}
+                                                </span>
                                             </div>
-                                            <Badge
-                                                variant={getRatingVariant(review.rating)}
-                                                size="small"
-                                            >
-                                                {review.rating}/10
-                                            </Badge>
                                         </div>
 
                                         <div className="review-card-content">
                                             <div className="review-section">
-                                                <h4>Feedback</h4>
-                                                <p>{review.feedback || "No feedback provided."}</p>
+                                                <h4>Comments</h4>
+                                                <p>{review.comments || "No comments provided."}</p>
                                             </div>
+
+                                            {review.suggestedChange && (
+                                                <div className="review-section">
+                                                    <h4>Suggested Changes</h4>
+                                                    <p>{review.suggestedChange}</p>
+                                                </div>
+                                            )}
                                         </div>
 
                                         {isCurrentUserReview && (
