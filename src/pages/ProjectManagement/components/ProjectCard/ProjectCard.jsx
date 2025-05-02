@@ -7,7 +7,7 @@ import ServiceCard from "../ServiceCard/ServiceCard";
 import Card from "../../../../components/common/Card/Card";
 import Badge from "../../../../components/common/Badge/Badge";
 
-export default function ProjectCard({ project }) {
+export default function ProjectCard({ project, onEdit, onDelete }) {
     const [open, setOpen] = useState(false);
     const [fetchServices, { data, loading }] = useLazyQuery(
         GET_PROJECT_SERVICES,
@@ -21,6 +21,20 @@ export default function ProjectCard({ project }) {
 
     const format = (d) => d ? new Date(d).toLocaleDateString() : "—";
     const money  = (v) => v != null ? `$${(+v).toFixed(2)}` : "—";
+
+    const handleEdit = (e) => {
+        e.stopPropagation();
+        if (onEdit) {
+            onEdit(project.id);
+        }
+    };
+
+    const handleDelete = (e) => {
+        e.stopPropagation();
+        if (onDelete) {
+            onDelete(project.id);
+        }
+    };
 
     return (
         <Card className={`project-card ${open ? "expanded":""}`} onClick={()=>setOpen(!open)}>
@@ -46,11 +60,34 @@ export default function ProjectCard({ project }) {
                     <span>{money(project.cost)} act.</span>
                 </div>
 
-                <Button
-                    variant={open ? "primary":"outline"}
-                    icon={open ? "▲":"▼"} size="small"
-                    onClick={(e)=>{e.stopPropagation(); setOpen(!open);}}
-                >{open ? "Collapse":"Expand"}</Button>
+                <div className="project-actions">
+                    <Button
+                        variant="outline"
+                        size="small"
+                        icon="✏️"
+                        onClick={handleEdit}
+                    >
+                        Edit
+                    </Button>
+
+                    <Button
+                        variant="danger"
+                        size="small"
+                        icon="🗑️"
+                        onClick={handleDelete}
+                    >
+                        Delete
+                    </Button>
+
+                    <Button
+                        variant={open ? "primary":"outline"}
+                        icon={open ? "▲":"▼"}
+                        size="small"
+                        onClick={(e)=>{e.stopPropagation(); setOpen(!open);}}
+                    >
+                        {open ? "Collapse":"Expand"}
+                    </Button>
+                </div>
             </div>
 
             {open && (
