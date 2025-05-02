@@ -8,7 +8,7 @@ import Pagination from "../../components/common/Pagination/Pagination";
 
 import { formatDate, getStatusBadgeVariant } from "./utils/reviewerUtils";
 import "./ReviewerDashboard.css";
-import MaterialReviewModal from "./components/MaterialReviewModal/MaterialReviewModal";
+import MaterialReviewModal from "./components/MaterialReviewModal";
 import ReviewerFilterPanel from "./components/ReviewFilterPanel/ReviewerFilterPanel";
 import { GET_PAGINATED_MATERIALS_WITH_TOTAL } from "./graphql/reviewerQueries";
 
@@ -60,7 +60,7 @@ export default function ReviewerDashboard() {
 
     // Query for materials with pagination
     const { loading, error, data, refetch } = useQuery(GET_PAGINATED_MATERIALS_WITH_TOTAL, {
-        variables: {
+        variables:   {
             input: {
                 page: page - 1, // Convert to 0-based for backend
                 size,

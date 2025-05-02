@@ -43,6 +43,7 @@ export const GET_PAGINATED_MATERIALS_WITH_TOTAL = gql`
                     comments
                     suggestedChange
                     createDatetime
+                    reviewDate
                     reviewer {
                         id
                         name
@@ -62,6 +63,17 @@ export const GET_PAGINATED_MATERIALS_WITH_TOTAL = gql`
         }
     }
 `;
+
+
+export const GET_MATERIAL_SUMMARIES = gql`
+    query GetMaterialSummaries {
+        materialSummaries {
+            id
+            name
+        }
+    }
+`;
+
 
 // Used to get reference data for filters
 export const GET_FILTER_REFERENCE_DATA = gql`

@@ -346,3 +346,14 @@
         flex-wrap: wrap;
     }
 }
+
+.review-card {
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+.review-card-content {
+    margin-top: 10px;
+}
+.review-section {
+    margin-bottom: 10px;
+}
