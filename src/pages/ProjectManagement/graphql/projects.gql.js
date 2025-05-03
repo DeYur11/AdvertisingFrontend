@@ -60,6 +60,45 @@ export const GET_SERVICES_IN_PROGRESS = gql`
     }
 `;
 
+
+export const GET_PROJECT_PAYMENTS = gql`
+    query GetProjectPayments($projectId: ID!) {
+        paymentsByProject(projectId: $projectId) {
+            id
+            amount
+            paymentDate
+            description
+        }
+    }
+`;
+
+export const UPDATE_PAYMENT = gql`
+    mutation UpdatePayment($id: ID!, $amount: Float!, $paymentDate: DateTime!, $description: String) {
+        updatePayment(
+            id: $id,
+            input: {
+                amount: $amount,
+                paymentDate: $paymentDate,
+                description: $description
+            }
+        ) {
+            id
+            amount
+            paymentDate
+            description
+        }
+    }
+`;
+
+export const DELETE_PAYMENT = gql`
+    mutation DeletePayment($id: ID!) {
+        deletePayment(id: $id) {
+            success
+            message
+        }
+    }
+`;
+
 export const GET_SERVICE_TASKS = gql`
 query GetServiceTasks($serviceInProgressId: ID!) {
     serviceInProgress(id: $serviceInProgressId) {

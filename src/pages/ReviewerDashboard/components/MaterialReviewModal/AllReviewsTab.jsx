@@ -20,7 +20,10 @@ export default function AllReviewsTab({ reviews, workerId, onEditOwn, onDeleteOw
                         review={review}
                         isMine={isMine}
                         onEditOwn={() => handleEditOwn(review)}
-                        onDeleteOwn={() => handleDeleteOwn(review.id)}
+                        onDeleteOwn={(e) => {
+                            e.stopPropagation();
+                            handleDeleteOwn(review.id);
+                        }}
                     />
                 );
             })}

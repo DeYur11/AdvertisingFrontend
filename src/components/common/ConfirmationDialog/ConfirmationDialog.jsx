@@ -36,8 +36,8 @@ export default function ConfirmationDialog({
                     <Button
                         variant={variant}
                         size="medium"
-                        onClick={() => {
-                            onConfirm();
+                        onClick={(e) => {
+                            onConfirm(e);
                             onClose();
                         }}
                     >

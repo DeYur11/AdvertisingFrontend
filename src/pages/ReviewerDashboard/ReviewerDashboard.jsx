@@ -75,7 +75,6 @@ export default function ReviewerDashboard() {
 
     // Handle refresh after review submission
     const handleReviewSubmitted = () => {
-        setIsReviewModalOpen(false);
         setSelectedMaterial(null);
         refetch();
     };
