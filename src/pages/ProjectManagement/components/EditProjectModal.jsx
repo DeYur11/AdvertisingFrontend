@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
-import { useQuery, useMutation } from "@apollo/client";
-import { gql } from "@apollo/client";
+import { useQuery, useMutation, gql } from "@apollo/client";
 import SelectWithCreate from "../../../components/common/SelectWithCreate";
 import Button from "../../../components/common/Button/Button";
 import Modal from "../../../components/common/Modal/Modal";
@@ -8,16 +7,22 @@ import ClientModal from "./ClientModal/ClientModal";
 import SelectWithModalCreate from "../../../components/common/SelectWithModalCreate";
 import "./EditProjectModal.css";
 
-// Get project reference data
+// Запит для довідкових даних
 const GET_PROJECT_REFERENCE_DATA = gql`
     query GetProjectReferenceData {
         clients { id name }
         projectTypes { id name }
         projectStatuses { id name }
+        workersByPosition(position: "Project Manager") {
+            id
+            name
+            surname
+        }
     }
 `;
 
-// Update project mutation
+
+// Мутація оновлення
 const UPDATE_PROJECT = gql`
     mutation UpdateProject($id: ID!, $input: UpdateProjectInput!) {
         updateProject(id: $id, input: $input) {
@@ -27,31 +32,7 @@ const UPDATE_PROJECT = gql`
     }
 `;
 
-// Get project details mutation
-const GET_PROJECT_DETAILS = gql`
-    query GetProjectDetails($id: ID!) {
-        project(id: $id) {
-            id
-            name
-            description
-            registrationDate
-            status {
-                id
-                name
-            }
-            projectType {
-                id
-                name
-            }
-            client {
-                id
-                name
-            }
-        }
-    }
-`;
-
-// Create project type mutation
+// Мутація створення типу проекту
 const CREATE_PROJECT_TYPE = gql`
     mutation CreateProjectType($input: CreateProjectTypeInput!) {
         createProjectType(input: $input) {
@@ -61,6 +42,39 @@ const CREATE_PROJECT_TYPE = gql`
     }
 `;
 
+const GET_PROJECT_DETAILS = gql`
+    query GET_PROJECT_DETAILS($id: ID!) {
+        project(id: $id) {
+            id
+            name
+            description
+            cost
+            estimateCost
+            paymentDeadline
+            registrationDate
+
+            client {
+                id
+            }
+
+            projectType {
+                id
+                name
+            }
+
+            status {
+                id
+                name
+            }
+
+            manager {
+                id
+            }
+        }
+    }
+`;
+
+
 export default function EditProjectModal({ isOpen, projectId, onClose, onUpdated }) {
     const [project, setProject] = useState({
         name: "",
@@ -68,30 +82,26 @@ export default function EditProjectModal({ isOpen, projectId, onClose, onUpdated
         clientId: "",
         projectTypeId: "",
         projectStatusId: "",
-        registrationDate: ""
+        cost: "",
+        estimateCost: "",
+        paymentDeadline: "",
+        managerId: ""
     });
 
     const [showCreateClient, setShowCreateClient] = useState(false);
     const [prefillClientName, setPrefillClientName] = useState("");
     const [isLoading, setIsLoading] = useState(false);
 
-    // Fetch reference data (clients, project types, etc.)
     const { data: refData, loading: refLoading, refetch } = useQuery(GET_PROJECT_REFERENCE_DATA);
 
-    // Fetch project details
-    const {
-        data: projectData,
-        loading: projectLoading
-    } = useQuery(GET_PROJECT_DETAILS, {
+    const { data: projectData, loading: projectLoading } = useQuery(GET_PROJECT_DETAILS, {
         variables: { id: projectId },
         skip: !projectId,
         fetchPolicy: "network-only"
     });
 
-    // Mutations
     const [updateProject] = useMutation(UPDATE_PROJECT);
 
-    // Set initial form values when project data is loaded
     useEffect(() => {
         if (projectData?.project) {
             const p = projectData.project;
@@ -101,32 +111,38 @@ export default function EditProjectModal({ isOpen, projectId, onClose, onUpdated
                 clientId: p.client?.id || "",
                 projectTypeId: p.projectType?.id || "",
                 projectStatusId: p.status?.id || "",
-                registrationDate: p.registrationDate ? new Date(p.registrationDate).toISOString().slice(0, 10) : ""
+                cost: p.cost !== null && p.cost !== undefined ? p.cost.toString() : "",
+                estimateCost: p.estimateCost !== null && p.estimateCost !== undefined ? p.estimateCost.toString() : "",
+                paymentDeadline: p.paymentDeadline || "",
+                managerId: p.manager?.id || ""
             });
         }
     }, [projectData]);
 
+
     const handleChange = (e) => {
         const { name, value } = e.target;
-        setProject(prev => ({ ...prev, [name]: value }));
+        setProject((prev) => ({ ...prev, [name]: value }));
     };
 
     const handleSave = async (e) => {
         e.preventDefault();
         setIsLoading(true);
-
+        console.log(project)
         try {
-            // Update the project with only the fields allowed by the UpdateProjectInput
             await updateProject({
                 variables: {
                     id: projectId,
                     input: {
                         name: project.name,
-                        description: project.description,
-                        clientId: project.clientId ? parseInt(project.clientId) : null,
-                        projectTypeId: project.projectTypeId ? parseInt(project.projectTypeId) : null,
-                        projectStatusId: project.projectStatusId ? parseInt(project.projectStatusId) : null,
-                        registrationDate: project.registrationDate || null
+                        description: project.description || null,
+                        clientId: parseInt(project.clientId),
+                        projectTypeId: parseInt(project.projectTypeId),
+                        projectStatusId: parseInt(project.projectStatusId),
+                        cost: project.cost !== "" ? parseFloat(project.cost) : null,
+                        estimateCost: project.estimateCost !== "" ? parseFloat(project.estimateCost) : null,
+                        paymentDeadline: project.paymentDeadline || null,
+                        managerId: project.managerId ? parseInt(project.managerId) : null
                     }
                 }
             });
@@ -136,8 +152,8 @@ export default function EditProjectModal({ isOpen, projectId, onClose, onUpdated
             if (onUpdated) onUpdated();
         } catch (err) {
             console.error("Error updating project:", err);
-            setIsLoading(false);
             alert(`Error updating project: ${err.message}`);
+            setIsLoading(false);
         }
     };
 
@@ -208,21 +224,60 @@ export default function EditProjectModal({ isOpen, projectId, onClose, onUpdated
                                 required
                             >
                                 <option value="">Select Status</option>
-                                {refData?.projectStatuses?.map(status => (
+                                {refData?.projectStatuses?.map((status) => (
                                     <option key={status.id} value={status.id}>{status.name}</option>
                                 ))}
                             </select>
                         </div>
 
-                        <div className="mb-3">
-                            <label className="form-label">Registration Date</label>
-                            <input
-                                type="date"
-                                className="form-control"
-                                name="registrationDate"
-                                value={project.registrationDate}
+                        <div className="mb-2">
+                            <label className="form-label">Manager</label>
+                            <select
+                                className="form-select"
+                                name="managerId"
+                                value={project.managerId}
                                 onChange={handleChange}
-                            />
+                            >
+                                <option value="">— none —</option>
+                                {refData?.workersByPosition?.map((w) => (
+                                    <option key={w.id} value={w.id}>{w.name} {w.surname}</option>
+                                ))}
+                            </select>
+                        </div>
+
+                        <div className="row g-2 mb-2">
+                            <div className="col">
+                                <label className="form-label">Payment Deadline</label>
+                                <input
+                                    type="date"
+                                    className="form-control"
+                                    name="paymentDeadline"
+                                    value={project.paymentDeadline}
+                                    onChange={handleChange}
+                                />
+                            </div>
+                            <div className="col">
+                                <label className="form-label">Estimate Cost, $</label>
+                                <input
+                                    type="number"
+                                    className="form-control"
+                                    name="estimateCost"
+                                    value={project.estimateCost}
+                                    onChange={handleChange}
+                                    min="0"
+                                />
+                            </div>
+                            <div className="col">
+                                <label className="form-label">Cost, $</label>
+                                <input
+                                    type="number"
+                                    className="form-control"
+                                    name="cost"
+                                    value={project.cost}
+                                    onChange={handleChange}
+                                    min="0"
+                                />
+                            </div>
                         </div>
 
                         <div className="mt-4 d-flex gap-2 justify-content-end">
@@ -239,7 +294,7 @@ export default function EditProjectModal({ isOpen, projectId, onClose, onUpdated
                 )}
             </div>
 
-            {/* Modal for creating new client */}
+            {/* Модалка створення клієнта */}
             <Modal
                 isOpen={showCreateClient}
                 onClose={() => setShowCreateClient(false)}
