@@ -1,0 +1,19 @@
+.chip {
+    display: inline-flex;
+    align-items: center;
+    border-radius: 12px;
+    font-weight: 500;
+    line-height: 1;
+    white-space: nowrap;
+    user-select: none;
+}
+
+.chip.sm { font-size: 12px; padding: 2px 8px; }
+.chip.md { font-size: 13px; padding: 4px 10px; }
+
+/* variants */
+.chip.default  { background:#e2e8f0; color:#1e293b; }
+.chip.primary  { background:#2563eb; color:#fff; }
+.chip.success  { background:#10b981; color:#fff; }
+.chip.warning  { background:#fbbf24; color:#1e293b; }
+.chip.danger   { background:#ef4444; color:#fff; }

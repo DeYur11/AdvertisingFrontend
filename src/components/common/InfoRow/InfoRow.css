@@ -1,0 +1,8 @@
+.info-row {
+    display: inline-flex;
+    align-items: center;
+    font-size: 14px;
+}
+
+.info-icon  { display:flex; align-items:center; }
+.info-label { font-weight:500; opacity:.7; margin-right:4px; }

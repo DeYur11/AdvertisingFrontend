@@ -20,9 +20,21 @@ export const GET_SERVICES_IN_PROGRESS_BY_PS = gql`
     query GetServicesInProgressByProjectService($projectServiceId: ID!) {
         servicesInProgressByProjectService(projectServiceId: $projectServiceId) {
             id
+            startDate
+            endDate
             cost
             status {
                 name
+            }
+            projectService {
+                id
+                service {
+                    id
+                    serviceName
+                }
+            }
+            tasks {
+                id   # потрібен лише для підрахунку кількості завдань
             }
         }
     }
