@@ -288,3 +288,36 @@
         margin-bottom: 6px;
     }
 }
+
+.finance-summary.small {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-bottom: 20px;
+}
+
+.finance-summary.small .summary-card {
+    flex: 1 1 160px;
+    padding: 10px 12px;
+    border-radius: 8px;
+    min-width: 140px;
+}
+
+.finance-summary.small .summary-icon {
+    font-size: 18px;
+    margin-right: 10px;
+}
+
+.finance-summary.small .summary-label {
+    font-size: 12px;
+    margin-bottom: 2px;
+}
+
+.finance-summary.small .summary-value {
+    font-size: 16px;
+    font-weight: 600;
+}
+
+.finance-summary.small .summary-value.negative {
+    color: #dc2626;
+}

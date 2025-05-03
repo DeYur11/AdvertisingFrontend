@@ -65,9 +65,40 @@ export const GET_PROJECT_PAYMENTS = gql`
     query GetProjectPayments($projectId: ID!) {
         paymentsByProject(projectId: $projectId) {
             id
-            amount
+            transactionNumber
+            paymentSum
             paymentDate
-            description
+            paymentPurpose {
+                name
+                id
+            }
+            createDatetime
+            updateDatetime
+        }
+    }
+`;
+export const CREATE_PAYMENT = gql`
+    mutation CreatePayment($input: CreatePaymentInput!) {
+        createPayment(input: $input) {
+            id
+            transactionNumber
+            paymentSum
+            paymentDate
+        }
+    }
+`;
+
+export const DELETE_PAYMENT = gql`
+    mutation DeletePayment($id: ID!) {
+        deletePayment(id: $id)
+    }
+`;
+
+export const GET_PAYMENT_PURPOSES = gql`
+    query GetPaymentPurposes {
+        paymentPurposes {
+            id
+            name
         }
     }
 `;
@@ -86,15 +117,6 @@ export const UPDATE_PAYMENT = gql`
             amount
             paymentDate
             description
-        }
-    }
-`;
-
-export const DELETE_PAYMENT = gql`
-    mutation DeletePayment($id: ID!) {
-        deletePayment(id: $id) {
-            success
-            message
         }
     }
 `;

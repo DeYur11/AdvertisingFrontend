@@ -1,8 +1,8 @@
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useMutation, gql } from "@apollo/client";
-import "./PaymentModal.css";
+import Modal from "../../../../components/common/Modal/Modal";
+import Button from "../../../../components/common/Button/Button";
 
-// GraphQL mutations
 const CREATE_PAYMENT = gql`
     mutation CreatePayment($input: CreatePaymentInput!) {
         createPayment(input: $input) {
@@ -26,217 +26,186 @@ const UPDATE_PAYMENT = gql`
 `;
 
 export default function PaymentModal({
+                                         isOpen,
+                                         onClose,
                                          payment,
                                          projectId,
-                                         purposes,
+                                         purposes = [],
                                          editMode,
-                                         onSave,
-                                         onCancel
+                                         onSave
                                      }) {
-    // Default form values
     const defaultForm = {
-        amount: "",
-        date: new Date().toISOString().split('T')[0],
-        description: "",
-        purposeId: ""
+        paymentSum: "",
+        paymentDate: new Date().toISOString().split("T")[0],
+        paymentPurposeId: "",
+        transactionNumber: ""
     };
 
-    // Form state
     const [form, setForm] = useState(defaultForm);
     const [errors, setErrors] = useState({});
 
-    // Mutations
-    const [createPayment, { loading: createLoading }] = useMutation(CREATE_PAYMENT);
-    const [updatePayment, { loading: updateLoading }] = useMutation(UPDATE_PAYMENT);
+    const [createPayment, { loading: creating }] = useMutation(CREATE_PAYMENT);
+    const [updatePayment, { loading: updating }] = useMutation(UPDATE_PAYMENT);
 
-    // Set form values if in edit mode
     useEffect(() => {
         if (editMode && payment) {
             setForm({
-                amount: payment.amount || "",
-                date: payment.date ? new Date(payment.date).toISOString().split('T')[0] : "",
-                description: payment.description || "",
-                purposeId: payment.purpose?.id || ""
+                paymentSum: payment.paymentSum?.toString() || "",
+                paymentDate: payment.paymentDate || "",
+                paymentPurposeId: payment.paymentPurpose?.id || "",
+                transactionNumber: payment.transactionNumber || ""
             });
+        } else {
+            setForm(defaultForm);
         }
-    }, [editMode, payment]);
+    }, [editMode, payment, isOpen]);
 
-    // Handle input changes
     const handleChange = (e) => {
         const { name, value } = e.target;
-        setForm(prev => ({ ...prev, [name]: value }));
-
-        // Clear error when field is changed
+        setForm((prev) => ({ ...prev, [name]: value }));
         if (errors[name]) {
-            setErrors(prev => ({ ...prev, [name]: null }));
+            setErrors((prev) => ({ ...prev, [name]: null }));
         }
     };
 
-    // Validate form
-    const validateForm = () => {
+    const validate = () => {
         const newErrors = {};
-
-        if (!form.amount) {
-            newErrors.amount = "Payment amount is required";
-        } else if (isNaN(parseFloat(form.amount)) || parseFloat(form.amount) <= 0) {
-            newErrors.amount = "Amount must be a positive number";
+        if (!form.paymentSum || isNaN(parseFloat(form.paymentSum))) {
+            newErrors.paymentSum = "Valid amount is required";
         }
-
-        if (!form.date) {
-            newErrors.date = "Payment date is required";
+        if (!form.paymentDate) {
+            newErrors.paymentDate = "Date is required";
         }
-
-        if (!form.purposeId) {
-            newErrors.purposeId = "Payment purpose is required";
+        if (!form.paymentPurposeId) {
+            newErrors.paymentPurposeId = "Purpose is required";
         }
-
+        if (!form.transactionNumber?.trim()) {
+            newErrors.transactionNumber = "Transaction number is required";
+        }
         setErrors(newErrors);
         return Object.keys(newErrors).length === 0;
     };
 
-    // Handle form submission
     const handleSubmit = async (e) => {
         e.preventDefault();
+        if (!validate()) return;
 
-        if (!validateForm()) {
-            return;
-        }
+        const input = {
+            paymentSum: parseFloat(form.paymentSum),
+            paymentDate: form.paymentDate,
+            paymentPurposeId: parseInt(form.paymentPurposeId),
+            transactionNumber: form.transactionNumber.trim()
+        };
 
         try {
             if (editMode) {
                 await updatePayment({
                     variables: {
                         id: payment.id,
-                        input: {
-                            amount: parseFloat(form.amount),
-                            date: form.date,
-                            description: form.description,
-                            purposeId: parseInt(form.purposeId)
-                        }
+                        input
                     }
                 });
             } else {
                 await createPayment({
                     variables: {
                         input: {
-                            amount: parseFloat(form.amount),
-                            date: form.date,
-                            description: form.description,
-                            purposeId: parseInt(form.purposeId),
+                            ...input,
                             projectId: parseInt(projectId)
                         }
                     }
                 });
             }
-
             onSave();
-        } catch (error) {
-            console.error("Error saving payment:", error);
-            setErrors({ submit: error.message });
+        } catch (err) {
+            console.error(err);
+            setErrors({ submit: err.message });
         }
     };
 
-    // Loading state
-    const isLoading = createLoading || updateLoading;
-
     return (
-        <div className="payment-modal">
-            <form onSubmit={handleSubmit} className="payment-form">
-                <div className="form-grid">
-                    {/* Amount */}
-                    <div className="form-group">
-                        <label htmlFor="amount" className="form-label">Amount*</label>
-                        <div className="input-with-prefix">
-                            <span className="input-prefix">$</span>
-                            <input
-                                type="text"
-                                id="amount"
-                                name="amount"
-                                value={form.amount}
-                                onChange={handleChange}
-                                className={`form-input ${errors.amount ? 'has-error' : ''}`}
-                                placeholder="Enter payment amount"
-                            />
-                        </div>
-                        {errors.amount && <div className="error-message">{errors.amount}</div>}
-                    </div>
+        <Modal
+            isOpen={isOpen}
+            onClose={onClose}
+            title={editMode ? "Edit Payment" : "Add Payment"}
+            size="small"
+        >
+            <form className="payment-form" onSubmit={handleSubmit}>
+                <div className="form-group">
+                    <label htmlFor="paymentSum">Amount*</label>
+                    <input
+                        type="number"
+                        step="0.01"
+                        id="paymentSum"
+                        name="paymentSum"
+                        value={form.paymentSum}
+                        onChange={handleChange}
+                        className={errors.paymentSum ? "has-error" : ""}
+                        placeholder="e.g. 1200.00"
+                    />
+                    {errors.paymentSum && <div className="error-message">{errors.paymentSum}</div>}
+                </div>
 
-                    {/* Date */}
-                    <div className="form-group">
-                        <label htmlFor="date" className="form-label">Date*</label>
-                        <input
-                            type="date"
-                            id="date"
-                            name="date"
-                            value={form.date}
-                            onChange={handleChange}
-                            className={`form-input ${errors.date ? 'has-error' : ''}`}
-                        />
-                        {errors.date && <div className="error-message">{errors.date}</div>}
-                    </div>
+                <div className="form-group">
+                    <label htmlFor="paymentDate">Payment Date*</label>
+                    <input
+                        type="date"
+                        id="paymentDate"
+                        name="paymentDate"
+                        value={form.paymentDate}
+                        onChange={handleChange}
+                        className={errors.paymentDate ? "has-error" : ""}
+                    />
+                    {errors.paymentDate && <div className="error-message">{errors.paymentDate}</div>}
+                </div>
 
-                    {/* Purpose */}
-                    <div className="form-group">
-                        <label htmlFor="purposeId" className="form-label">Purpose*</label>
-                        <select
-                            id="purposeId"
-                            name="purposeId"
-                            value={form.purposeId}
-                            onChange={handleChange}
-                            className={`form-select ${errors.purposeId ? 'has-error' : ''}`}
-                        >
-                            <option value="">Select Purpose</option>
-                            {purposes.map(purpose => (
-                                <option key={purpose.id} value={purpose.id}>
-                                    {purpose.name}
-                                </option>
-                            ))}
-                        </select>
-                        {errors.purposeId && <div className="error-message">{errors.purposeId}</div>}
-                    </div>
+                <div className="form-group">
+                    <label htmlFor="paymentPurposeId">Purpose*</label>
+                    <select
+                        id="paymentPurposeId"
+                        name="paymentPurposeId"
+                        value={form.paymentPurposeId}
+                        onChange={handleChange}
+                        className={errors.paymentPurposeId ? "has-error" : ""}
+                    >
+                        <option value="">Select purpose</option>
+                        {purposes.map(p => (
+                            <option key={p.id} value={p.id}>
+                                {p.name}
+                            </option>
+                        ))}
+                    </select>
+                    {errors.paymentPurposeId && <div className="error-message">{errors.paymentPurposeId}</div>}
+                </div>
 
-                    {/* Description */}
-                    <div className="form-group full-width">
-                        <label htmlFor="description" className="form-label">Description</label>
-                        <textarea
-                            id="description"
-                            name="description"
-                            value={form.description}
-                            onChange={handleChange}
-                            className="form-textarea"
-                            placeholder="Enter payment description"
-                            rows="3"
-                        />
-                    </div>
+                <div className="form-group">
+                    <label htmlFor="transactionNumber">Transaction Number*</label>
+                    <input
+                        type="text"
+                        id="transactionNumber"
+                        name="transactionNumber"
+                        value={form.transactionNumber}
+                        onChange={handleChange}
+                        className={errors.transactionNumber ? "has-error" : ""}
+                        placeholder="e.g. TXN-2024-001"
+                    />
+                    {errors.transactionNumber && <div className="error-message">{errors.transactionNumber}</div>}
                 </div>
 
                 {errors.submit && (
-                    <div className="submit-error-message">
-                        Error: {errors.submit}
-                    </div>
+                    <div className="submit-error-message">Error: {errors.submit}</div>
                 )}
 
                 <div className="form-actions">
-                    <button
-                        type="button"
-                        className="cancel-button"
-                        onClick={onCancel}
-                        disabled={isLoading}
-                    >
+                    <Button type="button" variant="outline" onClick={onClose}>
                         Cancel
-                    </button>
-                    <button
-                        type="submit"
-                        className="submit-button"
-                        disabled={isLoading}
-                    >
-                        {isLoading
+                    </Button>
+                    <Button type="submit" variant="primary" disabled={creating || updating}>
+                        {creating || updating
                             ? (editMode ? "Updating..." : "Creating...")
-                            : (editMode ? "Update Payment" : "Create Payment")
-                        }
-                    </button>
+                            : (editMode ? "Update Payment" : "Create Payment")}
+                    </Button>
                 </div>
             </form>
-        </div>
+        </Modal>
     );
 }
