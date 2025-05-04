@@ -1,10 +1,5 @@
 .details-modal .modal-content {
-    padding: 0;
-}
-
-.details-container {
-    display: flex;
-    flex-direction: column;
+    padding: 20px;
 }
 
 .details-breadcrumbs {
@@ -39,15 +34,6 @@
     margin: 0 4px;
 }
 
-.breadcrumb-item.project {
-    color: #2563eb;
-}
-
-.breadcrumb-item.service {
-    color: #7c3aed;
-}
-
-/* Responsive adjustments */
 @media (max-width: 640px) {
     .details-breadcrumbs {
         flex-direction: column;

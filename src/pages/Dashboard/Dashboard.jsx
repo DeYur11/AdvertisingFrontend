@@ -1,5 +1,5 @@
 import { useSelector } from "react-redux";
-import TaskList from "../../features/tasks/components/TaskList";
+import TaskList from "./components/TaskList/TaskList";
 import Card from "../../components/common/Card/Card";
 import "./Dashboard.css";
 

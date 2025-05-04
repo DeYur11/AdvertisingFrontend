@@ -20,14 +20,18 @@ export default function Modal({
 
         if (isOpen) {
             document.addEventListener('keydown', handleEscapeKey);
-            document.body.style.overflow = 'hidden';
-        }
 
-        return () => {
-            document.removeEventListener('keydown', handleEscapeKey);
-            document.body.style.overflow = 'auto';
-        };
+            // Блокуємо прокрутку
+            const originalOverflow = document.body.style.overflow;
+            document.body.style.overflow = 'hidden';
+
+            return () => {
+                document.removeEventListener('keydown', handleEscapeKey);
+                document.body.style.overflow = originalOverflow; // Повертаємо початкове значення
+            };
+        }
     }, [isOpen, onClose]);
+
 
     if (!isOpen) return null;
 

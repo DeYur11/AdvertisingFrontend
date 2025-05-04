@@ -1,4 +1,4 @@
-// src/pages/ReviewerDashboard/graphql/reviewerQueries.js
+// src/pages/ReviewerDashboard/material-review-graphql/reviewerQueries.js
 import { gql } from "@apollo/client";
 
 export const GET_PAGINATED_MATERIALS_WITH_TOTAL = gql`

@@ -1,7 +1,7 @@
-// src/pages/ServiceTracker/graphql/mutations.js
+// src/pages/ServiceTracker/material-review-graphql/mutations.js
 import { gql } from "@apollo/client";
 
-// Mutation to create a new service in progress
+// Mutation to create a new service in progress with correct field names
 export const CREATE_SERVICE_IN_PROGRESS = gql`
     mutation CreateServiceInProgress($input: CreateServiceInProgressInput!) {
         createServiceInProgress(input: $input) {

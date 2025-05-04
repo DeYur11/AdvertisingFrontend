@@ -1,7 +1,7 @@
 // src/pages/ServiceTracker/components/ServiceForm/ServiceForm.jsx
 import "./ServiceForm.css";
 
-export default function ServiceForm({ serviceForm, onChange, projectService, statuses }) {
+export default function ServiceForm({ serviceForm, onChange, projectService, statuses, workers }) {
     const handleChange = (e) => {
         const { name, value } = e.target;
         onChange({ ...serviceForm, [name]: value });
@@ -33,10 +33,28 @@ export default function ServiceForm({ serviceForm, onChange, projectService, sta
                 </div>
 
                 <div className="form-group">
+                    <label className="form-label">Assigned Worker *</label>
+                    <select
+                        name="assignedWorkerId"
+                        value={serviceForm.assignedWorkerId}
+                        onChange={handleChange}
+                        className="form-control"
+                        required
+                    >
+                        <option value="">Select worker</option>
+                        {workers.map(worker => (
+                            <option key={worker.id} value={worker.id}>
+                                {worker.name} {worker.surname}
+                            </option>
+                        ))}
+                    </select>
+                </div>
+
+                <div className="form-group">
                     <label className="form-label">Status *</label>
                     <select
-                        name="statusId"
-                        value={serviceForm.statusId}
+                        name="serviceInProgressStatusId"
+                        value={serviceForm.serviceInProgressStatusId}
                         onChange={handleChange}
                         className="form-control"
                         required

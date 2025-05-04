@@ -3,9 +3,9 @@ import ServiceCard from "../ServiceCard/ServiceCard";
 import Card from "../../../../components/common/Card/Card";
 import Badge from "../../../../components/common/Badge/Badge";
 import Button from "../../../../components/common/Button/Button";
-import "./CompactProjectCard.css";
+import "./ProjectCard.css";
 
-export default function CompactProjectCard({ project, expanded, onToggle, services, searchQuery, onSelect }) {
+export default function ProjectCard({ project, expanded, onToggle, services, searchQuery, onSelect }) {
     // Get project status for styling
     const projectStatus = project.status?.name?.toLowerCase() || "";
 

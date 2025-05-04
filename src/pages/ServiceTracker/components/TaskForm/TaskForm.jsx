@@ -92,7 +92,7 @@ export default function TaskForm({
                             <option value="">Select worker</option>
                             {workers.map(worker => (
                                 <option key={worker.id} value={worker.id}>
-                                    {getWorkerNameById(worker.id, [worker])}
+                                    {worker.name} {worker.surname}
                                 </option>
                             ))}
                         </select>

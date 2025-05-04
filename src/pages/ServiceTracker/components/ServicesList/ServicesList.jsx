@@ -3,7 +3,7 @@ import Card from "../../../../components/common/Card/Card";
 import ServiceCard from "../ServiceCard/ServiceCard";
 import "./ServicesList.css";
 
-export default function ServicesList({ services, loading, error, onCreateService, filters }) {
+export default function ServicesList({ services, loading, error, onCreateService, onViewDetails, filters }) {
     if (loading) {
         return <div className="loading-message">Loading services...</div>;
     }
@@ -31,6 +31,7 @@ export default function ServicesList({ services, loading, error, onCreateService
                     key={service.id}
                     service={service}
                     onCreateService={onCreateService}
+                    onViewDetails={onViewDetails}
                 />
             ))}
         </div>

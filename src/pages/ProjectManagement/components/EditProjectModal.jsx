@@ -155,7 +155,7 @@ export default function EditProjectModal({ isOpen, projectId, onClose, onUpdated
                         description: project.description || null,
                         clientId: +project.clientId,
                         projectTypeId: +project.projectTypeId,
-                        projectStatusId: +project.projectStatusId,
+                        statusId: +project.projectStatusId,
                         cost: project.cost !== "" ? +project.cost : null,
                         estimateCost: project.estimateCost !== "" ? +project.estimateCost : null,
                         paymentDeadline: project.paymentDeadline || null,

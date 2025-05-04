@@ -8,11 +8,13 @@ import {
     ServicesList,
     CreateServiceModal
 } from "./components";
+import ServiceDetailsModal from "./components/ServiceDetailsModal/ServiceDetailsModal";
 import "./ServiceTracker.css";
 
 export default function ServiceTracker() {
     const [selectedService, setSelectedService] = useState(null);
     const [showCreateModal, setShowCreateModal] = useState(false);
+    const [showDetailsModal, setShowDetailsModal] = useState(false);
     const [filters, setFilters] = useState({
         onlyMismatched: true,
         searchQuery: "",
@@ -57,6 +59,11 @@ export default function ServiceTracker() {
         setShowCreateModal(true);
     };
 
+    const handleViewServiceDetails = (service) => {
+        setSelectedService(service);
+        setShowDetailsModal(true);
+    };
+
     const filteredServices = getFilteredServices();
 
     return (
@@ -73,6 +80,7 @@ export default function ServiceTracker() {
                 loading={loading}
                 error={error}
                 onCreateService={handleCreateServiceClick}
+                onViewDetails={handleViewServiceDetails}
                 filters={filters}
             />
 
@@ -83,6 +91,16 @@ export default function ServiceTracker() {
                     onClose={() => setShowCreateModal(false)}
                     onSave={handleServiceCreated}
                     projectService={selectedService}
+                />
+            )}
+
+            {/* Service Details Modal */}
+            {showDetailsModal && selectedService && (
+                <ServiceDetailsModal
+                    isOpen={showDetailsModal}
+                    onClose={() => setShowDetailsModal(false)}
+                    projectService={selectedService}
+                    onCreateService={handleCreateServiceClick}
                 />
             )}
         </div>

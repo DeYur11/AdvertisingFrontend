@@ -5,9 +5,14 @@ import Button from "../../../../components/common/Button/Button";
 import { calculateProgress, getMissingCount } from "../../utils/serviceUtils";
 import "./ServiceCard.css";
 
-export default function ServiceCard({ service, onCreateService }) {
-    const handleCreateClick = () => {
+export default function ServiceCard({ service, onCreateService, onViewDetails }) {
+    const handleCreateClick = (e) => {
+        e.stopPropagation(); // Prevents the card click from triggering
         onCreateService(service);
+    };
+
+    const handleCardClick = () => {
+        onViewDetails(service);
     };
 
     const progress = calculateProgress(service);
@@ -16,6 +21,7 @@ export default function ServiceCard({ service, onCreateService }) {
     return (
         <Card
             className={`service-card ${service.servicesInProgress.length < service.amount ? 'incomplete' : 'complete'}`}
+            onClick={handleCardClick}
         >
             <div className="service-header">
                 <h3 className="service-name">{service.service.serviceName}</h3>
@@ -59,17 +65,24 @@ export default function ServiceCard({ service, onCreateService }) {
                 </div>
             </div>
 
-            {missingCount > 0 && (
-                <div className="service-actions">
+            <div className="service-actions">
+                {missingCount > 0 && (
                     <Button
                         variant="primary"
                         size="small"
                         onClick={handleCreateClick}
                     >
-                        Create Service Implementation ({missingCount} missing)
+                        Create Implementation
                     </Button>
-                </div>
-            )}
+                )}
+                <Button
+                    variant="outline"
+                    size="small"
+                    onClick={handleCardClick}
+                >
+                    View Details
+                </Button>
+            </div>
         </Card>
     );
 }

@@ -1,4 +1,4 @@
-// src/features/materials/graphql/queries.js
+// src/features/materials/material-review-graphql/queries.js
 import { gql } from '@apollo/client';
 
 export const MATERIALS_BY_TASK = gql`

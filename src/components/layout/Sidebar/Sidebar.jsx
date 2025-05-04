@@ -1,6 +1,6 @@
 import "./Sidebar.css";
-import TaskDetails from "../../../features/tasks/components/details/TaskDetails/TaskDetails";
-import ServiceDetails from "../../../features/tasks/components/details/ServiceDetails/ServiceDetails";
+import TaskDetails from "../../../pages/Dashboard/components/details/TaskDetails/TaskDetails";
+import ServiceDetails from "../../../pages/Dashboard/components/details/ServiceDetails/ServiceDetails";
 
 export default function Sidebar({ selectedItem, onClose }) {
     if (!selectedItem || selectedItem.type === "project") return null;

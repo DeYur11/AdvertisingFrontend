@@ -1,14 +1,13 @@
-
 /* src/pages/ServiceTracker/components/ServiceFilterPanel/ServiceFilterPanel.css */
 .filter-bar {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 16px;
-    margin-bottom: 24px;
-    padding: 16px;
+    gap: 12px;
+    margin-bottom: 16px;
+    padding: 10px 12px;
     background-color: #f8fafc;
-    border-radius: 8px;
+    border-radius: 6px;
     border: 1px solid #e2e8f0;
     flex-wrap: wrap;
 }
@@ -16,42 +15,42 @@
 .search-container {
     position: relative;
     width: 100%;
-    max-width: 400px;
+    max-width: 360px;
 }
 
 .search-input {
     width: 100%;
-    padding: 10px 36px 10px 12px;
-    border-radius: 6px;
+    padding: 7px 28px 7px 10px;
+    border-radius: 4px;
     border: 1px solid #cbd5e1;
     outline: none;
-    font-size: 14px;
+    font-size: 13px;
     color: #334155;
     background-color: white;
-    transition: all 0.3s ease;
+    transition: all 0.2s ease;
 }
 
 .search-input:focus {
     border-color: #2563eb;
-    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+    box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.1);
 }
 
 .clear-search {
     position: absolute;
-    right: 12px;
+    right: 8px;
     top: 50%;
     transform: translateY(-50%);
     background: none;
     border: none;
     cursor: pointer;
     color: #64748b;
-    font-size: 14px;
+    font-size: 12px;
     display: flex;
     align-items: center;
     justify-content: center;
     padding: 0;
-    width: 16px;
-    height: 16px;
+    width: 14px;
+    height: 14px;
     border-radius: 50%;
     background-color: #e2e8f0;
     transition: all 0.2s;
@@ -65,8 +64,8 @@
 .filter-checkbox {
     display: flex;
     align-items: center;
-    gap: 8px;
-    font-size: 14px;
+    gap: 6px;
+    font-size: 13px;
     color: #475569;
     cursor: pointer;
 }

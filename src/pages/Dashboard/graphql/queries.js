@@ -1,4 +1,4 @@
-// src/features/tasks/graphql/queries.js
+// src/features/tasks/material-review-graphql/queries.js
 import { gql } from '@apollo/client';
 
 // Existing query from EmployeeTasks.jsx
@@ -116,7 +116,7 @@ export const GET_MATERIAL_REFERENCE_DATA = gql`
     query GetMaterialReferenceData {
         materialTypes { id name }
         licenceTypes { id name }
-        usageRestrictions { id name }
+        usageRestrictions { id description }
         targetAudiences { id name }
         languages { id name }
     }

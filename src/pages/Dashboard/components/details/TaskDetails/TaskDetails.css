@@ -7,7 +7,6 @@
     display: flex;
     gap: 12px;
     margin-bottom: 20px;
-    padding: 0 20px;
 }
 
 .tab-button {
@@ -17,13 +16,6 @@
 /* Info tab */
 .info-tab {
     animation: fadeIn 0.3s ease;
-    padding: 0 20px 20px;
-}
-
-.info-card {
-    border: none;
-    box-shadow: none;
-    padding: 0;
 }
 
 .task-title-section {
@@ -38,67 +30,28 @@
     font-weight: 600;
     color: #1e293b;
     margin: 0;
-    padding: 0;
 }
 
 .task-description {
     margin-bottom: 24px;
-    padding: 16px;
     background-color: #f8fafc;
     border-radius: 8px;
     border: 1px solid #e2e8f0;
-}
-
-.description-content {
-    line-height: 1.6;
+    padding: 16px;
     color: #334155;
     white-space: pre-line;
-}
-
-.section-title {
-    font-size: 16px;
-    font-weight: 600;
-    color: #1e293b;
-    margin-bottom: 16px;
-    padding-bottom: 8px;
-    border-bottom: 1px solid #e2e8f0;
 }
 
 .task-details-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 30px;
-}
-
-.detail-item {
-    margin-bottom: 16px;
-}
-
-.detail-label {
-    font-size: 14px;
-    color: #64748b;
-    font-weight: 500;
-    margin-bottom: 6px;
-}
-
-.detail-value {
-    font-size: 15px;
-    color: #1e293b;
-}
-
-.detail-value.cost {
-    color: #047857;
-    font-weight: 600;
-}
-
-.detail-value.deadline {
-    font-weight: 600;
+    margin-top: 20px;
 }
 
 /* Materials tab */
 .materials-tab {
     animation: fadeIn 0.3s ease;
-    padding: 0 20px 20px;
 }
 
 .materials-header {
@@ -106,18 +59,6 @@
     justify-content: space-between;
     align-items: center;
     margin-bottom: 20px;
-}
-
-.materials-header .section-title {
-    margin-bottom: 0;
-    padding-bottom: 0;
-    border-bottom: none;
-}
-
-.add-material-btn {
-    display: flex;
-    align-items: center;
-    gap: 4px;
 }
 
 .materials-grid {
@@ -131,19 +72,6 @@
     display: flex;
     flex-direction: column;
     height: 100%;
-}
-
-.material-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    margin-bottom: 12px;
-}
-
-.material-name {
-    font-weight: 600;
-    font-size: 16px;
-    color: #1e293b;
 }
 
 .material-description {
@@ -164,12 +92,6 @@
 .language-badge {
     background-color: #e0e7ff;
     color: #4338ca;
-}
-
-.keywords {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 6px;
 }
 
 .keyword {
@@ -197,15 +119,8 @@
 .empty-state-card {
     background-color: #f8fafc;
     border: 1px dashed #cbd5e1;
-}
-
-.no-materials {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    padding: 40px 20px;
     text-align: center;
+    padding: 40px 20px;
 }
 
 .empty-icon {
@@ -220,46 +135,7 @@
     font-size: 16px;
 }
 
-/* Animation */
-@keyframes fadeIn {
-    from {
-        opacity: 0;
-        transform: translateY(10px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-/* Responsive adjustments */
-@media (max-width: 640px) {
-    .task-details-grid {
-        grid-template-columns: 1fr;
-        gap: 20px;
-    }
-
-    .materials-grid {
-        grid-template-columns: 1fr;
-    }
-
-    .task-title-section {
-        flex-direction: column;
-        gap: 12px;
-    }
-
-    .task-title-section .status-badge {
-        align-self: flex-start;
-    }
-
-    .task-tabs,
-    .info-tab,
-    .materials-tab {
-        padding-left: 12px;
-        padding-right: 12px;
-    }
-}
-
+/* Delete confirmation */
 .delete-confirmation {
     padding: 10px 0;
 }
@@ -274,4 +150,33 @@
     justify-content: flex-end;
     gap: 12px;
     margin-top: 20px;
+}
+
+/* Animations */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Responsive */
+@media (max-width: 640px) {
+    .task-details-grid {
+        grid-template-columns: 1fr;
+        gap: 20px;
+    }
+
+    .materials-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .task-title-section {
+        flex-direction: column;
+        gap: 12px;
+    }
 }

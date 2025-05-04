@@ -1,35 +1,37 @@
 /* src/pages/ServiceTracker/components/ServiceCard/ServiceCard.css */
 .service-card {
-    border-radius: 8px;
+    border-radius: 6px;
     border: 1px solid #e2e8f0;
-    padding: 16px;
+    padding: 12px;
     transition: all 0.2s ease;
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: 8px;
+    cursor: pointer; /* Add cursor pointer to show it's clickable */
 }
 
 .service-card:hover {
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
     transform: translateY(-2px);
 }
 
 .service-card.incomplete {
-    border-left: 4px solid #f59e0b;
+    border-left: 3px solid #f59e0b;
 }
 
 .service-card.complete {
-    border-left: 4px solid #10b981;
+    border-left: 3px solid #10b981;
 }
 
 .service-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    margin-bottom: 6px;
 }
 
 .service-name {
-    font-size: 18px;
+    font-size: 16px;
     font-weight: 600;
     color: #1e293b;
     margin: 0;
@@ -41,14 +43,14 @@
 .service-cost {
     display: flex;
     align-items: center;
-    gap: 8px;
-    font-size: 14px;
+    gap: 6px;
+    font-size: 13px;
 }
 
 .label {
     color: #64748b;
     font-weight: 500;
-    min-width: 80px;
+    min-width: 70px;
 }
 
 .value {
@@ -57,33 +59,53 @@
 
 /* Progress bar */
 .progress-container {
-    margin-top: 8px;
+    margin-top: 6px;
 }
 
 .progress-label {
     display: flex;
     justify-content: space-between;
-    font-size: 13px;
+    font-size: 12px;
     color: #475569;
-    margin-bottom: 6px;
+    margin-bottom: 4px;
 }
 
 .progress-bar {
-    height: 8px;
+    height: 6px;
     background-color: #e2e8f0;
-    border-radius: 4px;
+    border-radius: 3px;
     overflow: hidden;
 }
 
 .progress-fill {
     height: 100%;
     background-color: #2563eb;
-    border-radius: 4px;
+    border-radius: 3px;
 }
 
 /* Service card actions */
 .service-actions {
-    margin-top: 8px;
+    margin-top: 6px;
     display: flex;
     justify-content: flex-end;
+    gap: 6px;
+}
+
+/* Click indicator */
+.service-card::after {
+    content: "Click for details";
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    background-color: rgba(30, 41, 59, 0.7);
+    color: white;
+    padding: 2px 4px;
+    border-radius: 3px;
+    font-size: 10px;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+}
+
+.service-card:hover::after {
+    opacity: 1;
 }

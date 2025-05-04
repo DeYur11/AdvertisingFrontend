@@ -23,9 +23,10 @@ export default function CreateServiceModal({
                                                onSave,
                                                projectService
                                            }) {
-    // Form state
+    // Form state with the correct field names
     const [serviceForm, setServiceForm] = useState({
-        statusId: "",
+        assignedWorkerId: "",
+        serviceInProgressStatusId: "",
         startDate: new Date().toISOString().split("T")[0],
         endDate: "",
         cost: projectService?.service?.estimateCost || ""
@@ -46,7 +47,7 @@ export default function CreateServiceModal({
     const [createTask] = useMutation(CREATE_TASK);
 
     // Get statuses and workers
-    const statuses = statusesData?.serviceStatuses || [];
+    const statuses = statusesData?.serviceInProgressStatuses || [];
     const workers = workersData?.workers || [];
 
     // Handle service form field changes
@@ -105,12 +106,13 @@ export default function CreateServiceModal({
         e.preventDefault();
 
         try {
-            // First create the service in progress
+            // Create the service in progress with the correct field names
             const { data: sipData } = await createServiceInProgress({
                 variables: {
                     input: {
                         projectServiceId: parseInt(projectService.id),
-                        statusId: parseInt(serviceForm.statusId),
+                        assignedWorkerId: parseInt(serviceForm.assignedWorkerId),
+                        serviceInProgressStatusId: parseInt(serviceForm.serviceInProgressStatusId),
                         startDate: serviceForm.startDate,
                         endDate: serviceForm.endDate || null,
                         cost: serviceForm.cost ? parseFloat(serviceForm.cost) : null
@@ -161,6 +163,7 @@ export default function CreateServiceModal({
                     onChange={handleServiceFormChange}
                     projectService={projectService}
                     statuses={statuses}
+                    workers={workers}
                 />
 
                 {/* Tasks section */}
@@ -178,7 +181,7 @@ export default function CreateServiceModal({
                     <Button
                         variant="primary"
                         type="submit"
-                        disabled={!serviceForm.statusId || !serviceForm.startDate}
+                        disabled={!serviceForm.startDate || !serviceForm.assignedWorkerId || !serviceForm.serviceInProgressStatusId}
                     >
                         Create Service Implementation
                     </Button>

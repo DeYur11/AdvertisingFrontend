@@ -1,4 +1,4 @@
-// src/pages/ProjectManagement/graphql/projectsPagination.gql.js
+// src/pages/ProjectManagement/material-review-graphql/projectsPagination.gql.js
 import { gql } from "@apollo/client";
 
 export const GET_PAGINATED_PROJECTS_WITH_TOTAL = gql`

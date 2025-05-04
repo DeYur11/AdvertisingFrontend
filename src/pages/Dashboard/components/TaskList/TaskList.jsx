@@ -1,20 +1,20 @@
 import { useState } from "react";
 import { useQuery } from "@apollo/client";
 import { useSelector } from "react-redux";
-import TaskFilterPanel from "./TaskFilterPanel/TaskFilterPanel";
-import Modal from "../../../components/common/Modal/Modal";
-import TaskDetails from "./details/TaskDetails/TaskDetails";
-import ServiceDetails from "./details/ServiceDetails/ServiceDetails";
-import Card from "../../../components/common/Card/Card";
+import TaskFilterPanel from "../TaskFilterPanel/TaskFilterPanel";
+import Modal from "../../../../components/common/Modal/Modal";
+import TaskDetails from "../details/TaskDetails/TaskDetails";
+import ServiceDetails from "../details/ServiceDetails/ServiceDetails";
+import Card from "../../../../components/common/Card/Card";
 import "./TaskList.css";
 import {
     ProjectNameMatchHandler,
     ActiveTaskExistenceHandler,
     ServiceNameMatchHandler,
     ActiveServiceExistenceHandler
-} from "../../../utils/filterHandlers";
-import { GET_TASKS_BY_WORKER } from "../graphql/queries";
-import CompactProjectCard from "./CompactProjectCard/CompactProjectCard";
+} from "../../../../utils/filterHandlers";
+import { GET_TASKS_BY_WORKER } from "../../graphql/queries";
+import ProjectCard from "../ProjectCard/ProjectCard";
 
 export default function TaskList() {
     const [expandedProjectId, setExpandedProjectId] = useState(null);
@@ -286,7 +286,7 @@ export default function TaskList() {
                 {visibleProjects.length > 0 ? (
                     <div className="projects-list">
                         {visibleProjects.map(project => (
-                            <CompactProjectCard
+                            <ProjectCard
                                 key={project.id}
                                 project={project}
                                 expanded={expandedProjectId === project.id}

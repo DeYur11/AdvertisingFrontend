@@ -1,7 +1,7 @@
 // src/features/tasks/components/details/TaskDetails/MaterialDetails.jsx
 import { useQuery } from "@apollo/client";
 import { Box, CircularProgress } from "@mui/material";
-import { REVIEWS_BY_MATERIAL } from "../../../graphql/queries";
+import { REVIEWS_BY_MATERIAL } from "../../review-graphql/queries";
 
 export default function MaterialDetails({ material, onBack }) {
     const { data, loading, error } = useQuery(REVIEWS_BY_MATERIAL, {

@@ -1,4 +1,4 @@
-// src/features/materials/graphql/mutations.js
+// src/features/materials/material-review-graphql/mutations.js
 import { gql } from '@apollo/client';
 
 export const DELETE_MATERIAL = gql`
