@@ -1,0 +1,37 @@
+/* src/pages/ServiceTracker/components/TaskList/TaskList.css */
+.tasks-section {
+    margin-bottom: 32px;
+}
+
+.section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+}
+
+.section-title {
+    font-size: 18px;
+    font-weight: 600;
+    color: #1e293b;
+    margin: 0;
+    padding-bottom: 8px;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.tasks-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-top: 16px;
+}
+
+.no-tasks-message {
+    text-align: center;
+    padding: 24px;
+    background-color: #f1f5f9;
+    border-radius: 8px;
+    border: 1px dashed #cbd5e1;
+    color: #64748b;
+    margin: 16px 0;
+}

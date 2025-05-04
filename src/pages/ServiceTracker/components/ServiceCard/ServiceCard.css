@@ -1,0 +1,89 @@
+/* src/pages/ServiceTracker/components/ServiceCard/ServiceCard.css */
+.service-card {
+    border-radius: 8px;
+    border: 1px solid #e2e8f0;
+    padding: 16px;
+    transition: all 0.2s ease;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.service-card:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    transform: translateY(-2px);
+}
+
+.service-card.incomplete {
+    border-left: 4px solid #f59e0b;
+}
+
+.service-card.complete {
+    border-left: 4px solid #10b981;
+}
+
+.service-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.service-name {
+    font-size: 18px;
+    font-weight: 600;
+    color: #1e293b;
+    margin: 0;
+}
+
+.service-project,
+.service-client,
+.service-type,
+.service-cost {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+}
+
+.label {
+    color: #64748b;
+    font-weight: 500;
+    min-width: 80px;
+}
+
+.value {
+    color: #334155;
+}
+
+/* Progress bar */
+.progress-container {
+    margin-top: 8px;
+}
+
+.progress-label {
+    display: flex;
+    justify-content: space-between;
+    font-size: 13px;
+    color: #475569;
+    margin-bottom: 6px;
+}
+
+.progress-bar {
+    height: 8px;
+    background-color: #e2e8f0;
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.progress-fill {
+    height: 100%;
+    background-color: #2563eb;
+    border-radius: 4px;
+}
+
+/* Service card actions */
+.service-actions {
+    margin-top: 8px;
+    display: flex;
+    justify-content: flex-end;
+}

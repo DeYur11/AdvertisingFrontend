@@ -1,0 +1,15 @@
+/* src/pages/ServiceTracker/components/CreateServiceModal/CreateServiceModal.css */
+.service-form {
+    max-height: 70vh;
+    overflow-y: auto;
+    padding-right: 16px;
+}
+
+.form-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    margin-top: 24px;
+    padding-top: 16px;
+    border-top: 1px solid #e2e8f0;
+}

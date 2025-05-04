@@ -1,0 +1,83 @@
+
+/* src/pages/ServiceTracker/components/ServiceFilterPanel/ServiceFilterPanel.css */
+.filter-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 24px;
+    padding: 16px;
+    background-color: #f8fafc;
+    border-radius: 8px;
+    border: 1px solid #e2e8f0;
+    flex-wrap: wrap;
+}
+
+.search-container {
+    position: relative;
+    width: 100%;
+    max-width: 400px;
+}
+
+.search-input {
+    width: 100%;
+    padding: 10px 36px 10px 12px;
+    border-radius: 6px;
+    border: 1px solid #cbd5e1;
+    outline: none;
+    font-size: 14px;
+    color: #334155;
+    background-color: white;
+    transition: all 0.3s ease;
+}
+
+.search-input:focus {
+    border-color: #2563eb;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+.clear-search {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: #64748b;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background-color: #e2e8f0;
+    transition: all 0.2s;
+}
+
+.clear-search:hover {
+    background-color: #cbd5e1;
+    color: #1e293b;
+}
+
+.filter-checkbox {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    color: #475569;
+    cursor: pointer;
+}
+
+@media (max-width: 768px) {
+    .filter-bar {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .search-container {
+        max-width: 100%;
+    }
+}

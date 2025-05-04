@@ -1,12 +1,8 @@
-/* src/pages/ServiceTracker/ServiceTracker.css */
-.service-tracker-container {
-    width: 100%;
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 20px;
+/* src/pages/ServiceTracker/components/TaskForm/TaskForm.css */
+.task-form {
+    padding: 8px;
 }
 
-/* Form styling */
 .form-group {
     margin-bottom: 16px;
 }
@@ -39,4 +35,23 @@
 .form-control:disabled {
     background-color: #f1f5f9;
     cursor: not-allowed;
+}
+
+.form-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+}
+
+.form-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    margin-top: 24px;
+}
+
+@media (max-width: 768px) {
+    .form-grid {
+        grid-template-columns: 1fr;
+    }
 }
