@@ -19,9 +19,14 @@ export default function Header() {
 
                 {/* Access to Admin Panel only for Project Manager */}
                 {user.mainRole === "ProjectManager" && (
-                    <NavLink to="/projects" className={({ isActive }) => isActive ? "nav-button active" : "nav-button"}>
-                        Project Management
-                    </NavLink>
+                    <>
+                        <NavLink to="/projects" className={({ isActive }) => isActive ? "nav-button active" : "nav-button"}>
+                            Project Management
+                        </NavLink>
+                        <NavLink to="/service-tracker" className={({ isActive }) => isActive ? "nav-button active" : "nav-button"}>
+                            Service Tracker
+                        </NavLink>
+                    </>
                 )}
 
                 {/* Access to Dashboard only for Worker */}

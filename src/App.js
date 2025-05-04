@@ -13,6 +13,7 @@ import Settings from './pages/Settings/Settings';
 import ProjectManagement from "./pages/ProjectManagement/ProjectManagement";
 import ReviewerDashboard from './pages/ReviewerDashboard/ReviewerDashboard';
 import ProtectedRoute from "./components/common/ProtectedRoute";
+import ServiceTracker from "./pages/ServiceTracker/ServiceTracker";
 
 export default function App() {
     return (
@@ -23,6 +24,11 @@ export default function App() {
                     <Route path="/" element={
                         <ProtectedRoute>
                             <Home />
+                        </ProtectedRoute>
+                    } />
+                    <Route path="/service-tracker" element={
+                        <ProtectedRoute>
+                            <ServiceTracker />
                         </ProtectedRoute>
                     } />
                     <Route path="/dashboard" element={
