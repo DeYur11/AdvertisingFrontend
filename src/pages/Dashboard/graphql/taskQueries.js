@@ -13,6 +13,8 @@ export const GET_PAGINATED_TASKS_BY_WORKER = gql`
                 endDate
                 priority
                 value
+                createDatetime
+                updateDatetime
                 taskStatus {
                     id
                     name
@@ -81,6 +83,8 @@ export const GET_TASK_BY_ID = gql`
             endDate
             priority
             value
+            createDatetime
+            updateDatetime
             taskStatus {
                 id
                 name
@@ -141,6 +145,46 @@ export const GET_TASK_BY_ID = gql`
     }
 `;
 
+// Reference data queries for filters
+export const GET_FILTER_REFERENCE_DATA = gql`
+    query GetFilterReferenceData {
+        projectTypes {
+            id
+            name
+        }
+        projectStatuses {
+            id
+            name
+        }
+        serviceTypes {
+            id
+            name
+        }
+        taskStatuses {
+            id
+            name
+        }
+        clients {
+            id
+            name
+        }
+    }
+`;
+
+// Task status transition mutation
+export const TRANSITION_TASK_STATUS = gql`
+    mutation TransitionTaskStatus($input: TransitionTaskStatusInput!) {
+        transitionTaskStatus(input: $input) {
+            id
+            taskStatus {
+                id
+                name
+            }
+            updateDatetime
+        }
+    }
+`;
+
 // Material related queries
 export const MATERIALS_BY_TASK = gql`
     query GetMaterialsByTask($taskId: ID!) {
@@ -179,44 +223,6 @@ export const UPDATE_MATERIAL = gql`
     }
 `;
 
-// Reference data queries for filters
-export const GET_FILTER_REFERENCE_DATA = gql`
-    query GetFilterReferenceData {
-        projectTypes {
-            id
-            name
-        }
-        projectStatuses {
-            id
-            name
-        }
-        serviceTypes {
-            id
-            name
-        }
-        taskStatuses {
-            id
-            name
-        }
-        clients {
-            id
-            name
-        }
-    }
-`;
-
-// Get material reference data for forms
-export const GET_MATERIAL_REFERENCE_DATA = gql`
-    query GetMaterialReferenceData {
-        materialTypes { id name }
-        licenceTypes { id name }
-        usageRestrictions { id description }
-        targetAudiences { id name }
-        languages { id name }
-        keywords { id name }
-    }
-`;
-
 // Get material by ID for editing
 export const GET_MATERIAL_BY_ID = gql`
     query GetMaterialById($id: ID!) {
@@ -231,5 +237,17 @@ export const GET_MATERIAL_BY_ID = gql`
             language { id }
             keywords { id name }
         }
+    }
+`;
+
+// Get material reference data for forms
+export const GET_MATERIAL_REFERENCE_DATA = gql`
+    query GetMaterialReferenceData {
+        materialTypes { id name }
+        licenceTypes { id name }
+        usageRestrictions { id description }
+        targetAudiences { id name }
+        languages { id name }
+        keywords { id name }
     }
 `;

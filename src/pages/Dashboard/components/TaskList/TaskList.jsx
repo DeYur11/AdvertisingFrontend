@@ -1,50 +1,178 @@
-import { useState } from "react";
-import { useQuery } from "@apollo/client";
+import {useEffect, useState} from "react";
+import { useQuery, gql } from "@apollo/client";
 import { useSelector } from "react-redux";
-import TaskFilterPanel from "../TaskFilterPanel/TaskFilterPanel";
-import Modal from "../../../../components/common/Modal/Modal";
-import TaskDetails from "../details/TaskDetails/TaskDetails";
-import ServiceDetails from "../details/ServiceDetails/ServiceDetails";
 import Card from "../../../../components/common/Card/Card";
-import "./TaskList.css";
-import {
-    ProjectNameMatchHandler,
-    ActiveTaskExistenceHandler,
-    ServiceNameMatchHandler,
-    ActiveServiceExistenceHandler
-} from "../../../../utils/filterHandlers";
-import { GET_TASKS_BY_WORKER } from "../../graphql/queries";
+import Pagination from "../../../../components/common/Pagination/Pagination";
+import TaskFilterPanel from "../TaskFilterPanel/TaskFilterPanel";
 import ProjectCard from "../ProjectCard/ProjectCard";
+import Modal from "../../../../components/common/Modal/Modal";
+import TaskDetailsModal from "../details/TaskDetailsModal/TaskDetailsModal";
+import "./TaskList.css";
 
-export default function TaskList() {
-    const [expandedProjectId, setExpandedProjectId] = useState(null);
-    const [selectedItem, setSelectedItem] = useState(null);
-    const [modalOpen, setModalOpen] = useState(false);
-    const [taskFilter, setTaskFilter] = useState("active");
-    const [searchQuery, setSearchQuery] = useState("");
-    const [activeProject, setActiveProject] = useState(null);
-    const [activeService, setActiveService] = useState(null);
-    const [advancedFilters, setAdvancedFilters] = useState({});
-    const [filterPanelExpanded, setFilterPanelExpanded] = useState(false);
+// GraphQL query for paginated tasks
+const GET_PAGINATED_TASKS_BY_WORKER = gql`
+    query GetPaginatedTasksByWorker($workerId: ID!, $input: PaginatedTasksInput!) {
+        paginatedTasksByWorker(workerId: $workerId, input: $input) {
+            content {
+                id
+                name
+                description
+                startDate
+                deadline
+                endDate
+                priority
+                value
+                taskStatus {
+                    id
+                    name
+                }
+                serviceInProgress {
+                    id
+                    startDate
+                    endDate
+                    cost
+                    status {
+                        name
+                    }
+                    projectService {
+                        service {
+                            id
+                            serviceName
+                            estimateCost
+                            serviceType {
+                                name
+                            }
+                        }
+                        project {
+                            id
+                            name
+                            startDate
+                            endDate
+                            status {
+                                name
+                            }
+                            projectType {
+                                name
+                            }
+                            client {
+                                name
+                            }
+                            manager {
+                                name
+                                surname
+                            }
+                        }
+                    }
+                }
+            }
+            pageInfo {
+                totalElements
+                totalPages
+                size
+                number
+                first
+                last
+                numberOfElements
+            }
+        }
+    }
+`;
 
+
+const ACTIVE_TASK_STATUS_IDS = [1, 2, 4]
+
+export default function TaskList({
+                                     pageState,
+                                     updatePageState,
+                                     updateFilterState,
+                                     handleSearchChange,
+                                     clearAllFilters
+                                 }) {
     const user = useSelector(state => state.user);
     const workerId = user.workerId;
 
-    const { loading, error, data } = useQuery(GET_TASKS_BY_WORKER, {
-        variables: { workerId: String(workerId) },
-        skip: !workerId,
+    // State for expanded project, task details modal, and filter panel
+    const [expandedProjectId, setExpandedProjectId] = useState(null);
+    const [selectedItem, setSelectedItem] = useState(null);
+    const [modalOpen, setModalOpen] = useState(false);
+    const [filterPanelExpanded, setFilterPanelExpanded] = useState(false);
+    const [activeProject, setActiveProject] = useState(null);
+    const [activeService, setActiveService] = useState(null);
+    const [viewMode, setViewMode] = useState("active"); // "active" or "all"
+
+
+    // Execute GraphQL query
+    const { loading, error, data, refetch} = useQuery(GET_PAGINATED_TASKS_BY_WORKER, {
+        variables: {
+            workerId: String(workerId),
+            input: {
+                page: Number(pageState.page),  // Ensure it's a number
+                size: Number(pageState.size),  // Ensure it's a number
+                sortField: pageState.sortField,
+                sortDirection: pageState.sortDirection,
+                filter: {
+                    ...pageState.filter,
+                    // Convert all IDs in arrays to numbers
+                    statusIds: pageState.filter.statusIds?.map(id => Number(id)) ||
+                        // Add default status IDs for "active" view if no status filter
+                        (viewMode === "active" && (!pageState.filter.statusIds || pageState.filter.statusIds.length === 0)
+                            ? [1, 2, 4] // ID 1 for "in progress", ID 3 for "pending" (adjust as needed)
+                            : undefined),
+                    priorityIn: pageState.filter.priorityIn?.map(p => Number(p)) || undefined,
+                    serviceInProgressIds: pageState.filter.serviceInProgressIds?.map(id => Number(id)) || undefined
+                }
+            }
+        },
+        fetchPolicy: "network-only"
     });
+
+    useEffect(() => {
+        if (
+            viewMode === "active" &&
+            (!pageState.filter.statusIds || pageState.filter.statusIds.length === 0)
+        ) {
+            updateFilterState({ statusIds: ACTIVE_TASK_STATUS_IDS });
+        }
+    }, []);
+
+    useEffect(() => {
+        let variables = { // Створіть об'єкт змінних окремо
+            workerId: String(workerId),
+            input: {
+                page: Number(pageState.page),
+                size: Number(pageState.size),
+                sortField: pageState.sortField,
+                sortDirection: pageState.sortDirection,
+                filter: {
+                    // ... логіка формування filter ...
+                    statusIds: (
+                        pageState.filter.statusIds && pageState.filter.statusIds.length > 0
+                            ? pageState.filter.statusIds.map(id => Number(id))
+                            : viewMode === "active"
+                                ? ACTIVE_TASK_STATUS_IDS // Використовуйте константу
+                                : undefined
+                    ),
+                    // ... інші фільтри ...
+                }
+            }
+        };
+        console.log(variables)
+        refetch()
+    }, [refetch, viewMode]);
+
+    console.log("Current viewMode:", viewMode);
+    console.log("Current pageState.filter.statusIds:", pageState.filter.statusIds);
 
     if (!workerId) return <div className="no-worker-message">No worker selected.</div>;
     if (loading) return <div className="loading-message">Loading tasks...</div>;
     if (error) return <div className="error-message">Error loading tasks: {error.message}</div>;
 
-    const tasksByWorker = data.tasksByWorker;
+    const { content: tasks, pageInfo } = data.paginatedTasksByWorker;
 
     // Group tasks by project and service
     const groupedProjects = {};
 
-    tasksByWorker.forEach(task => {
+    tasks.forEach(task => {
         const project = task.serviceInProgress.projectService.project;
         const service = task.serviceInProgress.projectService.service;
 
@@ -60,7 +188,7 @@ export default function TaskList() {
             groupedProjects[project.id].services[service.id] = {
                 ...service,
                 tasks: [],
-                projectId: project.id // Store reference to parent project
+                projectId: project.id
             };
 
             // Add to the services list
@@ -69,8 +197,8 @@ export default function TaskList() {
 
         groupedProjects[project.id].services[service.id].tasks.push({
             ...task,
-            serviceId: service.id, // Store reference to parent service
-            projectId: project.id  // Store reference to parent project
+            serviceId: service.id,
+            projectId: project.id
         });
     });
 
@@ -78,139 +206,6 @@ export default function TaskList() {
 
     function toggleProject(id) {
         setExpandedProjectId(prev => (prev === id ? null : id));
-    }
-
-    function getVisibleProjectsForActiveTasks(projectsArray) {
-        const chain = new ProjectNameMatchHandler(
-            searchQuery,
-            new ActiveTaskExistenceHandler(
-                new ActiveServiceExistenceHandler(searchQuery, null)
-            )
-        );
-
-        return projectsArray
-            .map(project => chain.handle(project))
-            .filter(project => project !== null)
-            .filter(project => applyAdvancedFilters(project));
-    }
-
-    function getVisibleProjectsForAllTasks(projectsArray) {
-        const chain = new ProjectNameMatchHandler(
-            searchQuery,
-            new ServiceNameMatchHandler(
-                searchQuery,
-                null
-            )
-        );
-
-        return projectsArray
-            .map(project => chain.handle(project))
-            .filter(project => project !== null)
-            .filter(project => applyAdvancedFilters(project));
-    }
-
-    // Function to apply advanced filters
-    function applyAdvancedFilters(project) {
-        // If no advanced filters are set, return true (include all projects)
-        if (Object.keys(advancedFilters).length === 0) {
-            return true;
-        }
-
-        // Apply project type filter if set
-        if (advancedFilters.projectType && advancedFilters.projectType.length > 0) {
-            const projectTypeName = project.projectType?.name || "";
-            if (!advancedFilters.projectType.includes(projectTypeName)) {
-                return false;
-            }
-        }
-
-        // Apply client filter if set
-        if (advancedFilters.clientId && advancedFilters.clientId.length > 0) {
-            const clientId = project.client?.id;
-            if (!advancedFilters.clientId.includes(clientId)) {
-                return false;
-            }
-        }
-
-        // Create a modified project with only filtered services
-        const filteredProject = {
-            ...project,
-            services: []
-        };
-
-        // Filter services and tasks based on advanced filters
-        const filteredServices = project.services.filter(service => {
-            // Apply service type filter if set
-            if (advancedFilters.serviceType && advancedFilters.serviceType.length > 0) {
-                const serviceTypeName = service.serviceType?.name || "";
-                if (!advancedFilters.serviceType.includes(serviceTypeName)) {
-                    return false;
-                }
-            }
-
-            // Filter tasks within each service
-            const filteredTasks = service.filteredTasks ? service.filteredTasks.filter(task => {
-                // Apply status filter
-                if (advancedFilters.status && advancedFilters.status.length > 0) {
-                    const taskStatusName = task.taskStatus?.name?.toLowerCase() || "";
-                    if (!advancedFilters.status.includes(taskStatusName)) {
-                        return false;
-                    }
-                }
-
-                // Apply priority filter
-                if (advancedFilters.priority && advancedFilters.priority.length > 0) {
-                    const priority = parseInt(task.priority || "0");
-                    const priorityCategory =
-                        priority >= 8 ? "high" :
-                            priority >= 4 ? "medium" :
-                                "low";
-
-                    if (!advancedFilters.priority.includes(priorityCategory)) {
-                        return false;
-                    }
-                }
-
-                // Apply deadline filter
-                if (advancedFilters.deadline) {
-                    const taskDeadline = task.deadline ? new Date(task.deadline) : null;
-
-                    if (taskDeadline) {
-                        // Format dates for comparison (YYYY-MM-DD)
-                        const deadlineDate = taskDeadline.toISOString().split('T')[0];
-
-                        if (advancedFilters.deadline.from && deadlineDate < advancedFilters.deadline.from) {
-                            return false;
-                        }
-
-                        if (advancedFilters.deadline.to && deadlineDate > advancedFilters.deadline.to) {
-                            return false;
-                        }
-                    } else if (advancedFilters.deadline.from || advancedFilters.deadline.to) {
-                        // If deadline filter is active but task has no deadline
-                        return false;
-                    }
-                }
-
-                return true;
-            }) : [];
-
-            // Include service only if it has tasks after filtering
-            if (filteredTasks.length > 0) {
-                const filteredService = {
-                    ...service,
-                    filteredTasks: filteredTasks
-                };
-
-                filteredProject.services.push(filteredService);
-                return true;
-            }
-
-            return false;
-        });
-
-        // Check if project has any services after filtering
-        return filteredServices.length > 0;
     }
 
     function handleSelect(item) {
@@ -255,11 +250,38 @@ export default function TaskList() {
         setSelectedItem(null);
     }
 
-    const visibleProjects = taskFilter === "active"
-        ? getVisibleProjectsForActiveTasks(projectsArray)
-        : getVisibleProjectsForAllTasks(projectsArray);
+    function handlePageChange(newPage) {
+        // Note: newPage is 1-based but the API expects 0-based
+        // Ensure we're passing a number, not a string
+        updatePageState({ page: Number(newPage) - 1 });
+    }
 
-    // Determine modal title based on selected item
+    function handlePageSizeChange(newSize) {
+        updatePageState({
+            page: 0,  // Reset to first page
+            size: Number(newSize) // Ensure it's a number
+        });
+    }
+
+    function handleSortChange(field, direction) {
+        updatePageState({
+            sortField: field,
+            sortDirection: direction
+        });
+    }
+
+    function handleViewModeChange(mode) {
+        setViewMode(mode);
+        if(viewMode === "active") {
+            updateFilterState({ statusIds: [] });
+        }else{
+            updateFilterState({
+                statusIds: ACTIVE_TASK_STATUS_IDS
+            })
+        }
+    }
+
+    // Generate modal title
     let modalTitle = "";
     if (selectedItem) {
         if (selectedItem.type === "service") {
@@ -273,26 +295,30 @@ export default function TaskList() {
         <div className="task-list-wrapper">
             <div className="task-list-container">
                 <TaskFilterPanel
-                    taskFilter={taskFilter}
-                    setTaskFilter={setTaskFilter}
-                    searchQuery={searchQuery}
-                    setSearchQuery={setSearchQuery}
-                    filters={advancedFilters}
-                    setFilters={setAdvancedFilters}
+                    viewMode={viewMode}
+                    onViewModeChange={handleViewModeChange}
+                    searchQuery={pageState.filter.nameContains || ""}
+                    onSearchChange={handleSearchChange}
+                    filters={pageState.filter}
+                    onFiltersChange={updateFilterState}
                     expanded={filterPanelExpanded}
                     setExpanded={setFilterPanelExpanded}
+                    onSortChange={handleSortChange}
+                    currentSortField={pageState.sortField}
+                    currentSortDirection={pageState.sortDirection}
+                    onClearAllFilters={clearAllFilters}
                 />
 
-                {visibleProjects.length > 0 ? (
+                {projectsArray.length > 0 ? (
                     <div className="projects-list">
-                        {visibleProjects.map(project => (
+                        {projectsArray.map(project => (
                             <ProjectCard
                                 key={project.id}
                                 project={project}
                                 expanded={expandedProjectId === project.id}
                                 onToggle={() => toggleProject(project.id)}
-                                services={project.services}
-                                searchQuery={searchQuery}
+                                services={project.servicesList}
+                                searchQuery={pageState.filter.nameContains || ""}
                                 onSelect={handleSelect}
                             />
                         ))}
@@ -300,52 +326,35 @@ export default function TaskList() {
                 ) : (
                     <Card className="empty-state-card">
                         <div className="no-projects-message">
-                            {searchQuery || Object.keys(advancedFilters).length > 0
+                            {(pageState.filter.nameContains || Object.values(pageState.filter).some(f =>
+                                Array.isArray(f) ? f.length > 0 : f !== null && f !== ""))
                                 ? "No tasks match your current filters. Try adjusting your search or filters."
-                                : "No active projects found"}
+                                : "No active tasks found"}
                         </div>
                     </Card>
+                )}
+
+                {/* Pagination controls */}
+                {pageInfo.totalPages > 0 && (
+                    <Pagination
+                        currentPage={pageInfo.number + 1} // API returns 0-based, UI needs 1-based
+                        totalPages={pageInfo.totalPages}
+                        onPageChange={handlePageChange}
+                        pageSize={pageInfo.size}
+                        onPageSizeChange={handlePageSizeChange}
+                        totalItems={pageInfo.totalElements}
+                    />
                 )}
             </div>
 
             {/* Modal for task/service details */}
-            <Modal
+            <TaskDetailsModal
                 isOpen={modalOpen}
                 onClose={handleCloseModal}
-                title={modalTitle}
-                size="large"
-                className="details-modal"
-            >
-                {selectedItem && (
-                    <div className="details-container">
-                        {/* Breadcrumb navigation */}
-                        {(activeProject || activeService) && (
-                            <div className="details-breadcrumbs">
-                                {activeProject && (
-                                    <span className="breadcrumb-item project">
-                                        <span className="breadcrumb-label">Project:</span>
-                                        <span className="breadcrumb-value">{activeProject.name}</span>
-                                    </span>
-                                )}
-
-                                {activeProject && activeService && (
-                                    <span className="breadcrumb-separator">›</span>
-                                )}
-
-                                {activeService && selectedItem.type === "task" && (
-                                    <span className="breadcrumb-item service">
-                                        <span className="breadcrumb-label">Service:</span>
-                                        <span className="breadcrumb-value">{activeService.serviceName}</span>
-                                    </span>
-                                )}
-                            </div>
-                        )}
-
-                        {selectedItem.type === "service" && <ServiceDetails data={selectedItem.data} />}
-                        {selectedItem.type === "task" && <TaskDetails data={selectedItem.data} />}
-                    </div>
-                )}
-            </Modal>
+                selectedItem={selectedItem}
+                activeProject={activeProject}
+                activeService={activeService}
+            />
         </div>
     );
 }

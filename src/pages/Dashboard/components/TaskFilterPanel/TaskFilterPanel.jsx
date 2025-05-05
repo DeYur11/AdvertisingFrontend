@@ -5,7 +5,7 @@ import Card from "../../../../components/common/Card/Card";
 import Badge from "../../../../components/common/Badge/Badge";
 import "./TaskFilterPanel.css";
 
-// GraphQL queries for filter reference data
+// GraphQL query for reference data
 const GET_FILTER_REFERENCE_DATA = gql`
     query GetFilterReferenceData {
         projectTypes {
@@ -32,127 +32,168 @@ const GET_FILTER_REFERENCE_DATA = gql`
 `;
 
 export default function TaskFilterPanel({
-                                            taskFilter,
-                                            setTaskFilter,
+                                            viewMode,
+                                            onViewModeChange,
                                             searchQuery,
-                                            setSearchQuery,
+                                            onSearchChange,
                                             filters = {},
-                                            setFilters,
+                                            onFiltersChange,
                                             expanded,
                                             setExpanded,
                                             onSortChange,
-                                            currentSortField = "DEADLINE",
-                                            currentSortDirection = "ASC"
+                                            currentSortField,
+                                            currentSortDirection,
+                                            onClearAllFilters
                                         }) {
-    // Fetch reference data from database
+    // Fetch reference data
     const { data: refData, loading } = useQuery(GET_FILTER_REFERENCE_DATA);
 
-    // Local state for filter values
+    // Local state for tracking active filters count and client search
     const [activeFilterCount, setActiveFilterCount] = useState(0);
     const [clientSearchQuery, setClientSearchQuery] = useState("");
 
     // Update active filter count when filters change
     useEffect(() => {
-        // Count active filters
         let count = 0;
-        Object.keys(filters).forEach(key => {
-            if (Array.isArray(filters[key]) && filters[key].length > 0) count++;
-            else if (typeof filters[key] === 'object' && filters[key] !== null) count++;
-            else if (filters[key]) count++;
-        });
+
+        // Count statusIds
+        if (filters.statusIds?.length > 0) count++;
+
+        // Count priorityIn
+        if (filters.priorityIn?.length > 0) count++;
+
+        // Count deadline date range
+        if (filters.deadlineFrom || filters.deadlineTo) count++;
+
+        // Count nameContains (search)
+        if (filters.nameContains) count++;
+
+        // Count serviceInProgressIds
+        if (filters.serviceInProgressIds?.length > 0) count++;
+
+        // Count other date ranges
+        if (filters.startDateFrom || filters.startDateTo) count++;
+        if (filters.endDateFrom || filters.endDateTo) count++;
+        if (filters.createdFrom || filters.createdTo) count++;
 
         setActiveFilterCount(count);
     }, [filters]);
 
-    // Handle applying filter changes immediately
-    const applyFilter = (filterType, value) => {
-        const newFilters = { ...filters };
+    // Handle filter changes
+    const applyFilter = (key, value) => {
+        // Create a new filter object
+        const updatedFilters = { ...filters };
 
-        // Handle array-type filters (checkboxes, multiselect)
+        // Handle array type filters
         if (Array.isArray(value)) {
             if (value.length === 0) {
-                delete newFilters[filterType];
+                delete updatedFilters[key];
             } else {
-                newFilters[filterType] = value;
+                updatedFilters[key] = value;
             }
         }
         // Handle date ranges
-        else if (filterType === 'deadline') {
-            if (!value.from && !value.to) {
-                delete newFilters[filterType];
-            } else {
-                newFilters[filterType] = value;
-            }
-        }
-        // Handle regular single-value filters
-        else {
+        else if (
+            key === 'deadlineFrom' || key === 'deadlineTo' ||
+            key === 'startDateFrom' || key === 'startDateTo' ||
+            key === 'endDateFrom' || key === 'endDateTo' ||
+            key === 'createdFrom' || key === 'createdTo'
+        ) {
             if (!value) {
-                delete newFilters[filterType];
+                delete updatedFilters[key];
             } else {
-                newFilters[filterType] = value;
+                updatedFilters[key] = value;
+            }
+        }
+        // Handle simple value filters
+        else {
+            if (!value && value !== 0) {
+                delete updatedFilters[key];
+            } else {
+                updatedFilters[key] = value;
             }
         }
 
-        setFilters(newFilters);
+        onFiltersChange(updatedFilters);
     };
 
-    // Handle changes to multi-select options
-    const handleOptionToggle = (filterType, optionValue) => {
-        const currentValues = filters[filterType] || [];
-        let newValues;
+    // Handle toggling a status ID in the filter
+    const handleStatusToggle = (statusId) => {
+        const currentStatusIds = filters.statusIds || [];
+        let newStatusIds;
 
-        if (currentValues.includes(optionValue)) {
-            newValues = currentValues.filter(v => v !== optionValue);
+        if (currentStatusIds.includes(statusId)) {
+            newStatusIds = currentStatusIds.filter(id => id !== statusId);
         } else {
-            newValues = [...currentValues, optionValue];
+            newStatusIds = [...currentStatusIds, statusId];
         }
 
-        applyFilter(filterType, newValues);
+        applyFilter('statusIds', newStatusIds);
     };
 
-    // Handle changes to date ranges
+    // Handle toggling a priority value in the filter
+    const handlePriorityToggle = (priorityLevel) => {
+        const currentPriorities = filters.priorityIn || [];
+        let newPriorities;
+
+        // Map priority levels to actual priority values
+        const priorityRanges = {
+            "high": [8, 9, 10],
+            "medium": [4, 5, 6, 7],
+            "low": [1, 2, 3]
+        };
+
+        const allPriorities = priorityRanges[priorityLevel] || [];
+
+        // Check if all the priorities in this level are already selected
+        const allSelected = allPriorities.every(p => currentPriorities.includes(p));
+
+        if (allSelected) {
+            // If all are selected, remove them all
+            newPriorities = currentPriorities.filter(p => !allPriorities.includes(p));
+        } else {
+            // If not all selected, add the missing ones
+            newPriorities = [
+                ...currentPriorities.filter(p => !allPriorities.includes(p)),
+                ...allPriorities
+            ];
+        }
+
+        applyFilter('priorityIn', newPriorities);
+    };
+
+    // Handle deadline date changes
     const handleDateChange = (type, value) => {
-        const currentDeadline = filters.deadline || {};
-        applyFilter('deadline', {
-            ...currentDeadline,
-            [type]: value
-        });
+        applyFilter(type, value);
     };
 
-    // Reset all filters
-    const handleResetFilters = () => {
-        setFilters({});
-        setClientSearchQuery("");
-    };
-
-    // Helper to apply quick date filters
+    // Apply quick date filters
     const applyQuickDateFilter = (days) => {
         const today = new Date();
-        const targetDate = new Date();
+        const todayStr = today.toISOString().split('T')[0];
 
         if (days === 'overdue') {
-            // For overdue, we set "to" as today
-            applyFilter('deadline', {
-                from: null,
-                to: today.toISOString().split('T')[0]
-            });
+            // For overdue, set deadlineTo as today
+            applyFilter('deadlineTo', todayStr);
+            applyFilter('deadlineFrom', null);
         } else {
-            // For future dates, we set "from" as today and "to" as X days from now
+            // For future dates
+            const targetDate = new Date();
             targetDate.setDate(today.getDate() + days);
-            applyFilter('deadline', {
-                from: today.toISOString().split('T')[0],
-                to: targetDate.toISOString().split('T')[0]
-            });
+            const targetStr = targetDate.toISOString().split('T')[0];
+
+            applyFilter('deadlineFrom', todayStr);
+            applyFilter('deadlineTo', targetStr);
         }
     };
 
-    // Handle sort change
+    // Handle sort changes
     const handleSortChange = (field) => {
-        // If clicking the same field, toggle direction
         if (field === currentSortField) {
+            // Toggle direction if clicking the same field
             onSortChange(field, currentSortDirection === "ASC" ? "DESC" : "ASC");
         } else {
-            // New field, default to DESC for CREATE_DATETIME, ASC for others
+            // Default to ASC for new field (except CREATE_DATETIME which defaults to DESC)
             const defaultDirection = field === "CREATE_DATETIME" ? "DESC" : "ASC";
             onSortChange(field, defaultDirection);
         }
@@ -168,23 +209,21 @@ export default function TaskFilterPanel({
         );
     };
 
-    // Get unique priority values from tasks
+    // Define priority options
     const priorityOptions = [
         { value: "high", label: "High (8-10)", class: "priority-high" },
         { value: "medium", label: "Medium (4-7)", class: "priority-medium" },
         { value: "low", label: "Low (1-3)", class: "priority-low" }
     ];
 
-    // Get sorted clients with filtered search
+    // Get client list with search filtering
     const getSortedClients = () => {
         if (!refData?.clients) return [];
 
-        // Sort alphabetically by name
         const sortedClients = [...refData.clients].sort((a, b) =>
             a.name.localeCompare(b.name)
         );
 
-        // Filter by search query if it exists
         if (clientSearchQuery) {
             return sortedClients.filter(client =>
                 client.name.toLowerCase().includes(clientSearchQuery.toLowerCase())
@@ -194,6 +233,19 @@ export default function TaskFilterPanel({
         return sortedClients;
     };
 
+    // Check if a priority level is selected (partially or fully)
+    const isPrioritySelected = (priorityLevel) => {
+        const currentPriorities = filters.priorityIn || [];
+        const priorityRanges = {
+            "high": [8, 9, 10],
+            "medium": [4, 5, 6, 7],
+            "low": [1, 2, 3]
+        };
+
+        // Check if any priority in this level is selected
+        return priorityRanges[priorityLevel].some(p => currentPriorities.includes(p));
+    };
+
     return (
         <div className="task-filter-panel-container">
             {/* Search and Basic Filters Bar */}
@@ -201,17 +253,17 @@ export default function TaskFilterPanel({
                 <div className="filter-actions">
                     <div className="filter-buttons">
                         <Button
-                            variant={taskFilter === "active" ? "primary" : "outline"}
+                            variant={viewMode === "active" ? "primary" : "outline"}
                             size="small"
-                            onClick={() => setTaskFilter("active")}
+                            onClick={() => onViewModeChange("active")}
                             className="filter-button"
                         >
                             Active Tasks
                         </Button>
                         <Button
-                            variant={taskFilter === "all" ? "primary" : "outline"}
+                            variant={viewMode === "all" ? "primary" : "outline"}
                             size="small"
-                            onClick={() => setTaskFilter("all")}
+                            onClick={() => onViewModeChange("all")}
                             className="filter-button"
                         >
                             All Tasks
@@ -233,15 +285,15 @@ export default function TaskFilterPanel({
                     <input
                         type="text"
                         className="search-input"
-                        placeholder="Search by project, service, or task..."
+                        placeholder="Search by task name..."
                         value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
+                        onChange={(e) => onSearchChange(e.target.value)}
                         aria-label="Search tasks"
                     />
                     {searchQuery && (
                         <button
                             className="clear-search"
-                            onClick={() => setSearchQuery("")}
+                            onClick={() => onSearchChange("")}
                             aria-label="Clear search"
                         >
                             ✕
@@ -287,15 +339,32 @@ export default function TaskFilterPanel({
                 <div className="active-filters-display">
                     <div className="active-filters-label">Active Filters:</div>
                     <div className="active-filters-list">
-                        {filters.status?.length > 0 && (
+                        {filters.nameContains && (
+                            <div className="active-filter">
+                                <span className="filter-name">Search:</span>
+                                <span className="filter-value">"{filters.nameContains}"</span>
+                                <button
+                                    className="remove-filter"
+                                    onClick={() => onSearchChange("")}
+                                    aria-label="Remove search filter"
+                                >
+                                    ✕
+                                </button>
+                            </div>
+                        )}
+
+                        {filters.statusIds?.length > 0 && (
                             <div className="active-filter">
                                 <span className="filter-name">Status:</span>
                                 <span className="filter-value">
-                                    {filters.status.length} selected
+                                    {refData?.taskStatuses
+                                        .filter(s => filters.statusIds.includes(s.id))
+                                        .map(s => s.name)
+                                        .join(', ')}
                                 </span>
                                 <button
                                     className="remove-filter"
-                                    onClick={() => applyFilter('status', [])}
+                                    onClick={() => applyFilter('statusIds', [])}
                                     aria-label="Remove status filter"
                                 >
                                     ✕
@@ -303,15 +372,15 @@ export default function TaskFilterPanel({
                             </div>
                         )}
 
-                        {filters.priority?.length > 0 && (
+                        {filters.priorityIn?.length > 0 && (
                             <div className="active-filter">
                                 <span className="filter-name">Priority:</span>
                                 <span className="filter-value">
-                                    {filters.priority.join(', ')}
+                                    {filters.priorityIn.length} values
                                 </span>
                                 <button
                                     className="remove-filter"
-                                    onClick={() => applyFilter('priority', [])}
+                                    onClick={() => applyFilter('priorityIn', [])}
                                     aria-label="Remove priority filter"
                                 >
                                     ✕
@@ -319,19 +388,20 @@ export default function TaskFilterPanel({
                             </div>
                         )}
 
-                        {filters.deadline && (
+                        {(filters.deadlineFrom || filters.deadlineTo) && (
                             <div className="active-filter">
                                 <span className="filter-name">Deadline:</span>
                                 <span className="filter-value">
-                                    {filters.deadline.from &&
-                                        `From: ${new Date(filters.deadline.from).toLocaleDateString()}`}
-                                    {filters.deadline.from && filters.deadline.to && ' - '}
-                                    {filters.deadline.to &&
-                                        `To: ${new Date(filters.deadline.to).toLocaleDateString()}`}
+                                    {filters.deadlineFrom && `From: ${filters.deadlineFrom}`}
+                                    {filters.deadlineFrom && filters.deadlineTo && ' - '}
+                                    {filters.deadlineTo && `To: ${filters.deadlineTo}`}
                                 </span>
                                 <button
                                     className="remove-filter"
-                                    onClick={() => applyFilter('deadline', {})}
+                                    onClick={() => {
+                                        applyFilter('deadlineFrom', null);
+                                        applyFilter('deadlineTo', null);
+                                    }}
                                     aria-label="Remove deadline filter"
                                 >
                                     ✕
@@ -339,68 +409,17 @@ export default function TaskFilterPanel({
                             </div>
                         )}
 
-                        {filters.projectType?.length > 0 && (
-                            <div className="active-filter">
-                                <span className="filter-name">Project Type:</span>
-                                <span className="filter-value">
-                                    {filters.projectType.join(', ')}
-                                </span>
-                                <button
-                                    className="remove-filter"
-                                    onClick={() => applyFilter('projectType', [])}
-                                    aria-label="Remove project type filter"
-                                >
-                                    ✕
-                                </button>
-                            </div>
-                        )}
-
-                        {filters.clientId?.length > 0 && (
-                            <div className="active-filter">
-                                <span className="filter-name">Client:</span>
-                                <span className="filter-value">
-                                    {refData?.clients
-                                        .filter(c => filters.clientId.includes(c.id))
-                                        .map(c => c.name)
-                                        .join(', ')}
-                                </span>
-                                <button
-                                    className="remove-filter"
-                                    onClick={() => applyFilter('clientId', [])}
-                                    aria-label="Remove client filter"
-                                >
-                                    ✕
-                                </button>
-                            </div>
-                        )}
-
-                        {filters.serviceType?.length > 0 && (
-                            <div className="active-filter">
-                                <span className="filter-name">Service Type:</span>
-                                <span className="filter-value">
-                                    {filters.serviceType.join(', ')}
-                                </span>
-                                <button
-                                    className="remove-filter"
-                                    onClick={() => applyFilter('serviceType', [])}
-                                    aria-label="Remove service type filter"
-                                >
-                                    ✕
-                                </button>
-                            </div>
-                        )}
+                        {/* Add more active filters here as needed */}
                     </div>
 
-                    {activeFilterCount > 0 && (
-                        <Button
-                            variant="outline"
-                            size="small"
-                            className="clear-filters-btn"
-                            onClick={handleResetFilters}
-                        >
-                            Clear All
-                        </Button>
-                    )}
+                    <Button
+                        variant="outline"
+                        size="small"
+                        className="clear-filters-btn"
+                        onClick={onClearAllFilters}
+                    >
+                        Clear All
+                    </Button>
                 </div>
             )}
 
@@ -419,8 +438,8 @@ export default function TaskFilterPanel({
                                         {refData?.taskStatuses.map(status => (
                                             <div
                                                 key={status.id}
-                                                className={`filter-chip ${(filters.status || []).includes(status.id) ? 'selected' : ''}`}
-                                                onClick={() => handleOptionToggle('status', status.id)}
+                                                className={`filter-chip ${(filters.statusIds || []).includes(status.id) ? 'selected' : ''}`}
+                                                onClick={() => handleStatusToggle(status.id)}
                                             >
                                                 {status.name}
                                             </div>
@@ -435,8 +454,8 @@ export default function TaskFilterPanel({
                                         {priorityOptions.map(option => (
                                             <div
                                                 key={option.value}
-                                                className={`filter-chip ${option.class} ${(filters.priority || []).includes(option.value) ? 'selected' : ''}`}
-                                                onClick={() => handleOptionToggle('priority', option.value)}
+                                                className={`filter-chip ${option.class} ${isPrioritySelected(option.value) ? 'selected' : ''}`}
+                                                onClick={() => handlePriorityToggle(option.value)}
                                             >
                                                 {option.label}
                                             </div>
@@ -453,16 +472,16 @@ export default function TaskFilterPanel({
                                                 <label>From:</label>
                                                 <input
                                                     type="date"
-                                                    value={filters.deadline?.from || ""}
-                                                    onChange={(e) => handleDateChange("from", e.target.value)}
+                                                    value={filters.deadlineFrom || ""}
+                                                    onChange={(e) => handleDateChange("deadlineFrom", e.target.value)}
                                                 />
                                             </div>
                                             <div className="date-range-input">
                                                 <label>To:</label>
                                                 <input
                                                     type="date"
-                                                    value={filters.deadline?.to || ""}
-                                                    onChange={(e) => handleDateChange("to", e.target.value)}
+                                                    value={filters.deadlineTo || ""}
+                                                    onChange={(e) => handleDateChange("deadlineTo", e.target.value)}
                                                 />
                                             </div>
                                         </div>
@@ -493,79 +512,81 @@ export default function TaskFilterPanel({
                                     </div>
                                 </div>
 
-                                {/* Project Type Filters */}
+                                {/* More filters can be added here as needed */}
+                                {/* For example: Start Date, End Date, Service Type filters */}
+
+                                {/* Advanced Dates Section - can be extended */}
                                 <div className="filter-section">
-                                    <h3 className="filter-section-title">Project Type</h3>
-                                    <div className="filter-chips">
-                                        {refData?.projectTypes.map(type => (
-                                            <div
-                                                key={type.id}
-                                                className={`filter-chip ${(filters.projectType || []).includes(type.name) ? 'selected' : ''}`}
-                                                onClick={() => handleOptionToggle('projectType', type.name)}
-                                            >
-                                                {type.name}
+                                    <h3 className="filter-section-title">More Date Filters</h3>
+                                    <div className="date-subsections">
+                                        {/* Start Date Range */}
+                                        <div className="date-subsection">
+                                            <h4 className="date-subsection-title">Start Date</h4>
+                                            <div className="date-inputs">
+                                                <div className="date-range-input">
+                                                    <label>From:</label>
+                                                    <input
+                                                        type="date"
+                                                        value={filters.startDateFrom || ""}
+                                                        onChange={(e) => handleDateChange("startDateFrom", e.target.value)}
+                                                    />
+                                                </div>
+                                                <div className="date-range-input">
+                                                    <label>To:</label>
+                                                    <input
+                                                        type="date"
+                                                        value={filters.startDateTo || ""}
+                                                        onChange={(e) => handleDateChange("startDateTo", e.target.value)}
+                                                    />
+                                                </div>
                                             </div>
-                                        ))}
-                                    </div>
-                                </div>
+                                        </div>
 
-                                {/* Client Filters */}
-                                <div className="filter-section">
-                                    <h3 className="filter-section-title">Client</h3>
-
-                                    {/* Search bar for clients */}
-                                    <div className="client-search-container">
-                                        <input
-                                            type="text"
-                                            className="client-search-input"
-                                            placeholder="Search clients..."
-                                            value={clientSearchQuery}
-                                            onChange={(e) => setClientSearchQuery(e.target.value)}
-                                            aria-label="Search clients"
-                                        />
-                                        {clientSearchQuery && (
-                                            <button
-                                                className="clear-client-search"
-                                                onClick={() => setClientSearchQuery("")}
-                                                aria-label="Clear client search"
-                                            >
-                                                ✕
-                                            </button>
-                                        )}
-                                    </div>
-
-                                    <div className="client-list">
-                                        {getSortedClients().map(client => (
-                                            <div
-                                                key={client.id}
-                                                className={`client-item ${(filters.clientId || []).includes(client.id) ? 'selected' : ''}`}
-                                                onClick={() => handleOptionToggle('clientId', client.id)}
-                                            >
-                                                {client.name}
-                                                {(filters.clientId || []).includes(client.id) && (
-                                                    <span className="client-selected-check">✓</span>
-                                                )}
+                                        {/* End Date Range */}
+                                        <div className="date-subsection">
+                                            <h4 className="date-subsection-title">End Date</h4>
+                                            <div className="date-inputs">
+                                                <div className="date-range-input">
+                                                    <label>From:</label>
+                                                    <input
+                                                        type="date"
+                                                        value={filters.endDateFrom || ""}
+                                                        onChange={(e) => handleDateChange("endDateFrom", e.target.value)}
+                                                    />
+                                                </div>
+                                                <div className="date-range-input">
+                                                    <label>To:</label>
+                                                    <input
+                                                        type="date"
+                                                        value={filters.endDateTo || ""}
+                                                        onChange={(e) => handleDateChange("endDateTo", e.target.value)}
+                                                    />
+                                                </div>
                                             </div>
-                                        ))}
-                                        {getSortedClients().length === 0 && (
-                                            <div className="no-clients-found">No clients found</div>
-                                        )}
-                                    </div>
-                                </div>
+                                        </div>
 
-                                {/* Service Type Filters */}
-                                <div className="filter-section">
-                                    <h3 className="filter-section-title">Service Type</h3>
-                                    <div className="filter-chips">
-                                        {refData?.serviceTypes.map(type => (
-                                            <div
-                                                key={type.id}
-                                                className={`filter-chip ${(filters.serviceType || []).includes(type.name) ? 'selected' : ''}`}
-                                                onClick={() => handleOptionToggle('serviceType', type.name)}
-                                            >
-                                                {type.name}
+                                        {/* Created Date Range */}
+                                        <div className="date-subsection">
+                                            <h4 className="date-subsection-title">Created Date</h4>
+                                            <div className="date-inputs">
+                                                <div className="date-range-input">
+                                                    <label>From:</label>
+                                                    <input
+                                                        type="date"
+                                                        value={filters.createdFrom || ""}
+                                                        onChange={(e) => handleDateChange("createdFrom", e.target.value)}
+                                                    />
+                                                </div>
+                                                <div className="date-range-input">
+                                                    <label>To:</label>
+                                                    <input
+                                                        type="date"
+                                                        value={filters.createdTo || ""}
+                                                        onChange={(e) => handleDateChange("createdTo", e.target.value)}
+                                                    />
+                                                </div>
                                             </div>
-                                        ))}
+                                        </div>
                                     </div>
                                 </div>
                             </>

@@ -1,4 +1,3 @@
-// src/components/common/Pagination/Pagination.jsx
 import React from 'react';
 import './Pagination.css';
 import Button from '../Button/Button';
@@ -15,6 +14,7 @@ export default function Pagination({
     // Generate page numbers to display
     const getPageNumbers = () => {
         const pageNumbers = [];
+
         // Always show first page
         if (currentPage > 3) {
             pageNumbers.push(1);
@@ -45,6 +45,15 @@ export default function Pagination({
     const startItem = totalItems ? (currentPage - 1) * pageSize + 1 : 0;
     const endItem = Math.min(currentPage * pageSize, totalItems);
 
+    // Handler for page size change
+    const handlePageSizeChange = (e) => {
+        const newSize = Number(e.target.value);
+        onPageSizeChange(newSize);
+    };
+
+    // Don't render pagination if there's only one page
+    if (totalPages <= 1) return null;
+
     return (
         <div className="pagination-container">
             <div className="pagination-info">
@@ -58,7 +67,7 @@ export default function Pagination({
                     <span className="page-size-label">Items per page:</span>
                     <select
                         value={pageSize}
-                        onChange={(e) => onPageSizeChange(Number(e.target.value))}
+                        onChange={handlePageSizeChange}
                         className="page-size-select"
                     >
                         {pageSizeOptions.map(size => (

@@ -6,8 +6,8 @@ export const GET_PROJECT_REFERENCE_DATA = gql`
         clients       { id name }
         projectTypes  { id name }
         projectStatuses { id name }
-        workers       { id name surname }
         services      { id serviceName estimateCost }
+        workers: workersByPosition(position: "project manager") { id name surname }
     }
 `;
 

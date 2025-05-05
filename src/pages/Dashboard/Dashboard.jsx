@@ -1,23 +1,69 @@
-import React, { useState } from "react"; // Додано useState
+import { useState } from "react";
 import { useSelector } from "react-redux";
 import TaskList from "./components/TaskList/TaskList";
-import TaskFilterPanel from "./components/TaskFilterPanel/TaskFilterPanel"; // Шлях може потребувати коригування
 import Card from "../../components/common/Card/Card";
 import "./Dashboard.css";
 
 export default function Dashboard() {
     const user = useSelector(state => state.user);
 
-    // --- Стан фільтрів перенесено сюди ---
-    const [searchQuery, setSearchQuery] = useState("");
-    const [filters, setFilters] = useState({});
-    const [filterPanelExpanded, setFilterPanelExpanded] = useState(false);
-    const [sortField, setSortField] = useState("DEADLINE"); // Зберігаємо початкове сортування
-    const [sortDirection, setSortDirection] = useState("ASC"); // Зберігаємо початкове сортування
-    const [taskFilter, setTaskFilter] = useState("active"); // Стан для "Active"/"All" фільтра
+    // State for pagination and filtering
+    const [pageState, setPageState] = useState({
+        page: 0,           // 0-based page number (first page is 0)
+        size: 10,          // Items per page
+        sortField: "DEADLINE",
+        sortDirection: "ASC",
+        filter: {          // Initial empty filter
+            nameContains: "",
+            statusIds: [],
+            priorityIn: [],
+            deadlineFrom: null,
+            deadlineTo: null
+        }
+    });
 
-    // --- Кінець стану фільтрів ---
+    // Function to update pagination state
+    const updatePageState = (newState) => {
+        setPageState(prev => ({
+            ...prev,
+            ...newState
+        }));
+    };
 
+    // Function to update filter state
+    const updateFilterState = (filterUpdates) => {
+        setPageState(prev => ({
+            ...prev,
+            // Reset to first page when filters change
+            page: 0,
+            filter: {
+                ...prev.filter,
+                ...filterUpdates
+            }
+        }));
+    };
+
+    // Function to handle search query changes
+    const handleSearchChange = (query) => {
+        updateFilterState({ nameContains: query });
+    };
+
+    // Function to clear all filters
+    const clearAllFilters = () => {
+        setPageState(prev => ({
+            ...prev,
+            page: 0,
+            filter: {
+                nameContains: "",
+                statusIds: [],
+                priorityIn: [],
+                deadlineFrom: null,
+                deadlineTo: null
+            }
+        }));
+    };
+
+    // Check if user is a Worker
     if (user.mainRole !== "Worker") {
         return (
             <div className="dashboard-container">
@@ -38,41 +84,19 @@ export default function Dashboard() {
                     {user.isReviewer && <div className="user-role">Worker + Reviewer</div>}
                 </div>
                 <div className="dashboard-actions">
-                    {/* Future actions buttons can go here */}
+                    {/* Future action buttons can go here */}
                 </div>
             </div>
 
             <div className="dashboard-content">
                 <h3>Your Tasks</h3>
-
-                {/* --- TaskFilterPanel тепер рендериться тут --- */}
-                <TaskFilterPanel
-                    taskFilter={taskFilter}          // Передаємо стан
-                    setTaskFilter={setTaskFilter}    // Передаємо функцію оновлення
-                    searchQuery={searchQuery}
-                    setSearchQuery={setSearchQuery}
-                    filters={filters}
-                    setFilters={setFilters}
-                    expanded={filterPanelExpanded}
-                    setExpanded={setFilterPanelExpanded}
-                    onSortChange={(field, direction) => { // Обробник зміни сортування
-                        setSortField(field);
-                        setSortDirection(direction);
-                    }}
-                    currentSortField={sortField}      // Поточне поле сортування
-                    currentSortDirection={sortDirection} // Поточний напрямок сортування
-                />
-                {/* --- Кінець TaskFilterPanel --- */}
-
-                {/* --- TaskList отримує стан фільтрів як пропси --- */}
                 <TaskList
-                    searchQuery={searchQuery}
-                    filters={filters}
-                    sortField={sortField}
-                    sortDirection={sortDirection}
-                    // taskFilter={taskFilter} // Передаємо, якщо TaskList його потребує для запиту
+                    pageState={pageState}
+                    updatePageState={updatePageState}
+                    updateFilterState={updateFilterState}
+                    handleSearchChange={handleSearchChange}
+                    clearAllFilters={clearAllFilters}
                 />
-                {/* --- Кінець TaskList --- */}
             </div>
         </div>
     );

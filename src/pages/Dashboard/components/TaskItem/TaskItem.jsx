@@ -1,22 +1,48 @@
+import { useMutation, gql } from "@apollo/client";
 import { highlightMatch } from "../../../../utils/highlightMatch";
 import Badge from "../../../../components/common/Badge/Badge";
 import "./TaskItem.css";
 
+const TRANSITION_TASK_STATUS = gql`
+    mutation TransitionTaskStatus($taskId: Int!, $event: String!) {
+        transitionTaskStatus(input: { taskId: $taskId, event: $event }) {
+            id
+            taskStatus {
+                name
+            }
+        }
+    }
+`;
+
 export default function TaskItem({ task, searchQuery, onSelect, compact = false }) {
+    const [transitionTaskStatus] = useMutation(TRANSITION_TASK_STATUS);
+
     function handleClick(event) {
         event.stopPropagation();
         onSelect({ type: "task", data: task });
     }
 
+    async function handleStatusChange(event, nextEvent) {
+        event.stopPropagation();
+        try {
+            await transitionTaskStatus({
+                variables: {
+                    taskId: parseInt(task.id),
+                    event: nextEvent
+                },
+                refetchQueries: ["PaginatedTasksByWorker"]
+            });
+        } catch (err) {
+            console.error("Failed to transition status:", err.message);
+        }
+    }
+
     const status = task.taskStatus?.name?.toLowerCase() || "";
     const formattedDeadline = task.deadline ? new Date(task.deadline).toLocaleDateString() : "—";
 
-    // Define priority display and class
     let priorityClass = "default";
-
     if (task.priority) {
         const priority = parseInt(task.priority);
-
         if (priority >= 8) {
             priorityClass = "priority-high";
         } else if (priority >= 4) {
@@ -26,13 +52,11 @@ export default function TaskItem({ task, searchQuery, onSelect, compact = false 
         }
     }
 
-    // Determine if task deadline is approaching or passed
     let deadlineClass = "";
     if (task.deadline) {
         const now = new Date();
         const deadline = new Date(task.deadline);
         const daysUntilDeadline = Math.ceil((deadline - now) / (1000 * 60 * 60 * 24));
-
         if (deadline < now) {
             deadlineClass = "deadline-passed";
         } else if (daysUntilDeadline <= 3) {
@@ -66,7 +90,7 @@ export default function TaskItem({ task, searchQuery, onSelect, compact = false 
                 )}
             </div>
 
-            <div className="task-status">
+            <div className="task-controls">
                 <Badge
                     className={`status-badge status-${status}`}
                     variant={
@@ -77,13 +101,35 @@ export default function TaskItem({ task, searchQuery, onSelect, compact = false 
                     }
                     size={compact ? "small" : "medium"}
                 >
-                    {compact ?
-                        (status === "in progress" ? "In Progress" :
+                    {compact ? (
+                        status === "in progress" ? "In Progress" :
                             status === "completed" ? "Done" :
-                                status === "pending" ? "Pending" : task.taskStatus?.name || "Unknown") :
+                                status === "pending" ? "Pending" :
+                                    task.taskStatus?.name || "Unknown"
+                    ) : (
                         task.taskStatus?.name || "Unknown"
-                    }
+                    )}
                 </Badge>
+
+                {!compact && (
+                    (status === "not started" || status === "pending") && (
+                        <button
+                            className="task-action-btn"
+                            onClick={(e) => handleStatusChange(e, "START")}
+                        >
+                            Start
+                        </button>
+                    )
+                )}
+
+                {!compact && status === "in progress" && (
+                    <button
+                        className="task-action-btn"
+                        onClick={(e) => handleStatusChange(e, "COMPLETE")}
+                    >
+                        Finish
+                    </button>
+                )}
             </div>
         </div>
     );

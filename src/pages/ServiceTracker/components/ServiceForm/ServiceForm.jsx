@@ -1,7 +1,12 @@
 // src/pages/ServiceTracker/components/ServiceForm/ServiceForm.jsx
 import "./ServiceForm.css";
 
-export default function ServiceForm({ serviceForm, onChange, projectService, statuses, workers }) {
+export default function ServiceForm({
+                                        serviceForm,
+                                        onChange,
+                                        projectService
+                                        // statuses більше не потрібен
+                                    }) {
     const handleChange = (e) => {
         const { name, value } = e.target;
         onChange({ ...serviceForm, [name]: value });
@@ -9,11 +14,12 @@ export default function ServiceForm({ serviceForm, onChange, projectService, sta
 
     return (
         <div className="form-section">
-            <h3 className="section-title">Service Implementation Details</h3>
+            <h3 className="section-title">Деталі реалізації сервісу</h3>
 
             <div className="form-grid">
+                {/* Сервіс */}
                 <div className="form-group">
-                    <label className="form-label">Service</label>
+                    <label className="form-label">Сервіс</label>
                     <input
                         type="text"
                         className="form-control"
@@ -22,8 +28,9 @@ export default function ServiceForm({ serviceForm, onChange, projectService, sta
                     />
                 </div>
 
+                {/* Проєкт */}
                 <div className="form-group">
-                    <label className="form-label">Project</label>
+                    <label className="form-label">Проєкт</label>
                     <input
                         type="text"
                         className="form-control"
@@ -32,44 +39,9 @@ export default function ServiceForm({ serviceForm, onChange, projectService, sta
                     />
                 </div>
 
+                {/* Дата початку (обовʼязково) */}
                 <div className="form-group">
-                    <label className="form-label">Assigned Worker *</label>
-                    <select
-                        name="assignedWorkerId"
-                        value={serviceForm.assignedWorkerId}
-                        onChange={handleChange}
-                        className="form-control"
-                        required
-                    >
-                        <option value="">Select worker</option>
-                        {workers.map(worker => (
-                            <option key={worker.id} value={worker.id}>
-                                {worker.name} {worker.surname}
-                            </option>
-                        ))}
-                    </select>
-                </div>
-
-                <div className="form-group">
-                    <label className="form-label">Status *</label>
-                    <select
-                        name="serviceInProgressStatusId"
-                        value={serviceForm.serviceInProgressStatusId}
-                        onChange={handleChange}
-                        className="form-control"
-                        required
-                    >
-                        <option value="">Select status</option>
-                        {statuses.map(status => (
-                            <option key={status.id} value={status.id}>
-                                {status.name}
-                            </option>
-                        ))}
-                    </select>
-                </div>
-
-                <div className="form-group">
-                    <label className="form-label">Start Date *</label>
+                    <label className="form-label">Дата початку *</label>
                     <input
                         type="date"
                         name="startDate"
@@ -80,19 +52,9 @@ export default function ServiceForm({ serviceForm, onChange, projectService, sta
                     />
                 </div>
 
+                {/* Вартість (необовʼязково) */}
                 <div className="form-group">
-                    <label className="form-label">End Date</label>
-                    <input
-                        type="date"
-                        name="endDate"
-                        value={serviceForm.endDate}
-                        onChange={handleChange}
-                        className="form-control"
-                    />
-                </div>
-
-                <div className="form-group">
-                    <label className="form-label">Cost</label>
+                    <label className="form-label">Вартість</label>
                     <input
                         type="number"
                         name="cost"
@@ -100,7 +62,7 @@ export default function ServiceForm({ serviceForm, onChange, projectService, sta
                         onChange={handleChange}
                         className="form-control"
                         step="0.01"
-                        placeholder="Enter cost..."
+                        placeholder="Введіть вартість…"
                     />
                 </div>
             </div>
