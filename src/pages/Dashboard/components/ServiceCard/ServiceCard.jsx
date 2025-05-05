@@ -38,7 +38,7 @@ export default function ServiceCard({ service, searchQuery, onSelect }) {
                                 task={task}
                                 searchQuery={searchQuery}
                                 onSelect={onSelect}
-                                compact={true}
+                                compact={false} // Changed to false to make cards bigger
                             />
                         ))}
                     </div>

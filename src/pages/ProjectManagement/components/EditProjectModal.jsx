@@ -241,11 +241,11 @@ export default function EditProjectModal({ isOpen, projectId, onClose, onUpdated
                     </div>
                     <div className="col">
                         <label className="form-label">Estimate, $</label>
-                        <input type="number" className="form-control" name="estimateCost" min="0" value={project.estimateCost} onChange={handleChange} />
+                        <input type="number" step="0.01" className="form-control" name="estimateCost" min="0" value={project.estimateCost} onChange={handleChange} />
                     </div>
                     <div className="col">
                         <label className="form-label">Cost, $</label>
-                        <input type="number" className="form-control" name="cost" min="0" value={project.cost} onChange={handleChange} />
+                        <input type="number" step="0.01" className="form-control" name="cost" min="0" value={project.cost} onChange={handleChange} />
                     </div>
                 </div>
 

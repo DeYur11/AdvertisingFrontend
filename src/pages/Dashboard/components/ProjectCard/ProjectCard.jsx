@@ -119,7 +119,7 @@ export default function ProjectCard({ project, expanded, onToggle, services, sea
                     </div>
 
                     {services.length > 0 ? (
-                        <div className="services-grid">
+                        <div className="services-grid-dashboard">
                             {services.map(service => (
                                 <ServiceCard
                                     key={service.id}

@@ -117,9 +117,9 @@
     margin: 0;
 }
 
-.services-grid {
+.services-grid-dashboard {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(400px, 2fr));
     gap: 16px;
 }
 

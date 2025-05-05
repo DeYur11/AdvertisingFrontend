@@ -11,7 +11,6 @@ export const GET_ALL_PROJECT_SERVICES = gql`
                 id
                 serviceName
                 estimateCost
-                duration
                 serviceType {
                     id
                     name

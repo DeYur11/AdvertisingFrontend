@@ -57,12 +57,6 @@ export default function ServiceDetails({ data }) {
                                 {data.estimateCost ? `$${data.estimateCost}` : "—"}
                             </div>
                         </div>
-                        <div className="detail-item">
-                            <div className="detail-label">Duration</div>
-                            <div className="detail-value">
-                                {data.duration ? `${data.duration} days` : "—"}
-                            </div>
-                        </div>
                     </div>
 
                     <div className="details-col">
