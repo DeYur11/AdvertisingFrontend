@@ -1,4 +1,4 @@
-// src/pages/ServiceTracker/material-review-graphql/queries.js
+// src/pages/ServiceTracker/graphql/queries.js
 import { gql } from "@apollo/client";
 
 // Query to get all project services with their related services in progress
@@ -139,7 +139,7 @@ export const GET_PROJECTS_WITH_SERVICES = gql`
                         name
                     }
                 }
-                
+
                 project {
                     id
                     name
@@ -157,6 +157,16 @@ export const GET_PROJECTS_WITH_SERVICES = gql`
 export const GET_SERVICE_STATUSES = gql`
     query GetServiceStatuses {
         serviceInProgressStatuses {
+            id
+            name
+        }
+    }
+`;
+
+// Query to get task statuses for the dropdown
+export const GET_TASK_STATUSES = gql`
+    query GetTaskStatuses {
+        taskStatuses {
             id
             name
         }

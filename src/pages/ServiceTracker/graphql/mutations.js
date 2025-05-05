@@ -1,4 +1,4 @@
-// src/pages/ServiceTracker/material-review-graphql/mutations.js
+// src/pages/ServiceTracker/graphql/mutations.js
 import { gql } from "@apollo/client";
 
 // Mutation to create a new service in progress with correct field names
@@ -27,6 +27,45 @@ export const CREATE_TASK = gql`
             deadline
             priority
             value
+            taskStatus {
+                id
+                name
+            }
+            assignedWorker {
+                id
+                name
+                surname
+            }
         }
+    }
+`;
+
+// Mutation to update an existing task
+export const UPDATE_TASK = gql`
+    mutation UpdateTask($id: ID!, $input: UpdateTaskInput!) {
+        updateTask(id: $id, input: $input) {
+            id
+            name
+            description
+            deadline
+            priority
+            value
+            taskStatus {
+                id
+                name
+            }
+            assignedWorker {
+                id
+                name
+                surname
+            }
+        }
+    }
+`;
+
+// Mutation to delete a task
+export const DELETE_TASK = gql`
+    mutation DeleteTask($id: ID!) {
+        deleteTask(id: $id)
     }
 `;

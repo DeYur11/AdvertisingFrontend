@@ -1,8 +1,7 @@
 // src/pages/ServiceTracker/components/TaskForm/TaskForm.jsx
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Modal from "../../../../components/common/Modal/Modal";
 import Button from "../../../../components/common/Button/Button";
-import { getWorkerNameById } from "../../utils/serviceUtils";
 import "./TaskForm.css";
 
 export default function TaskForm({
@@ -11,16 +10,34 @@ export default function TaskForm({
                                      onSave,
                                      task = null,
                                      workers = [],
-                                     editIndex = -1
+                                     statuses = []
                                  }) {
     const [formData, setFormData] = useState({
+        id: task?.id || "",
         name: task?.name || "",
         description: task?.description || "",
         deadline: task?.deadline || new Date().toISOString().split("T")[0],
         assignedWorkerId: task?.assignedWorkerId || "",
+        taskStatusId: task?.taskStatusId || "",
         priority: task?.priority || "5",
         value: task?.value || ""
     });
+
+    // Update form data when task prop changes
+    useEffect(() => {
+        if (task) {
+            setFormData({
+                id: task.id || "",
+                name: task.name || "",
+                description: task.description || "",
+                deadline: task.deadline || new Date().toISOString().split("T")[0],
+                assignedWorkerId: task.assignedWorkerId || "",
+                taskStatusId: task.taskStatusId || "",
+                priority: task.priority || "5",
+                value: task.value || ""
+            });
+        }
+    }, [task]);
 
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -29,16 +46,24 @@ export default function TaskForm({
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        onSave(formData, editIndex);
+        const payload = { ...formData };
+
+        if (!formData.id) {
+            delete payload.taskStatusId;
+        }
+
+        onSave(payload);
     };
 
-    const isFormValid = formData.name && formData.deadline && formData.assignedWorkerId;
+    const isFormValid = formData.name && formData.deadline && formData.assignedWorkerId && (formData.taskStatusId || !formData.id);
+
+    const modalTitle = formData.id ? "Edit Task" : "Add Task";
 
     return (
         <Modal
             isOpen={isOpen}
             onClose={onClose}
-            title={editIndex >= 0 ? "Edit Task" : "Add Task"}
+            title={modalTitle}
             size="medium"
         >
             <form className="task-form" onSubmit={handleSubmit}>
@@ -79,6 +104,26 @@ export default function TaskForm({
                             required
                         />
                     </div>
+
+                    <div className="form-group">
+                        <label className="form-label">Status *</label>
+                        <select
+                            name="taskStatusId"
+                            value={formData.taskStatusId}
+                            onChange={handleChange}
+                            className="form-control"
+                            required
+                            disabled={!formData.id}  // ⬅️ тут обмеження на створення
+                        >
+                            <option value="">Select status</option>
+                            {statuses.map(status => (
+                                <option key={status.id} value={status.id}>
+                                    {status.name}
+                                </option>
+                            ))}
+                        </select>
+                    </div>
+
 
                     <div className="form-group">
                         <label className="form-label">Assign To *</label>
@@ -139,7 +184,7 @@ export default function TaskForm({
                         type="submit"
                         disabled={!isFormValid}
                     >
-                        {editIndex >= 0 ? "Save Changes" : "Add Task"}
+                        {formData.id ? "Save Changes" : "Add Task"}
                     </Button>
                 </div>
             </form>
