@@ -1,13 +1,16 @@
-// src/pages/ServiceTracker/ServiceTracker.jsx
 import { useState } from "react";
 import { useQuery } from "@apollo/client";
-import { GET_ALL_PROJECT_SERVICES } from "./graphql/queries";
+import {
+    GET_ALL_PROJECT_SERVICES,
+    GET_PROJECTS_WITH_SERVICES
+} from "./graphql/queries";
 import {
     ServiceTrackerHeader,
     ServiceFilterPanel,
     ServicesList,
     CreateServiceModal
 } from "./components";
+import ProjectGroupView from "./components/ProjectGroupView/ProjectGroupView";
 import ServiceDetailsModal from "./components/ServiceDetailsModal/ServiceDetailsModal";
 import "./ServiceTracker.css";
 
@@ -18,26 +21,41 @@ export default function ServiceTracker() {
     const [filters, setFilters] = useState({
         onlyMismatched: true,
         searchQuery: "",
-        projectFilter: ""
+        groupByProject: false // New filter for grouping
     });
 
-    // Fetch all project services
-    const { data, loading, error, refetch } = useQuery(GET_ALL_PROJECT_SERVICES);
+    // Fetch services data or projects data based on view mode
+    const {
+        data: servicesData,
+        loading: servicesLoading,
+        error: servicesError,
+        refetch: refetchServices
+    } = useQuery(GET_ALL_PROJECT_SERVICES, {
+        skip: filters.groupByProject
+    });
+
+    const {
+        data: projectsData,
+        loading: projectsLoading,
+        error: projectsError,
+        refetch: refetchProjects
+    } = useQuery(GET_PROJECTS_WITH_SERVICES, {
+        skip: !filters.groupByProject
+    });
+
+    // Determine which loading and error states to use
+    const loading = filters.groupByProject ? projectsLoading : servicesLoading;
+    const error = filters.groupByProject ? projectsError : servicesError;
 
     // Handle filtering of services
     const getFilteredServices = () => {
-        if (!data || !data.projectServices) return [];
+        if (!servicesData || !servicesData.projectServices) return [];
 
-        return data.projectServices.filter(ps => {
+        return servicesData.projectServices.filter(ps => {
             // Filter by search query (service name or project name)
             const matchesSearch = filters.searchQuery
-                ? (ps.service.serviceName.toLowerCase().includes(filters.searchQuery.toLowerCase())
-                    || ps.project.name.toLowerCase().includes(filters.searchQuery.toLowerCase()))
-                : true;
-
-            // Filter by project name if specified
-            const matchesProject = filters.projectFilter
-                ? ps.project.name.toLowerCase().includes(filters.projectFilter.toLowerCase())
+                ? (ps.service.serviceName.toLowerCase().includes(filters.searchQuery.toLowerCase()) ||
+                    ps.project.name.toLowerCase().includes(filters.searchQuery.toLowerCase()))
                 : true;
 
             // Filter by mismatch if enabled
@@ -45,13 +63,17 @@ export default function ServiceTracker() {
                 ? ps.amount > ps.servicesInProgress.length
                 : true;
 
-            return matchesSearch && matchesProject && isMismatched;
+            return matchesSearch && isMismatched;
         });
     };
 
     const handleServiceCreated = () => {
         setShowCreateModal(false);
-        refetch();
+        if (filters.groupByProject) {
+            refetchProjects();
+        } else {
+            refetchServices();
+        }
     };
 
     const handleCreateServiceClick = (service) => {
@@ -64,7 +86,20 @@ export default function ServiceTracker() {
         setShowDetailsModal(true);
     };
 
-    const filteredServices = getFilteredServices();
+    const handleRefresh = () => {
+        if (filters.groupByProject) {
+            refetchProjects();
+        } else {
+            refetchServices();
+        }
+    };
+
+    // Get filtered data based on view mode
+    const filteredServices = filters.groupByProject
+        ? [] // We don't need this in project mode
+        : getFilteredServices();
+
+    const projects = projectsData?.projects || [];
 
     return (
         <div className="service-tracker-container">
@@ -73,16 +108,29 @@ export default function ServiceTracker() {
             <ServiceFilterPanel
                 filters={filters}
                 setFilters={setFilters}
+                onRefresh={handleRefresh}
             />
 
-            <ServicesList
-                services={filteredServices}
-                loading={loading}
-                error={error}
-                onCreateService={handleCreateServiceClick}
-                onViewDetails={handleViewServiceDetails}
-                filters={filters}
-            />
+            {/* Render either flat list or grouped by project */}
+            {filters.groupByProject ? (
+                <ProjectGroupView
+                    projects={projects}
+                    loading={loading}
+                    error={error}
+                    onCreateService={handleCreateServiceClick}
+                    onViewDetails={handleViewServiceDetails}
+                    filters={filters}
+                />
+            ) : (
+                <ServicesList
+                    services={filteredServices}
+                    loading={loading}
+                    error={error}
+                    onCreateService={handleCreateServiceClick}
+                    onViewDetails={handleViewServiceDetails}
+                    filters={filters}
+                />
+            )}
 
             {/* Create Service In Progress Modal with Tasks */}
             {showCreateModal && selectedService && (

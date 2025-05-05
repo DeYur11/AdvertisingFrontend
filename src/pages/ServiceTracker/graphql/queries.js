@@ -74,6 +74,85 @@ export const GET_SERVICES_IN_PROGRESS_BY_PROJECT_SERVICE = gql`
     }
 `;
 
+export const GET_PROJECTS_WITH_SERVICES = gql`
+    query GetProjectsWithServices {
+        projects {
+            id
+            name
+            registrationDate
+            startDate
+            endDate
+            cost
+            estimateCost
+            paymentDeadline
+            description
+            createDatetime
+            updateDatetime
+
+            status {
+                id
+                name
+            }
+
+            projectType {
+                id
+                name
+            }
+
+            client {
+                id
+                name
+            }
+
+            manager {
+                id
+                name
+                surname
+            }
+
+            projectServices {
+                id
+                amount
+                createDatetime
+                updateDatetime
+
+                service {
+                    id
+                    serviceName
+                    estimateCost
+                    duration
+                    createDatetime
+                    updateDatetime
+                    serviceType {
+                        id
+                        name
+                    }
+                }
+
+                servicesInProgress {
+                    id
+                    startDate
+                    endDate
+                    cost
+                    status {
+                        id
+                        name
+                    }
+                }
+                
+                project {
+                    id
+                    name
+                    client {
+                        id
+                        name
+                    }
+                }
+            }
+        }
+    }
+`;
+
 // Query to get service statuses for the dropdown
 export const GET_SERVICE_STATUSES = gql`
     query GetServiceStatuses {

@@ -1,122 +1,90 @@
 import { highlightMatch } from "../../../../utils/highlightMatch";
 import Badge from "../../../../components/common/Badge/Badge";
-import Card from "../../../../components/common/Card/Card";
 import "./TaskItem.css";
 
-export default function TaskItem({ task, searchQuery, onSelect }) {
-    if (!task || !task.name) return null;
+export default function TaskItem({ task, searchQuery, onSelect, compact = false }) {
+    function handleClick(event) {
+        event.stopPropagation();
+        onSelect({ type: "task", data: task });
+    }
 
-    const status = task.taskStatus?.name?.toLowerCase() || "unknown";
-    const statusClass = status.replace(/\s+/g, "-"); // E.g., "in progress" → "in-progress"
-    const priority = parseInt(task.priority);
+    const status = task.taskStatus?.name?.toLowerCase() || "";
+    const formattedDeadline = task.deadline ? new Date(task.deadline).toLocaleDateString() : "—";
 
-    // Determine badge variant based on status
-    const badgeVariant = (() => {
-        switch (status) {
-            case "completed":
-                return "success";
-            case "in progress":
-                return "primary";
-            case "pending":
-                return "danger";
-            default:
-                return "default";
+    // Define priority display and class
+    let priorityClass = "default";
+
+    if (task.priority) {
+        const priority = parseInt(task.priority);
+
+        if (priority >= 8) {
+            priorityClass = "priority-high";
+        } else if (priority >= 4) {
+            priorityClass = "priority-medium";
+        } else {
+            priorityClass = "priority-low";
         }
-    })();
+    }
 
-    // Determine deadline class
-    const getDeadlineClass = () => {
-        if (!task.deadline) return "";
-
+    // Determine if task deadline is approaching or passed
+    let deadlineClass = "";
+    if (task.deadline) {
         const now = new Date();
         const deadline = new Date(task.deadline);
         const daysUntilDeadline = Math.ceil((deadline - now) / (1000 * 60 * 60 * 24));
 
         if (deadline < now) {
-            return "deadline-passed";
+            deadlineClass = "deadline-passed";
         } else if (daysUntilDeadline <= 3) {
-            return "deadline-soon";
+            deadlineClass = "deadline-soon";
         }
-        return "";
-    };
-
-    // Format date to display
-    const formatDate = (dateString) => {
-        if (!dateString) return "—";
-        return new Date(dateString).toLocaleDateString();
-    };
+    }
 
     return (
-        <Card
-            className={`task-item status-${statusClass}`}
-            onClick={onSelect}
-            hoverable
-        >
-            <div className="task-item-content">
-                <div className="task-header">
-                    <div className="task-name">
-                        {highlightMatch(task.name, searchQuery)}
-                    </div>
-                    <Badge variant={badgeVariant}>
-                        {task.taskStatus?.name || "Unknown"}
-                    </Badge>
+        <div className={`task-item ${compact ? 'compact' : ''}`} onClick={handleClick}>
+            <div className="task-content">
+                <div className="task-name">
+                    {highlightMatch(task.name, searchQuery)}
                 </div>
 
-                {task.description && (
-                    <div className="task-description">
-                        {task.description.length > 100
-                            ? `${task.description.substring(0, 100)}...`
-                            : task.description}
-                    </div>
-                )}
-
-                <div className="task-meta">
-                    {Number.isFinite(priority) && (
+                {!compact && (
+                    <div className="task-meta">
                         <div className="meta-item">
                             <span className="meta-label">Priority:</span>
-                            <Badge
-                                className={
-                                    priority >= 8
-                                        ? "priority-high"
-                                        : priority >= 4
-                                            ? "priority-medium"
-                                            : "priority-low"
-                                }
-                                size="small"
-                            >
-                                {priority}
+                            <Badge className={priorityClass} size="small">
+                                {task.priority || "—"}
                             </Badge>
                         </div>
-                    )}
 
-                    {task.deadline && (
                         <div className="meta-item">
                             <span className="meta-label">Deadline:</span>
-                            <span className={`meta-value ${getDeadlineClass()}`}>
-                                {formatDate(task.deadline)}
+                            <span className={`meta-value ${deadlineClass}`}>
+                                {formattedDeadline}
                             </span>
                         </div>
-                    )}
-
-                    {task.serviceInProgress?.projectService?.project && (
-                        <div className="meta-item">
-                            <span className="meta-label">Project:</span>
-                            <span className="meta-value">
-                                {task.serviceInProgress.projectService.project.name}
-                            </span>
-                        </div>
-                    )}
-
-                    {task.serviceInProgress?.projectService?.service && (
-                        <div className="meta-item">
-                            <span className="meta-label">Service:</span>
-                            <span className="meta-value">
-                                {task.serviceInProgress.projectService.service.serviceName}
-                            </span>
-                        </div>
-                    )}
-                </div>
+                    </div>
+                )}
             </div>
-        </Card>
+
+            <div className="task-status">
+                <Badge
+                    className={`status-badge status-${status}`}
+                    variant={
+                        status === "completed" ? "success" :
+                            status === "in progress" ? "primary" :
+                                status === "pending" ? "danger" :
+                                    "default"
+                    }
+                    size={compact ? "small" : "medium"}
+                >
+                    {compact ?
+                        (status === "in progress" ? "In Progress" :
+                            status === "completed" ? "Done" :
+                                status === "pending" ? "Pending" : task.taskStatus?.name || "Unknown") :
+                        task.taskStatus?.name || "Unknown"
+                    }
+                </Badge>
+            </div>
+        </div>
     );
 }

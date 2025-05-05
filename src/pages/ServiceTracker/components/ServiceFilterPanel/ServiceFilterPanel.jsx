@@ -1,7 +1,7 @@
-// src/pages/ServiceTracker/components/ServiceFilterPanel/ServiceFilterPanel.jsx
+import Button from "../../../../components/common/Button/Button";
 import "./ServiceFilterPanel.css";
 
-export default function ServiceFilterPanel({ filters, setFilters }) {
+export default function ServiceFilterPanel({ filters, setFilters, onRefresh }) {
     const handleSearchChange = (e) => {
         setFilters(prev => ({ ...prev, searchQuery: e.target.value }));
     };
@@ -10,12 +10,16 @@ export default function ServiceFilterPanel({ filters, setFilters }) {
         setFilters(prev => ({ ...prev, onlyMismatched: e.target.checked }));
     };
 
+    const handleGroupToggle = (e) => {
+        setFilters(prev => ({ ...prev, groupByProject: e.target.checked }));
+    };
+
     return (
         <div className="filter-bar">
             <div className="search-container">
                 <input
                     type="text"
-                    placeholder="Search by service or project name..."
+                    placeholder="Search by service, project, or client name..."
                     value={filters.searchQuery}
                     onChange={handleSearchChange}
                     className="search-input"
@@ -37,9 +41,27 @@ export default function ServiceFilterPanel({ filters, setFilters }) {
                         checked={filters.onlyMismatched}
                         onChange={handleFilterToggle}
                     />
-                    <span>Show only services with missing implementations</span>
+                    <span>Show only pending services</span>
+                </label>
+
+                <label className="filter-checkbox">
+                    <input
+                        type="checkbox"
+                        checked={filters.groupByProject}
+                        onChange={handleGroupToggle}
+                    />
+                    <span>Group by project</span>
                 </label>
             </div>
+
+            <Button
+                variant="outline"
+                size="small"
+                onClick={onRefresh}
+                icon="↻"
+            >
+                Refresh
+            </Button>
         </div>
     );
 }
