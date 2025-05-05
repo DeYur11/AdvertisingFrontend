@@ -39,20 +39,20 @@ export default function TaskFilterPanel({
                                             filters = {},
                                             setFilters,
                                             expanded,
-                                            setExpanded
+                                            setExpanded,
+                                            onSortChange,
+                                            currentSortField = "DEADLINE",
+                                            currentSortDirection = "ASC"
                                         }) {
     // Fetch reference data from database
     const { data: refData, loading } = useQuery(GET_FILTER_REFERENCE_DATA);
 
     // Local state for filter values
-    const [localFilters, setLocalFilters] = useState(filters);
     const [activeFilterCount, setActiveFilterCount] = useState(0);
     const [clientSearchQuery, setClientSearchQuery] = useState("");
 
-    // Update active filter count and local filters when filters change
+    // Update active filter count when filters change
     useEffect(() => {
-        setLocalFilters(filters);
-
         // Count active filters
         let count = 0;
         Object.keys(filters).forEach(key => {
@@ -146,6 +146,28 @@ export default function TaskFilterPanel({
         }
     };
 
+    // Handle sort change
+    const handleSortChange = (field) => {
+        // If clicking the same field, toggle direction
+        if (field === currentSortField) {
+            onSortChange(field, currentSortDirection === "ASC" ? "DESC" : "ASC");
+        } else {
+            // New field, default to DESC for CREATE_DATETIME, ASC for others
+            const defaultDirection = field === "CREATE_DATETIME" ? "DESC" : "ASC";
+            onSortChange(field, defaultDirection);
+        }
+    };
+
+    // Render sort indicator
+    const renderSortIndicator = (field) => {
+        if (field !== currentSortField) return null;
+        return (
+            <span className="sort-indicator">
+                {currentSortDirection === "ASC" ? "↑" : "↓"}
+            </span>
+        );
+    };
+
     // Get unique priority values from tasks
     const priorityOptions = [
         { value: "high", label: "High (8-10)", class: "priority-high" },
@@ -227,6 +249,37 @@ export default function TaskFilterPanel({
                     )}
                     <span className="search-icon">🔍</span>
                 </div>
+
+                {/* Sort Controls */}
+                <div className="sort-controls">
+                    <span className="sort-label">Sort by:</span>
+                    <div className="sort-options">
+                        <button
+                            className={`sort-option ${currentSortField === "NAME" ? "active" : ""}`}
+                            onClick={() => handleSortChange("NAME")}
+                        >
+                            Name {renderSortIndicator("NAME")}
+                        </button>
+                        <button
+                            className={`sort-option ${currentSortField === "PRIORITY" ? "active" : ""}`}
+                            onClick={() => handleSortChange("PRIORITY")}
+                        >
+                            Priority {renderSortIndicator("PRIORITY")}
+                        </button>
+                        <button
+                            className={`sort-option ${currentSortField === "DEADLINE" ? "active" : ""}`}
+                            onClick={() => handleSortChange("DEADLINE")}
+                        >
+                            Deadline {renderSortIndicator("DEADLINE")}
+                        </button>
+                        <button
+                            className={`sort-option ${currentSortField === "STATUS" ? "active" : ""}`}
+                            onClick={() => handleSortChange("STATUS")}
+                        >
+                            Status {renderSortIndicator("STATUS")}
+                        </button>
+                    </div>
+                </div>
             </div>
 
             {/* Active Filters Display */}
@@ -238,7 +291,7 @@ export default function TaskFilterPanel({
                             <div className="active-filter">
                                 <span className="filter-name">Status:</span>
                                 <span className="filter-value">
-                                    {filters.status.join(', ')}
+                                    {filters.status.length} selected
                                 </span>
                                 <button
                                     className="remove-filter"
@@ -366,8 +419,8 @@ export default function TaskFilterPanel({
                                         {refData?.taskStatuses.map(status => (
                                             <div
                                                 key={status.id}
-                                                className={`filter-chip ${(filters.status || []).includes(status.name.toLowerCase()) ? 'selected' : ''}`}
-                                                onClick={() => handleOptionToggle('status', status.name.toLowerCase())}
+                                                className={`filter-chip ${(filters.status || []).includes(status.id) ? 'selected' : ''}`}
+                                                onClick={() => handleOptionToggle('status', status.id)}
                                             >
                                                 {status.name}
                                             </div>

@@ -9,19 +9,20 @@
     max-width: 100%;
 }
 
-/* Projects grid - updated for wider cards */
-.projects-list {
+/* Tasks list */
+.tasks-list {
     display: flex;
     flex-direction: column;
-    gap: 16px;
+    gap: 12px;
     margin-top: 16px;
+    margin-bottom: 20px;
 }
 
 /* Status messages */
 .no-worker-message,
 .loading-message,
 .error-message,
-.no-projects-message {
+.no-tasks-message {
     padding: 16px;
     margin: 16px 0;
     text-align: center;
@@ -47,7 +48,7 @@
     border: 1px solid #fecaca;
 }
 
-.no-projects-message {
+.no-tasks-message {
     color: #64748b;
     font-style: italic;
     padding: 24px;
@@ -57,7 +58,6 @@
     background-color: #f8fafc;
     border: 1px dashed #cbd5e1;
 }
-
 
 .details-container {
     display: flex;
@@ -104,27 +104,6 @@
     color: #7c3aed;
 }
 
-/* Filter panel specific styles */
-.task-filter-panel-toggle {
-    position: sticky;
-    top: 0;
-    z-index: 10;
-    background-color: white;
-    padding: 8px 0;
-    display: flex;
-    justify-content: flex-end;
-}
-
-/* Hover effects for project cards */
-.projects-list .compact-project-card {
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
-}
-
-.projects-list .compact-project-card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-}
-
 /* Empty state improvements */
 .empty-state-card {
     padding: 40px 20px;
@@ -132,7 +111,7 @@
     animation: fadeIn 0.3s ease;
 }
 
-.empty-state-card .no-projects-message {
+.empty-state-card .no-tasks-message {
     padding: 0;
     font-size: 16px;
     color: #64748b;
@@ -159,18 +138,12 @@
 }
 
 /* Responsive adjustments */
-@media (min-width: 1024px) {
-    .projects-list {
-        grid-template-columns: 1fr;
-    }
-}
-
 @media (max-width: 768px) {
     .task-list-container {
         padding: 12px;
     }
 
-    .projects-list {
+    .tasks-list {
         gap: 12px;
     }
 }
