@@ -51,7 +51,7 @@ export default function ServiceForm({
                         required
                     />
                 </div>
-
+                {/* /TODO Зробити щоб завдання відкривались */}
                 {/* Вартість (необовʼязково) */}
                 <div className="form-group">
                     <label className="form-label">Вартість</label>

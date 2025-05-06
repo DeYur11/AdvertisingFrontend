@@ -1,73 +1,74 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
-import { login } from "../../store/userSlice";
+import { login as storeLogin } from "../../store/userSlice";
 import { toast } from "react-toastify";
+import axios from "axios";
+import { jwtDecode } from "jwt-decode";
 import "./Login.css";
 
 export default function Login() {
-    const [selectedRole, setSelectedRole] = useState("Worker");
-    const [name, setName] = useState("");
-    const [surname, setSurname] = useState("");
-    const [isReviewer, setIsReviewer] = useState(false);
+    const [username, setUsername] = useState("");
+    const [password, setPassword] = useState("");
 
     const navigate = useNavigate();
     const dispatch = useDispatch();
 
-    function handleLogin(event) {
+    async function handleLogin(event) {
         event.preventDefault();
 
-        dispatch(login({
-            name: name || "John",
-            surname: surname || "Doe",
-            mainRole: selectedRole,
-            isReviewer: selectedRole === "ProjectManager" ? true : isReviewer
-        }));
+        try {
+            const response = await axios.post("http://localhost:8080/auth/login", { username, password });
+            const token = response.data.token;
 
-        toast.success("Successfully logged in! 🚀");
-        navigate("/");
+            // Зберігаємо токен
+            localStorage.setItem("token", token);
+
+            // Декодуємо токен
+            const decoded = jwtDecode(token);
+
+            dispatch(storeLogin({
+                username: decoded.username,
+                name: decoded.name,         // 👈
+                surname: decoded.surname,   // 👈
+                mainRole: decoded.role,     // 👈
+                isReviewer: decoded.isReviewer,
+                workerId: parseInt(decoded.sub),
+                token
+            }));
+
+
+            toast.success("✅ Успішний вхід!");
+            navigate("/");
+        } catch (error) {
+            console.error("Login error:", error);
+            toast.error("❌ Невірні дані або сервер недоступний");
+        }
     }
 
     return (
         <div className="login-container">
-            <h2>Login</h2>
+            <h2>Вхід у систему</h2>
             <form onSubmit={handleLogin}>
-                <label>First Name:</label>
+                <label>Імʼя користувача</label>
                 <input
                     type="text"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    placeholder="Enter first name"
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value)}
+                    placeholder="username"
+                    required
                 />
 
-                <label>Last Name:</label>
+                <label>Пароль</label>
                 <input
-                    type="text"
-                    value={surname}
-                    onChange={(e) => setSurname(e.target.value)}
-                    placeholder="Enter last name"
+                    type="password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="••••••••"
+                    required
                 />
 
-                <label>Select your main role:</label>
-                <select value={selectedRole} onChange={(e) => setSelectedRole(e.target.value)}>
-                    <option value="ProjectManager">Project Manager</option>
-                    <option value="ScrumMaster">Scrum Master</option>
-                    <option value="Worker">Worker</option>
-                </select>
-
-                {/* Якщо Worker — показуємо чекбокс для вибору рецензента */}
-                {selectedRole === "Worker" && (
-                    <div className="checkbox-container">
-                        <input
-                            type="checkbox"
-                            checked={isReviewer}
-                            onChange={(e) => setIsReviewer(e.target.checked)}
-                        />
-                        <label>I am also a Reviewer</label>
-                    </div>
-                )}
-
-                <button type="submit">Login</button>
+                <button type="submit">Увійти</button>
             </form>
         </div>
     );

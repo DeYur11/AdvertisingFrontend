@@ -14,8 +14,28 @@ import ProjectManagement from "./pages/ProjectManagement/ProjectManagement";
 import ReviewerDashboard from './pages/ReviewerDashboard/ReviewerDashboard';
 import ProtectedRoute from "./components/common/ProtectedRoute";
 import ServiceTracker from "./pages/ServiceTracker/ServiceTracker";
+import {useDispatch} from "react-redux";
+import {useEffect} from "react";
+import {jwtDecode} from "jwt-decode";
+import {login} from "./store/userSlice";
 
 export default function App() {
+    const dispatch = useDispatch();
+
+    useEffect(() => {
+        const token = localStorage.getItem("token");
+        if (token) {
+            const decoded = jwtDecode(token);
+            dispatch(login({
+                username: decoded.username,
+                workerId: parseInt(decoded.sub),
+                role: decoded.role,
+                isReviewer: decoded.isReviewer,
+                token
+            }));
+        }
+    }, []);
+
     return (
         <BrowserRouter>
             <Routes>

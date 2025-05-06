@@ -1,15 +1,18 @@
 import { createSlice } from "@reduxjs/toolkit";
 
-// Зчитуємо дані з localStorage при старті
 const savedUser = JSON.parse(localStorage.getItem("user"));
 
-const initialState = {
+const initialState = savedUser || {
+    username: "",
     name: "",
     surname: "",
     mainRole: "",
     isReviewer: false,
-    workerId: 1
+    workerId: null,
+    token: ""
 };
+
+
 
 
 const userSlice = createSlice({
@@ -17,22 +20,24 @@ const userSlice = createSlice({
     initialState,
     reducers: {
         login(state, action) {
+            state.username = action.payload.username;
             state.name = action.payload.name;
             state.surname = action.payload.surname;
             state.mainRole = action.payload.mainRole;
-
-            if (action.payload.mainRole === "ProjectManager") {
-                state.isReviewer = true;
-            } else {
-                state.isReviewer = action.payload.isReviewer || false;
-            }
+            state.isReviewer = action.payload.isReviewer;
+            state.workerId = action.payload.workerId;
+            state.token = action.payload.token;
 
             localStorage.setItem("user", JSON.stringify(state));
         },
         logout(state) {
+            state.username = "";
             state.name = "";
             state.surname = "";
-            state.role = "";
+            state.mainRole = "";
+            state.isReviewer = false;
+            state.workerId = null;
+            state.token = "";
 
             localStorage.removeItem("user");
         }
