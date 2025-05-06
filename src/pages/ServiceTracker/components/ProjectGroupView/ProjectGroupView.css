@@ -50,11 +50,20 @@
     display: flex;
     align-items: center;
     gap: 12px;
+    flex-wrap: wrap;
 }
 
 .project-client {
     font-size: 14px;
     color: #64748b;
+}
+
+.project-date {
+    font-size: 13px;
+    color: #64748b;
+    background-color: #f1f5f9;
+    padding: 2px 8px;
+    border-radius: 4px;
 }
 
 .project-summary {
@@ -124,6 +133,73 @@
     font-size: 15px;
 }
 
+.loading-card,
+.error-card {
+    padding: 24px;
+    text-align: center;
+    color: #64748b;
+    font-size: 15px;
+    border-radius: 8px;
+    margin-bottom: 16px;
+}
+
+.loading-card {
+    background-color: #f1f5f9;
+    border: 1px solid #e2e8f0;
+}
+
+.error-card {
+    background-color: #fee2e2;
+    color: #b91c1c;
+    border: 1px solid #fecaca;
+}
+
+/* Стилі сортування */
+.sort-controls {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 12px;
+    padding: 8px 12px;
+    background-color: #f1f5f9;
+    border-radius: 6px;
+    border: 1px solid #e2e8f0;
+}
+
+.sort-label {
+    font-size: 13px;
+    color: #64748b;
+    font-weight: 500;
+    margin-right: 4px;
+}
+
+.sort-button {
+    background: none;
+    border: 1px solid transparent;
+    padding: 6px 10px;
+    border-radius: 4px;
+    font-size: 13px;
+    color: #475569;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    transition: all 0.2s;
+}
+
+.sort-button:hover {
+    background-color: #e2e8f0;
+    color: #1e293b;
+}
+
+.sort-button.active {
+    border-color: #2563eb;
+    background-color: #eff6ff;
+    color: #2563eb;
+    font-weight: 500;
+}
+
 @media (max-width: 768px) {
     .project-header {
         flex-direction: column;
@@ -136,7 +212,25 @@
         margin: 0;
     }
 
+    .project-meta {
+        gap: 8px;
+    }
+
     .services-grid {
         grid-template-columns: 1fr;
+    }
+
+    .sort-controls {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .sort-label {
+        margin-bottom: 6px;
+    }
+
+    .sort-button {
+        width: 100%;
+        justify-content: space-between;
     }
 }

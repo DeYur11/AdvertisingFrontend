@@ -113,9 +113,21 @@ export const GET_PAGINATED_PROJECTS = gql`
                     service {
                         id
                         serviceName
+                        serviceType{
+                            id
+                            name
+                        }
                     }
                     servicesInProgress {
                         id
+                    }
+                    project{
+                        id
+                        name
+                        client{
+                            id
+                            name
+                        }
                     }
                 }
             }
@@ -405,7 +417,7 @@ export const GET_CLIENTS = gql`
 
 export const GET_MANAGERS = gql`
     query GetManagers {
-        workersByPosition(position: "project manager"){
+        managers: workersByPosition(position: "project manager"){
             id,
             name,
             surname
