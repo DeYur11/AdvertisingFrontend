@@ -280,7 +280,7 @@ export default function ProjectGroupView({
                                     ) : (
                                         <div className="no-services-message">
                                             {filters.onlyMismatched
-                                                ? "Усі сервіси цього проєкту вже виконані."
+                                                ? "Усі сервіси цього проекту вже мають достатню кількість імплементацій"
                                                 : filters.searchQuery
                                                     ? "Немає сервісів, що відповідають критеріям пошуку."
                                                     : "Для цього проєкту немає сервісів."}

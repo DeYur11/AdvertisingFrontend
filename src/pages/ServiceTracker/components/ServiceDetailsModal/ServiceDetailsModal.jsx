@@ -5,20 +5,23 @@ import Button from "../../../../components/common/Button/Button";
 import Badge from "../../../../components/common/Badge/Badge";
 import Card from "../../../../components/common/Card/Card";
 import TaskForm from "../TaskForm/TaskForm";
+import EditServiceModal from "../EditServiceModal/EditServiceModal";
 import ConfirmationDialog from "../../../../components/common/ConfirmationDialog/ConfirmationDialog";
 import {
     GET_SERVICES_IN_PROGRESS_BY_PROJECT_SERVICE,
     GET_PROJECT_DETAILS,
     GET_WORKERS,
-    GET_TASK_STATUSES
+    GET_TASK_STATUSES,
+    GET_SERVICE_STATUSES
 } from "../../graphql/queries";
 import {
     CREATE_TASK,
     UPDATE_TASK,
-    DELETE_TASK
+    DELETE_TASK,
+    DELETE_SERVICE_IN_PROGRESS
 } from "../../graphql/mutations";
 import "./ServiceDetailsModal.css";
-import {toast} from "react-toastify";
+import { toast } from "react-toastify";
 
 export default function ServiceDetailsModal({
                                                 isOpen,
@@ -33,6 +36,12 @@ export default function ServiceDetailsModal({
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
     const [taskToDelete, setTaskToDelete] = useState(null);
 
+    // State for service implementation management
+    const [showEditServiceModal, setShowEditServiceModal] = useState(false);
+    const [serviceToEdit, setServiceToEdit] = useState(null);
+    const [showDeleteServiceConfirm, setShowDeleteServiceConfirm] = useState(false);
+    const [serviceToDelete, setServiceToDelete] = useState(null);
+
     // Fetch service implementation and project data
     const { data: sipData, loading: sipLoading, error: sipError, refetch: refetchServiceData } = useQuery(GET_SERVICES_IN_PROGRESS_BY_PROJECT_SERVICE, {
         variables: { projectServiceId: projectService?.id || "" },
@@ -40,26 +49,64 @@ export default function ServiceDetailsModal({
         fetchPolicy: "network-only"
     });
 
-    const { data: projectData } = useQuery(GET_PROJECT_DETAILS, {
+    const { data: projectData,refetch: refetchProject } = useQuery(GET_PROJECT_DETAILS, {
         variables: { projectId: projectService?.project?.id || "" },
         skip: !projectService?.project?.id,
         fetchPolicy: "network-only"
     });
 
-    // Fetch workers and task statuses for task form
+    // Fetch workers and statuses for forms
     const { data: workersData } = useQuery(GET_WORKERS);
-    const { data: statusesData } = useQuery(GET_TASK_STATUSES);
+    const { data: taskStatusesData } = useQuery(GET_TASK_STATUSES);
+    const { data: serviceStatusesData } = useQuery(GET_SERVICE_STATUSES);
 
     // Mutations for task management
     const [createTask] = useMutation(CREATE_TASK);
     const [updateTask] = useMutation(UPDATE_TASK);
     const [deleteTask] = useMutation(DELETE_TASK);
 
+    // Mutations for service implementation management
+    const [deleteServiceInProgress] = useMutation(DELETE_SERVICE_IN_PROGRESS);
+
     if (!isOpen || !projectService) return null;
 
     const handleCreateServiceClick = () => {
         onCreateService(projectService);
         onClose();
+    };
+
+    // Service implementation management functions
+    const handleEditService = (serviceInProgress) => {
+        setServiceToEdit(serviceInProgress);
+        setShowEditServiceModal(true);
+    };
+
+    const handleDeleteService = (serviceInProgress) => {
+        setServiceToDelete(serviceInProgress);
+        setShowDeleteServiceConfirm(true);
+    };
+
+    const confirmDeleteService = async () => {
+        try {
+            await deleteServiceInProgress({
+                variables: {
+                    id: parseInt(serviceToDelete.id)
+                }
+            });
+            toast.success("Service implementation deleted successfully!");
+            refetchServiceData();
+            refetchProject();
+        } catch (error) {
+            console.error("Error deleting service implementation:", error);
+            toast.error(error?.message || "Failed to delete service implementation. Please try again.");
+        }
+        setShowDeleteServiceConfirm(false);
+    };
+
+    const handleServiceSaved = () => {
+        setShowEditServiceModal(false);
+        refetchServiceData();
+        refetchProject();
     };
 
     // Task management functions
@@ -104,9 +151,12 @@ export default function ServiceDetailsModal({
                     id: parseInt(taskToDelete.id)
                 }
             });
+            toast.success("Task deleted successfully!");
             refetchServiceData();
+            refetchProject();
         } catch (error) {
             console.error("Error deleting task:", error);
+            toast.error(error?.message || "Failed to delete task. Please try again.");
         }
         setShowDeleteConfirm(false);
     };
@@ -147,6 +197,7 @@ export default function ServiceDetailsModal({
             }
 
             refetchServiceData();
+            refetchProject();
             setShowTaskModal(false);
         } catch (error) {
             console.error("Error saving task:", error);
@@ -154,12 +205,11 @@ export default function ServiceDetailsModal({
         }
     };
 
-
     const missingCount = (projectService?.amount || 0) - (projectService?.servicesInProgress?.length || 0);
     const project = projectData?.project || projectService?.project || {};
 
     const workers = workersData?.workers || [];
-    const taskStatuses = statusesData?.taskStatuses || [];
+    const taskStatuses = taskStatusesData?.taskStatuses || [];
 
     const calculateTaskCompletion = (sip) => {
         const tasks = sip?.tasks || [];
@@ -316,6 +366,25 @@ export default function ServiceDetailsModal({
                                     <Card key={sip.id} className="implementation-card">
                                         <div className="implementation-header">
                                             <h4>Implementation</h4>
+                                            <div className="implementation-actions">
+                                                <Button
+                                                    variant="outline"
+                                                    size="small"
+                                                    onClick={() => handleEditService(sip)}
+                                                >
+                                                    Edit
+                                                </Button>
+                                                <Button
+                                                    variant="danger"
+                                                    size="small"
+                                                    onClick={() => handleDeleteService(sip)}
+                                                >
+                                                    Delete
+                                                </Button>
+                                            </div>
+                                        </div>
+
+                                        <div className="implementation-status">
                                             <Badge
                                                 variant={sip.status?.name?.toLowerCase() === "completed" ? "success" : "primary"}
                                                 size="small"
@@ -467,13 +536,36 @@ export default function ServiceDetailsModal({
                 />
             )}
 
-            {/* Delete Confirmation Dialog */}
+            {/* Delete Task Confirmation Dialog */}
             <ConfirmationDialog
                 isOpen={showDeleteConfirm}
                 onClose={() => setShowDeleteConfirm(false)}
                 onConfirm={confirmDeleteTask}
                 title="Delete Task"
                 message={`Are you sure you want to delete the task "${taskToDelete?.name}"? This action cannot be undone.`}
+                confirmText="Delete"
+                cancelText="Cancel"
+                variant="danger"
+            />
+
+            {/* Edit Service Modal */}
+            {showEditServiceModal && serviceToEdit && (
+                <EditServiceModal
+                    isOpen={showEditServiceModal}
+                    onClose={() => setShowEditServiceModal(false)}
+                    onSave={handleServiceSaved}
+                    serviceInProgress={serviceToEdit}
+                    serviceStatuses={serviceStatusesData?.serviceInProgressStatuses || []}
+                />
+            )}
+
+            {/* Delete Service Confirmation Dialog */}
+            <ConfirmationDialog
+                isOpen={showDeleteServiceConfirm}
+                onClose={() => setShowDeleteServiceConfirm(false)}
+                onConfirm={confirmDeleteService}
+                title="Delete Service Implementation"
+                message={`Are you sure you want to delete this service implementation? This will also delete all associated tasks. This action cannot be undone.`}
                 confirmText="Delete"
                 cancelText="Cancel"
                 variant="danger"

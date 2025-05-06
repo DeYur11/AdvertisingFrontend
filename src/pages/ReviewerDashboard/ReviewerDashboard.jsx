@@ -274,9 +274,6 @@ export default function ReviewerDashboard() {
                                     )}
 
                                     <div className="material-footer">
-                                        <span className="created-date">
-                                                Created: {formatDate(material.createDatetime)}
-                                        </span>
 
                                         {material.status?.name === "Accepted" ? (
                                             <Button variant="outline" size="small" disabled>

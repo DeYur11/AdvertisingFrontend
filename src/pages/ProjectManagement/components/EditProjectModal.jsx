@@ -1,10 +1,12 @@
 import { useState, useEffect } from "react";
-import {useQuery, useMutation, gql, useApolloClient} from "@apollo/client";
+import { useQuery, useMutation, gql, useApolloClient } from "@apollo/client";
 import SelectWithCreate from "../../../components/common/SelectWithCreate";
 import Button from "../../../components/common/Button/Button";
 import Modal from "../../../components/common/Modal/Modal";
 import ClientModal from "./ClientModal/ClientModal";
 import SelectWithModalCreate from "../../../components/common/SelectWithModalCreate";
+import { toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 import "./EditProjectModal.css";
 
 /* ─── gql ───────────────────────────────────────────────────────────── */
@@ -14,7 +16,7 @@ const GET_PROJECT_REFERENCE_DATA = gql`
         projectTypes { id name }
         projectStatuses { id name }
         services { id serviceName estimateCost }
-        workersByPosition(position:"Project Manager") {
+        workersByPosition(position: "Project Manager") {
             id name surname
         }
     }
@@ -22,7 +24,7 @@ const GET_PROJECT_REFERENCE_DATA = gql`
 
 const GET_PROJECT_DETAILS = gql`
     query GetProjectDetails($id: ID!) {
-        project(id:$id) {
+        project(id: $id) {
             id
             name
             description
@@ -47,37 +49,38 @@ const GET_PROJECT_DETAILS = gql`
 `;
 
 const UPDATE_PROJECT = gql`
-    mutation UpdateProject($id:ID!,$input:UpdateProjectInput!){
-        updateProject(id:$id,input:$input){ id }
+    mutation UpdateProject($id: ID!, $input: UpdateProjectInput!) {
+        updateProject(id: $id, input: $input) { id }
     }
 `;
 
 const CREATE_PROJECT_TYPE = gql`
-    mutation($input:CreateProjectTypeInput!){
-        createProjectType(input:$input){ id name }
+    mutation($input: CreateProjectTypeInput!) {
+        createProjectType(input: $input) { id name }
     }
 `;
 
 const CREATE_PS = gql`
-    mutation($input:CreateProjectServiceInput!){
-        createProjectService(input:$input){ id }
+    mutation($input: CreateProjectServiceInput!) {
+        createProjectService(input: $input) { id }
     }
 `;
 
 const UPDATE_PS = gql`
-    mutation($id:ID!,$input:UpdateProjectServiceInput!){
-        updateProjectService(id:$id,input:$input){ id }
+    mutation($id: ID!, $input: UpdateProjectServiceInput!) {
+        updateProjectService(id: $id, input: $input) { id }
     }
 `;
 
 const DELETE_PS = gql`
-    mutation($id:ID!){
-        deleteProjectService(id:$id)
+    mutation($id: ID!) {
+        deleteProjectService(id: $id)
     }
 `;
 
 /* ─── компонент ─────────────────────────────────────────────────────── */
 export default function EditProjectModal({ isOpen, projectId, onClose, onUpdated }) {
+    const [invalidServiceIndexes, setInvalidServiceIndexes] = useState([]);
     const [project, setProject] = useState({
         name: "", description: "", clientId: "",
         projectTypeId: "", projectStatusId: "",
@@ -116,7 +119,8 @@ export default function EditProjectModal({ isOpen, projectId, onClose, onUpdated
                 services: p.projectServices.map(ps => ({
                     id: ps.id,
                     serviceId: ps.service.id,
-                    amount: ps.amount
+                    amount: ps.amount,
+                    initialAmount: ps.amount
                 }))
             });
         }
@@ -128,23 +132,58 @@ export default function EditProjectModal({ isOpen, projectId, onClose, onUpdated
     };
 
     const addServiceRow = () =>
-        setProject(prev => ({ ...prev, services: [...prev.services, { serviceId: "", amount: 1 }] }));
+        setProject(prev => ({
+            ...prev,
+            services: [...prev.services, { serviceId: "", amount: 1, initialAmount: 1 }]
+        }));
 
     const updateServiceRow = (i, f, v) =>
         setProject(prev => {
-            const s = [...prev.services]; s[i][f] = v; return { ...prev, services: s };
+            const services = [...prev.services];
+            if (f === "amount") {
+                const parsed = parseInt(v);
+                const min = services[i].initialAmount ?? 1;
+                if (parsed < min) {
+                    toast.error(`❌ Cannot reduce amount below initial value (${min})`);
+                    return prev;
+                }
+                services[i][f] = parsed;
+            } else {
+                services[i][f] = v;
+            }
+
+            // Очищення помилки для цього рядка
+            setInvalidServiceIndexes(prevInvalids =>
+                prevInvalids.filter(index => index !== i)
+            );
+
+            return { ...prev, services };
         });
+
 
     const removeServiceRow = i =>
         setProject(prev => {
-            const s = [...prev.services];
-            if (s[i].id) deletePS({ variables: { id: +s[i].id } });
-            s.splice(i, 1);
-            return { ...prev, services: s };
+            const services = [...prev.services];
+            if (services[i].id) deletePS({ variables: { id: +services[i].id } });
+            services.splice(i, 1);
+            return { ...prev, services };
         });
 
     const handleSave = async (e) => {
         e.preventDefault();
+
+
+        const invalidIndexes = project.services
+            .map((s, i) => (!s.serviceId ? i : -1))
+            .filter(i => i !== -1);
+
+        if (invalidIndexes.length > 0) {
+            setInvalidServiceIndexes(invalidIndexes);
+            toast.error("❌ Please select a service type for all service rows.");
+            return;
+        }
+
+        setInvalidServiceIndexes([]);
         setSaving(true);
         try {
             await updateProject({
@@ -181,7 +220,6 @@ export default function EditProjectModal({ isOpen, projectId, onClose, onUpdated
                 }
             }
 
-            // 🔁 REFRESH даних про сервіси та проект
             await client.refetchQueries({
                 include: ["GetProjectServices", "GetProjectDetails"]
             });
@@ -189,14 +227,17 @@ export default function EditProjectModal({ isOpen, projectId, onClose, onUpdated
             onUpdated?.();
             onClose();
         } catch (err) {
-            alert(err.message);
+            toast.error(`❌ ${err.message}`);
         }
         setSaving(false);
     };
 
-
     if (!isOpen) return null;
-    if (refLoading || detLoading) return <Modal isOpen title="Edit Project" onClose={onClose}><p>Loading…</p></Modal>;
+    if (refLoading || detLoading) return (
+        <Modal isOpen title="Edit Project" onClose={onClose}>
+            <p>Loading…</p>
+        </Modal>
+    );
 
     return (
         <Modal isOpen onClose={onClose} title="✏️ Edit Project" size="large">
@@ -216,7 +257,8 @@ export default function EditProjectModal({ isOpen, projectId, onClose, onUpdated
                                        onCreateStart={val => { setPrefillClientName(val); setShowCreateClient(true); }} />
 
                 <SelectWithCreate label="Project Type*" options={ref.projectTypes} value={project.projectTypeId}
-                                  onChange={v => setProject(p => ({ ...p, projectTypeId: v }))} createMutation={CREATE_PROJECT_TYPE} refetchOptions={refetch} />
+                                  onChange={v => setProject(p => ({ ...p, projectTypeId: v }))}
+                                  createMutation={CREATE_PROJECT_TYPE} refetchOptions={refetch} />
 
                 <div className="mb-2">
                     <label className="form-label">Status*</label>
@@ -252,11 +294,18 @@ export default function EditProjectModal({ isOpen, projectId, onClose, onUpdated
                 <h5 className="mt-3">Project Services</h5>
                 {project.services.map((s, idx) => (
                     <div key={idx} className="d-flex align-items-end gap-2 mb-2">
-                        <select className="form-select" style={{ flex: 1 }} value={s.serviceId} onChange={e => updateServiceRow(idx, "serviceId", e.target.value)}>
+                        <select
+                            className={`form-select ${invalidServiceIndexes.includes(idx) ? "is-invalid" : ""}`}
+                            style={{flex: 1}}
+                            value={s.serviceId}
+                            onChange={e => updateServiceRow(idx, "serviceId", e.target.value)}
+                        >
                             <option value="">— select service —</option>
-                            {ref.services.map(sv => <option key={sv.id} value={sv.id}>{sv.serviceName} (${sv.estimateCost})</option>)}
+                            {ref.services.map(sv => <option key={sv.id}
+                                                            value={sv.id}>{sv.serviceName} (${sv.estimateCost})</option>)}
                         </select>
-                        <input type="number" min="1" className="form-control" style={{ width: 90 }} value={s.amount} onChange={e => updateServiceRow(idx, "amount", e.target.value)} />
+                        <input type="number" min="1" className="form-control" style={{width: 90}} value={s.amount}
+                               onChange={e => updateServiceRow(idx, "amount", e.target.value)}/>
                         <Button variant="danger" size="sm" onClick={() => removeServiceRow(idx)}>🗑️</Button>
                     </div>
                 ))}
@@ -264,13 +313,21 @@ export default function EditProjectModal({ isOpen, projectId, onClose, onUpdated
 
                 <div className="mt-4 d-flex gap-2 justify-content-end">
                     <Button variant="outline" onClick={onClose}>Cancel</Button>
-                    <Button variant="primary" type="submit" disabled={isSaving}>{isSaving ? "Saving…" : "💾 Update Project"}</Button>
+                    <Button variant="primary" type="submit" disabled={isSaving}>
+                        {isSaving ? "Saving…" : "💾 Update Project"}
+                    </Button>
                 </div>
             </form>
 
             <Modal isOpen={showCreateClient} onClose={() => setShowCreateClient(false)} title="➕ New Client">
                 <ClientModal client={{ prefillName: prefillClientName }} editMode={false}
-                             onSave={c => { if (c?.id) { setProject(p => ({ ...p, clientId: c.id })); refetch(); } setShowCreateClient(false); }}
+                             onSave={c => {
+                                 if (c?.id) {
+                                     setProject(p => ({ ...p, clientId: c.id }));
+                                     refetch();
+                                 }
+                                 setShowCreateClient(false);
+                             }}
                              onCancel={() => setShowCreateClient(false)} />
             </Modal>
         </Modal>

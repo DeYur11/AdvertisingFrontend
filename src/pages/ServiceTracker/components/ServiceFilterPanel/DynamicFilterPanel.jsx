@@ -109,22 +109,32 @@ export default function DynamicFilterPanel({
         setShowAdvancedFilters(false);
     };
 
-    // Reset all filters
     const resetAllFilters = () => {
         const emptyFilters = {
+            // Common filters
             serviceTypeIds: [],
             clientIds: [],
             costRange: {
                 costMin: "",
-                costMax: ""
+                costMax:""
             },
+
+            // Project-specific filters (used when groupByProject is true)
+            projectStatusIds: [],
+            projectTypeIds:  [],
+            managerIds: [],
+
+            // Service-specific filters (used when groupByProject is false)
+            serviceInProgressStatusIds:  [],
+
+            // Date range filters (used by both views)
             dateRange: {
                 startDateFrom: "",
                 startDateTo: "",
                 endDateFrom: "",
                 endDateTo: ""
             }
-        };
+        }
 
         // Only add view-specific empty filters
         if (filters.groupByProject) {

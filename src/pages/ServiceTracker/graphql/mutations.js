@@ -17,6 +17,29 @@ export const CREATE_SERVICE_IN_PROGRESS = gql`
     }
 `;
 
+// Mutation to update an existing service in progress
+export const UPDATE_SERVICE_IN_PROGRESS = gql`
+    mutation UpdateServiceInProgress($id: ID!, $input: UpdateServiceInProgressInput!) {
+        updateServiceInProgress(id: $id, input: $input) {
+            id
+            startDate
+            endDate
+            cost
+            status {
+                id
+                name
+            }
+        }
+    }
+`;
+
+// Mutation to delete a service in progress
+export const DELETE_SERVICE_IN_PROGRESS = gql`
+    mutation DeleteServiceInProgress($id: ID!) {
+        deleteServiceInProgress(id: $id)
+    }
+`;
+
 // Mutation to create a new task
 export const CREATE_TASK = gql`
     mutation CreateTask($input: CreateTaskInput!) {
