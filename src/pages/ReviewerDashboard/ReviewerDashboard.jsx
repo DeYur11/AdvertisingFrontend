@@ -22,6 +22,7 @@ export default function ReviewerDashboard() {
         reviewStatus: 'all'
     });
     const [searchQuery, setSearchQuery] = useState("");
+    const [searchType, setSearchType] = useState("both"); // Track search type: name, description, or both
     const [filterPanelExpanded, setFilterPanelExpanded] = useState(false);
     const [page, setPage] = useState(1);
     const [size, setSize] = useState(12);
@@ -32,35 +33,65 @@ export default function ReviewerDashboard() {
     const buildFilterInput = () => {
         const filterInput = {};
 
-        // Add search query filter
+        // Add search query filter based on searchType
         if (searchQuery) {
-            filterInput.nameContains = searchQuery;
-            filterInput.descriptionContains = searchQuery;
+            if (searchType === "name" || searchType === "both") {
+                filterInput.nameContains = searchQuery;
+            }
+            if (searchType === "description" || searchType === "both") {
+                filterInput.descriptionContains = searchQuery;
+            }
         }
 
-        // Add status filters
+        // Add usageRestriction filters - ensure integers
+        if (filters.usageRestriction && filters.usageRestriction.length > 0) {
+            filterInput.usageRestrictionIds = filters.usageRestriction.map(id => parseInt(id, 10));
+        }
+
+// Add licenceType filters - ensure integers
+        if (filters.licenceType && filters.licenceType.length > 0) {
+            filterInput.licenceTypeIds = filters.licenceType.map(id => parseInt(id, 10));
+        }
+
+// Add targetAudience filters - ensure integers
+        if (filters.targetAudience && filters.targetAudience.length > 0) {
+            filterInput.targetAudienceIds = filters.targetAudience.map(id => parseInt(id, 10));
+        }
+
+
+        // Add status filte rs - ensure integers
         if (filters.status && filters.status.length > 0) {
-            filterInput.statusIds = filters.status;
+            filterInput.statusIds = filters.status.map(id => parseInt(id, 10));
         }
 
-        // Add material type filters
+        // Add material type filters - ensure integers
         if (filters.type && filters.type.length > 0) {
-            filterInput.typeIds = filters.type;
+            filterInput.typeIds = filters.type.map(id => parseInt(id, 10));
         }
 
-        // Add language filters
+        // Add language filters - ensure integers
         if (filters.language && filters.language.length > 0) {
-            filterInput.languageIds = filters.language;
+            filterInput.languageIds = filters.language.map(id => parseInt(id, 10));
         }
 
-        // Add date range filter - handled in post-query filtering
+        // Add task filters - ensure integers
+        if (filters.task && filters.task.length > 0) {
+            filterInput.taskIds = filters.task.map(id => parseInt(id, 10));
+        }
+
+        // Add keyword filters - ensure integers
+        if (filters.keywords && filters.keywords.length > 0) {
+            filterInput.keywordIds = filters.keywords.map(id => parseInt(id, 10));
+        }
+
+        // Date range filters are handled in post-query filtering
 
         return filterInput;
     };
 
     // Query for materials with pagination
     const { loading, error, data, refetch } = useQuery(GET_PAGINATED_MATERIALS_WITH_TOTAL, {
-        variables:   {
+        variables: {
             input: {
                 page: page - 1, // Convert to 0-based for backend
                 size,
@@ -152,6 +183,14 @@ export default function ReviewerDashboard() {
         );
     }
 
+    // Helper function to highlight search terms in text
+    const highlightSearchTerm = (text, searchTerm) => {
+        if (!searchTerm || !text) return text;
+
+        const regex = new RegExp(`(${searchTerm})`, 'gi');
+        return text.replace(regex, '<mark class="search-highlight">$1</mark>');
+    };
+
     return (
         <div className="reviewer-dashboard">
             <div className="dashboard-header">
@@ -164,6 +203,8 @@ export default function ReviewerDashboard() {
             <ReviewerFilterPanel
                 searchQuery={searchQuery}
                 setSearchQuery={setSearchQuery}
+                searchType={searchType}
+                setSearchType={setSearchType}
                 filters={filters}
                 setFilters={setFilters}
                 expanded={filterPanelExpanded}
@@ -188,7 +229,14 @@ export default function ReviewerDashboard() {
                                     hoverable
                                 >
                                     <div className="material-header">
-                                        <h3 className="material-name">{material.name}</h3>
+                                        <h3
+                                            className="material-name"
+                                            dangerouslySetInnerHTML={{
+                                                __html: searchQuery && (searchType === "name" || searchType === "both")
+                                                    ? highlightSearchTerm(material.name, searchQuery)
+                                                    : material.name
+                                            }}
+                                        />
                                         <Badge
                                             variant={getStatusBadgeVariant(material)}
                                             size="small"
@@ -226,11 +274,21 @@ export default function ReviewerDashboard() {
                                     </div>
 
                                     {material.description && (
-                                        <div className="material-description">
-                                            {material.description.length > 150
-                                                ? `${material.description.substring(0, 150)}...`
-                                                : material.description}
-                                        </div>
+                                        <div
+                                            className="material-description"
+                                            dangerouslySetInnerHTML={{
+                                                __html: searchQuery && (searchType === "description" || searchType === "both")
+                                                    ? highlightSearchTerm(
+                                                        material.description.length > 150
+                                                            ? `${material.description.substring(0, 150)}...`
+                                                            : material.description,
+                                                        searchQuery
+                                                    )
+                                                    : material.description.length > 150
+                                                        ? `${material.description.substring(0, 150)}...`
+                                                        : material.description
+                                            }}
+                                        />
                                     )}
 
                                     {material.keywords?.length > 0 && (
@@ -277,7 +335,7 @@ export default function ReviewerDashboard() {
                     </div>
 
                     {/* Pagination */}
-                    {pages > 1 && (
+                    {materials.length > 0 && (
                         <Pagination
                             currentPage={page}
                             totalPages={pages}

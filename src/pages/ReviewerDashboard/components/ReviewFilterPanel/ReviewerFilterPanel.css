@@ -124,6 +124,69 @@
     color: #1e293b;
 }
 
+/* Search Type Selector */
+.search-type-selector {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-left: 16px;
+}
+
+.search-type-button {
+    font-size: 12px;
+    padding: 4px 8px;
+}
+
+/* Sort Controls */
+.sort-controls {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-left: auto;
+}
+
+.sort-label {
+    font-size: 14px;
+    color: #64748b;
+    font-weight: 500;
+}
+
+.sort-options {
+    display: flex;
+    gap: 8px;
+}
+
+.sort-option {
+    background: none;
+    border: none;
+    font-size: 14px;
+    color: #64748b;
+    padding: 4px 8px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s;
+    white-space: nowrap;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.sort-option:hover {
+    background-color: #f1f5f9;
+    color: #1e293b;
+}
+
+.sort-option.active {
+    background-color: #e0e7ff;
+    color: #4338ca;
+    font-weight: 500;
+}
+
+.sort-indicator {
+    font-size: 12px;
+    margin-left: 2px;
+}
+
 /* Active Filters Display */
 .active-filters-display {
     display: flex;
@@ -260,6 +323,13 @@
     display: flex;
     flex-wrap: wrap;
     gap: 8px;
+    max-height: 200px;
+    overflow-y: auto;
+    padding: 4px;
+}
+
+.filter-chips.keywords-filter, .filter-chips.tasks-filter {
+    max-height: 250px;
 }
 
 .filter-chip {
@@ -285,6 +355,14 @@
     color: #1e3a8a;
     font-weight: 500;
     box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+/* Search field highlighting in active filters */
+.search-highlight {
+    font-weight: 600;
+    background-color: #93c5fd;
+    padding: 0 2px;
+    border-radius: 2px;
 }
 
 /* Date filters */
@@ -380,6 +458,19 @@
         max-width: none;
         width: 100%;
         margin-top: 12px;
+    }
+
+    .search-type-selector {
+        margin-left: 0;
+        margin-top: 12px;
+        width: 100%;
+        justify-content: space-between;
+    }
+
+    .sort-controls {
+        margin-top: 12px;
+        width: 100%;
+        justify-content: space-between;
     }
 
     .filters-content {

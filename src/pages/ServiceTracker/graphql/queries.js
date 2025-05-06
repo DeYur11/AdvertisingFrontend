@@ -1,40 +1,55 @@
 // src/pages/ServiceTracker/graphql/queries.js
 import { gql } from "@apollo/client";
 
-// Query to get all project services with their related services in progress
-export const GET_ALL_PROJECT_SERVICES = gql`
-    query GetAllProjectServices {
-        projectServices {
-            id
-            amount
-            service {
+// Paginated query for project services with flexible filtering
+export const GET_PAGINATED_PROJECT_SERVICES = gql`
+    query GetPaginatedProjectServices($input: PaginatedProjectServicesInput!) {
+        paginatedProjectServices(input: $input) {
+            content {
                 id
-                serviceName
-                estimateCost
-                serviceType {
+                amount
+                service {
+                    id
+                    serviceName
+                    estimateCost
+                    serviceType {
+                        id
+                        name
+                    }
+                }
+                project {
                     id
                     name
+                    client {
+                        id
+                        name
+                    }
+                    status {
+                        id
+                        name
+                    }
+                    startDate
+                    endDate
                 }
-            }
-            project {
-                id
-                name
-                client {
-                    name
-                }
-                status {
-                    name
-                }
-            }
-            servicesInProgress {
-                id
-                startDate
-                endDate
-                cost
-                status {
+                servicesInProgress {
                     id
-                    name
+                    startDate
+                    endDate
+                    cost
+                    status {
+                        id
+                        name
+                    }
                 }
+            }
+            pageInfo {
+                totalElements
+                totalPages
+                size
+                number
+                first
+                last
+                numberOfElements
             }
         }
     }
@@ -72,6 +87,119 @@ export const GET_SERVICES_IN_PROGRESS_BY_PROJECT_SERVICE = gql`
         }
     }
 `;
+export const GET_PAGINATED_PROJECTS = gql`
+    query GetPaginatedProjects($input: PaginatedProjectsInput!) {
+        paginatedProjects(input: $input) {
+            content {
+                id
+                name
+                cost
+                estimateCost
+                registrationDate
+                startDate
+                endDate
+                paymentDeadline
+                status {
+                    id
+                    name
+                }
+                client {
+                    id
+                    name
+                }
+                projectServices {
+                    id
+                    amount
+                    service {
+                        id
+                        serviceName
+                    }
+                    servicesInProgress {
+                        id
+                    }
+                }
+            }
+            pageInfo {
+                totalElements
+                totalPages
+                size
+                number
+                first
+                last
+                numberOfElements
+            }
+        }
+    }
+`;
+
+
+/* ---------------------------------- FRAGMENT ---------------------------------- */
+export const PROJECT_WITH_SERVICES_FIELDS = gql`
+    fragment ProjectWithServicesFields on Project {
+        id
+        name
+        registrationDate
+        startDate
+        endDate
+        cost
+        estimateCost
+        paymentDeadline
+        description
+        createDatetime
+        updateDatetime
+
+        status   { id name }
+        projectType { id name }
+        client  { id name }
+        manager { id name surname }
+
+        projectServices {
+            id
+            amount
+            createDatetime
+            updateDatetime
+
+            service {
+                id
+                serviceName
+                estimateCost
+                createDatetime
+                updateDatetime
+                serviceType { id name }
+            }
+
+            servicesInProgress {
+                id
+                startDate
+                endDate
+                cost
+                status { id name }
+            }
+        }
+    }
+`;
+
+/* ---------------------- ПАГІНОВАНИЙ ЗАПИТ З ФІЛЬТРАМИ ---------------------- */
+export const GET_PAGINATED_PROJECTS_WITH_SERVICES = gql`
+    query PaginatedProjects($input: PaginatedProjectsInput!) {
+        paginatedProjects(input: $input) {
+            content {
+                ...ProjectWithServicesFields
+            }
+            pageInfo {
+                totalElements
+                totalPages
+                size
+                number
+                first
+                last
+                numberOfElements
+            }
+        }
+    }
+    ${PROJECT_WITH_SERVICES_FIELDS}
+`;
+
 
 export const GET_PROJECTS_WITH_SERVICES = gql`
     query GetProjectsWithServices {
@@ -119,7 +247,6 @@ export const GET_PROJECTS_WITH_SERVICES = gql`
                     id
                     serviceName
                     estimateCost
-                    duration
                     createDatetime
                     updateDatetime
                     serviceType {
@@ -218,7 +345,6 @@ export const GET_PROJECT_DETAILS = gql`
                 service {
                     id
                     serviceName
-                    duration
                     estimateCost
                     serviceType {
                         id
@@ -236,6 +362,53 @@ export const GET_PROJECT_DETAILS = gql`
                     }
                 }
             }
+        }
+    }
+`;
+
+// New queries for filter options
+export const GET_SERVICE_TYPES = gql`
+    query GetServiceTypes {
+        serviceTypes {
+            id
+            name
+        }
+    }
+`;
+
+export const GET_PROJECT_STATUSES = gql`
+    query GetProjectStatuses {
+        projectStatuses {
+            id
+            name
+        }
+    }
+`;
+
+export const GET_PROJECT_TYPES = gql`
+    query GetProjectTypes {
+        projectTypes {
+            id
+            name
+        }
+    }
+`;
+
+export const GET_CLIENTS = gql`
+    query GetClients {
+        clients {
+            id
+            name
+        }
+    }
+`;
+
+export const GET_MANAGERS = gql`
+    query GetManagers {
+        workersByPosition(position: "project manager"){
+            id,
+            name,
+            surname
         }
     }
 `;

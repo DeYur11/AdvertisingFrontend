@@ -4,12 +4,14 @@ import "./ReviewerFilterPanel.css";
 import Button from "../../../../components/common/Button/Button";
 import Badge from "../../../../components/common/Badge/Badge";
 import Card from "../../../../components/common/Card/Card";
-// Import queries from the new file
+// Import queries
 import { GET_FILTER_REFERENCE_DATA } from "../../graphql/reviewerQueries";
 
 export default function ReviewerFilterPanel({
                                                 searchQuery,
                                                 setSearchQuery,
+                                                searchType,
+                                                setSearchType,
                                                 filters = {},
                                                 setFilters,
                                                 expanded,
@@ -70,13 +72,16 @@ export default function ReviewerFilterPanel({
 
     // Handle changes to multi-select options
     const handleOptionToggle = (filterType, optionValue) => {
+        // Ensure optionValue is an integer
+        const optionValueInt = parseInt(optionValue, 10);
+
         const currentValues = filters[filterType] || [];
         let newValues;
 
-        if (currentValues.includes(optionValue)) {
-            newValues = currentValues.filter(v => v !== optionValue);
+        if (currentValues.includes(optionValueInt)) {
+            newValues = currentValues.filter(v => v !== optionValueInt);
         } else {
-            newValues = [...currentValues, optionValue];
+            newValues = [...currentValues, optionValueInt];
         }
 
         applyFilter(filterType, newValues);
@@ -95,6 +100,7 @@ export default function ReviewerFilterPanel({
     const handleResetFilters = () => {
         setFilters({});
         setSearchQuery("");
+        setSearchType("both");
     };
 
     // Helper to apply quick date filters
@@ -134,6 +140,11 @@ export default function ReviewerFilterPanel({
             const defaultDirection = field === "createDatetime" ? "DESC" : "ASC";
             onSortChange(field, defaultDirection);
         }
+    };
+
+    // Handle search type change
+    const handleSearchTypeChange = (type) => {
+        setSearchType(type);
     };
 
     // Render sort indicator based on current sort state
@@ -194,7 +205,7 @@ export default function ReviewerFilterPanel({
                     <input
                         type="text"
                         className="search-input"
-                        placeholder="Search materials by name or description..."
+                        placeholder={`Search materials by ${searchType === "name" ? "name" : searchType === "description" ? "description" : "name or description"}...`}
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
                         aria-label="Search materials"
@@ -209,6 +220,34 @@ export default function ReviewerFilterPanel({
                         </button>
                     )}
                     <span className="search-icon">🔍</span>
+                </div>
+
+                {/* Search Type Selector */}
+                <div className="search-type-selector">
+                    <Button
+                        variant={searchType === "both" ? "primary" : "outline"}
+                        size="small"
+                        onClick={() => handleSearchTypeChange("both")}
+                        className="search-type-button"
+                    >
+                        All Fields
+                    </Button>
+                    <Button
+                        variant={searchType === "name" ? "primary" : "outline"}
+                        size="small"
+                        onClick={() => handleSearchTypeChange("name")}
+                        className="search-type-button"
+                    >
+                        Name Only
+                    </Button>
+                    <Button
+                        variant={searchType === "description" ? "primary" : "outline"}
+                        size="small"
+                        onClick={() => handleSearchTypeChange("description")}
+                        className="search-type-button"
+                    >
+                        Description Only
+                    </Button>
                 </div>
 
                 {/* Sort Controls */}
@@ -258,6 +297,32 @@ export default function ReviewerFilterPanel({
                             </div>
                         )}
 
+
+                        {filters.usageRestriction?.length > 0 && (
+                            <div className="active-filter">
+                                <span className="filter-name">Usage Restriction:</span>
+                                <span className="filter-value">{filters.usageRestriction.length} selected</span>
+                                <button className="remove-filter" onClick={() => applyFilter('usageRestriction', [])}>✕</button>
+                            </div>
+                        )}
+
+                        {filters.licenceType?.length > 0 && (
+                            <div className="active-filter">
+                                <span className="filter-name">Licence Type:</span>
+                                <span className="filter-value">{filters.licenceType.length} selected</span>
+                                <button className="remove-filter" onClick={() => applyFilter('licenceType', [])}>✕</button>
+                            </div>
+                        )}
+
+                        {filters.targetAudience?.length > 0 && (
+                            <div className="active-filter">
+                                <span className="filter-name">Target Audience:</span>
+                                <span className="filter-value">{filters.targetAudience.length} selected</span>
+                                <button className="remove-filter" onClick={() => applyFilter('targetAudience', [])}>✕</button>
+                            </div>
+                        )}
+
+
                         {filters.type?.length > 0 && (
                             <div className="active-filter">
                                 <span className="filter-name">Material Type:</span>
@@ -284,6 +349,38 @@ export default function ReviewerFilterPanel({
                                     className="remove-filter"
                                     onClick={() => applyFilter('language', [])}
                                     aria-label="Remove language filter"
+                                >
+                                    ✕
+                                </button>
+                            </div>
+                        )}
+
+                        {filters.task?.length > 0 && (
+                            <div className="active-filter">
+                                <span className="filter-name">Task:</span>
+                                <span className="filter-value">
+                                    {filters.task.length} selected
+                                </span>
+                                <button
+                                    className="remove-filter"
+                                    onClick={() => applyFilter('task', [])}
+                                    aria-label="Remove task filter"
+                                >
+                                    ✕
+                                </button>
+                            </div>
+                        )}
+
+                        {filters.keywords?.length > 0 && (
+                            <div className="active-filter">
+                                <span className="filter-name">Keywords:</span>
+                                <span className="filter-value">
+                                    {filters.keywords.length} selected
+                                </span>
+                                <button
+                                    className="remove-filter"
+                                    onClick={() => applyFilter('keywords', [])}
+                                    aria-label="Remove keywords filter"
                                 >
                                     ✕
                                 </button>
@@ -320,6 +417,22 @@ export default function ReviewerFilterPanel({
                                     className="remove-filter"
                                     onClick={() => applyFilter('reviewStatus', 'all')}
                                     aria-label="Remove review status filter"
+                                >
+                                    ✕
+                                </button>
+                            </div>
+                        )}
+
+                        {searchType !== "both" && (
+                            <div className="active-filter">
+                                <span className="filter-name">Search In:</span>
+                                <span className="filter-value">
+                                    {searchType === "name" ? "Name Only" : "Description Only"}
+                                </span>
+                                <button
+                                    className="remove-filter"
+                                    onClick={() => setSearchType("both")}
+                                    aria-label="Remove search type filter"
                                 >
                                     ✕
                                 </button>
@@ -393,6 +506,76 @@ export default function ReviewerFilterPanel({
                                         ))}
                                     </div>
                                 </div>
+                                {refData?.usageRestrictions && (
+                                    <div className="filter-section">
+                                        <h3 className="filter-section-title">Usage Restriction</h3>
+                                        <div className="filter-chips">
+                                            {refData.usageRestrictions.map(restriction => (
+                                                <div
+                                                    key={restriction.id}
+                                                    className={`filter-chip ${(filters.usageRestriction || []).includes(restriction.id) ? 'selected' : ''}`}
+                                                    onClick={() => handleOptionToggle('usageRestriction', restriction.id)}
+                                                >
+                                                    {restriction.name}
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* Licence Type Filters */}
+                                {refData?.licenceTypes && (
+                                    <div className="filter-section">
+                                        <h3 className="filter-section-title">Licence Type</h3>
+                                        <div className="filter-chips">
+                                            {refData.licenceTypes.map(licence => (
+                                                <div
+                                                    key={licence.id}
+                                                    className={`filter-chip ${(filters.licenceType || []).includes(licence.id) ? 'selected' : ''}`}
+                                                    onClick={() => handleOptionToggle('licenceType', licence.id)}
+                                                >
+                                                    {licence.name}
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* Target Audience Filters */}
+                                {refData?.targetAudiences && (
+                                    <div className="filter-section">
+                                        <h3 className="filter-section-title">Target Audience</h3>
+                                        <div className="filter-chips">
+                                            {refData.targetAudiences.map(audience => (
+                                                <div
+                                                    key={audience.id}
+                                                    className={`filter-chip ${(filters.targetAudience || []).includes(audience.id) ? 'selected' : ''}`}
+                                                    onClick={() => handleOptionToggle('targetAudience', audience.id)}
+                                                >
+                                                    {audience.name}
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
+                                {/* Keywords Filters - if available in refData */}
+                                {refData?.keywords && (
+                                    <div className="filter-section">
+                                        <h3 className="filter-section-title">Keywords</h3>
+                                        <div className="filter-chips keywords-filter">
+                                            {refData.keywords.map(keyword => (
+                                                <div
+                                                    key={keyword.id}
+                                                    className={`filter-chip ${(filters.keywords || []).includes(keyword.id) ? 'selected' : ''}`}
+                                                    onClick={() => handleOptionToggle('keywords', keyword.id)}
+                                                >
+                                                    #{keyword.name}
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
+
 
                                 {/* Date Filters */}
                                 <div className="filter-section">

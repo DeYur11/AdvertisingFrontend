@@ -1,4 +1,4 @@
-// src/pages/ReviewerDashboard/material-review-graphql/reviewerQueries.js
+// src/pages/ReviewerDashboard/graphql/reviewerQueries.js
 import { gql } from "@apollo/client";
 
 export const GET_PAGINATED_MATERIALS_WITH_TOTAL = gql`
@@ -79,14 +79,14 @@ export const GET_MATERIAL_SUMMARIES = gql`
 `;
 
 
-// Used to get reference data for filters
+// Used to get reference data for filters - expanded to include tasks and keywords
 export const GET_FILTER_REFERENCE_DATA = gql`
     query GetFilterReferenceData {
-        materialTypes {
+        materialStatuses {
             id
             name
         }
-        materialStatuses {
+        materialTypes {
             id
             name
         }
@@ -94,8 +94,30 @@ export const GET_FILTER_REFERENCE_DATA = gql`
             id
             name
         }
+        keywords {
+            id
+            name
+        }
+        tasks {
+            id
+            name
+        }
+        usageRestrictions {
+            id
+            name
+        }
+        licenceTypes {
+            id
+            name
+        }
+        targetAudiences {
+            id
+            name
+        }
     }
 `;
+
+
 
 // GraphQL mutation to submit a review
 export const SUBMIT_MATERIAL_REVIEW = gql`
