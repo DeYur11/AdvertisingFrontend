@@ -84,6 +84,17 @@ export default function ReviewerDashboard() {
             filterInput.keywordIds = filters.keywords.map(id => parseInt(id, 10));
         }
 
+        if (filters.status && filters.status.length > 0) {
+            filterInput.statusIds = filters.status.map(id => parseInt(id, 10));
+            if (filters.reviewStatus === 'pending') {
+                const pendingStatusId = 2;
+                if (!filterInput.statusIds.includes(pendingStatusId)) {
+                    filterInput.statusIds.push(pendingStatusId);
+                }
+            }
+        } else if (filters.reviewStatus === 'pending') {
+            filterInput.statusIds = [2]; // лише Pending Review
+        }
         // Date range filters are handled in post-query filtering
 
         return filterInput;
@@ -123,50 +134,7 @@ export default function ReviewerDashboard() {
         setSortDirection(direction);
     };
 
-    // Post-filter materials based on review status and date range
-    const filterMaterials = (materials) => {
-        if (!materials) return [];
-
-        return materials.filter(material => {
-            // Filter by review status
-            if (filters.reviewStatus && filters.reviewStatus !== 'all') {
-                const reviewed = hasBeenReviewedByMe(material);
-
-                if (filters.reviewStatus === 'reviewed' && !reviewed) {
-                    return false;
-                }
-
-                if (filters.reviewStatus === 'pending' && reviewed) {
-                    return false;
-                }
-            }
-
-            // Filter by date range
-            if (filters.dateRange) {
-                const materialDate = new Date(material.createDatetime);
-
-                if (filters.dateRange.from) {
-                    const fromDate = new Date(filters.dateRange.from);
-                    if (materialDate < fromDate) {
-                        return false;
-                    }
-                }
-
-                if (filters.dateRange.to) {
-                    const toDate = new Date(filters.dateRange.to);
-                    // Set time to end of day for the to date
-                    toDate.setHours(23, 59, 59, 999);
-                    if (materialDate > toDate) {
-                        return false;
-                    }
-                }
-            }
-
-            return true;
-        });
-    };
-
-    const materials = data?.paginatedMaterials?.content ? filterMaterials(data.paginatedMaterials.content) : [];
+    const materials = data?.paginatedMaterials?.content ? data.paginatedMaterials.content : [];
     const pageInfo = data?.paginatedMaterials?.pageInfo;
     const total = pageInfo?.totalElements ?? 0;
     const pages = pageInfo?.totalPages ?? 1;
@@ -299,27 +267,35 @@ export default function ReviewerDashboard() {
                                                 </span>
                                             ))}
                                             {material.keywords.length > 5 && (
-                                                <span className="more-keywords">+{material.keywords.length - 5} more</span>
+                                                <span
+                                                    className="more-keywords">+{material.keywords.length - 5} more</span>
                                             )}
                                         </div>
                                     )}
 
                                     <div className="material-footer">
                                         <span className="created-date">
-                                            Created: {formatDate(material.createDatetime)}
+                                                Created: {formatDate(material.createDatetime)}
                                         </span>
 
-                                        <Button
-                                            variant={hasBeenReviewedByMe(material) ? "outline" : "primary"}
-                                            size="small"
-                                            onClick={() => {
-                                                setSelectedMaterial(material);
-                                                setIsReviewModalOpen(true);
-                                            }}
-                                        >
-                                            {hasBeenReviewedByMe(material) ? "View Review" : "Review Material"}
-                                        </Button>
+                                        {material.status?.name === "Accepted" ? (
+                                            <Button variant="outline" size="small" disabled>
+                                                Cannot Review
+                                            </Button>
+                                        ) : (
+                                            <Button
+                                                variant={hasBeenReviewedByMe(material) ? "outline" : "primary"}
+                                                size="small"
+                                                onClick={() => {
+                                                    setSelectedMaterial(material);
+                                                    setIsReviewModalOpen(true);
+                                                }}
+                                            >
+                                                {hasBeenReviewedByMe(material) ? "View Review" : "Review Material"}
+                                            </Button>
+                                        )}
                                     </div>
+
                                 </Card>
                             ))
                         ) : (

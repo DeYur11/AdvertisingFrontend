@@ -42,7 +42,7 @@ export default function Dashboard() {
             }
         }));
     };
-
+    // TODO Зробити так щоб не можна було додавати матеріали до завдання що ще не почалось
     // Function to handle search query changes
     const handleSearchChange = (query) => {
         updateFilterState({ nameContains: query });

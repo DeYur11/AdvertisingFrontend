@@ -88,17 +88,6 @@ export default function ReviewFormTab({
                     </select>
                 </div>
 
-                <div className="form-group">
-                    <label htmlFor="reviewDate">Дата рецензії</label>
-                    <input
-                        type="date"
-                        id="reviewDate"
-                        name="reviewDate"
-                        value={formData?.reviewDate || ""}
-                        onChange={handleChange}
-                    />
-                </div>
-
                 {errors.submit && <div className="submit-error">{errors.submit}</div>}
 
                 <div className="action-buttons">

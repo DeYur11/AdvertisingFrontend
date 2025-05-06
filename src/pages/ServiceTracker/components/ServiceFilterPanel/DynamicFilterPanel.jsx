@@ -1,11 +1,11 @@
-// src/pages/ServiceTracker/components/ServiceFilterPanel/ServiceFilterPanel.jsx
+// src/pages/ServiceTracker/components/ServiceFilterPanel/DynamicFilterPanel.jsx
 import { useState } from "react";
 import Button from "../../../../components/common/Button/Button";
 import Badge from "../../../../components/common/Badge/Badge";
 import Modal from "../../../../components/common/Modal/Modal";
 import "./ServiceFilterPanel.css";
 
-export default function ServiceFilterPanel({
+export default function DynamicFilterPanel({
                                                filters,
                                                setFilters,
                                                onRefresh,
@@ -13,21 +13,28 @@ export default function ServiceFilterPanel({
                                            }) {
     const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
     const [advancedFilters, setAdvancedFilters] = useState({
+        // Common filters
         serviceTypeIds: filters.serviceTypeIds || [],
+        clientIds: filters.clientIds || [],
+        costRange: {
+            costMin: filters.costRange?.costMin || "",
+            costMax: filters.costRange?.costMax || ""
+        },
+
+        // Project-specific filters (used when groupByProject is true)
         projectStatusIds: filters.projectStatusIds || [],
         projectTypeIds: filters.projectTypeIds || [],
-        clientIds: filters.clientIds || [],
         managerIds: filters.managerIds || [],
+
+        // Service-specific filters (used when groupByProject is false)
         serviceInProgressStatusIds: filters.serviceInProgressStatusIds || [],
+
+        // Date range filters (used by both views)
         dateRange: {
             startDateFrom: filters.dateRange?.startDateFrom || "",
             startDateTo: filters.dateRange?.startDateTo || "",
             endDateFrom: filters.dateRange?.endDateFrom || "",
             endDateTo: filters.dateRange?.endDateTo || ""
-        },
-        costRange: {
-            costMin: filters.costRange?.costMin || "",
-            costMax: filters.costRange?.costMax || ""
         }
     });
 
@@ -42,7 +49,21 @@ export default function ServiceFilterPanel({
     };
 
     const handleGroupToggle = (e) => {
-        setFilters(prev => ({ ...prev, groupByProject: e.target.checked }));
+        // When toggling the view, we need to reset some filters that are specific to each view
+        const updatedFilters = { ...filters, groupByProject: e.target.checked };
+
+        // If switching to grouped view, clear service-specific filters
+        if (e.target.checked) {
+            updatedFilters.serviceInProgressStatusIds = [];
+        }
+        // If switching to service view, clear project-specific filters
+        else {
+            updatedFilters.projectStatusIds = [];
+            updatedFilters.projectTypeIds = [];
+            updatedFilters.managerIds = [];
+        }
+
+        setFilters(updatedFilters);
     };
 
     // Handle advanced filter changes
@@ -92,22 +113,27 @@ export default function ServiceFilterPanel({
     const resetAllFilters = () => {
         const emptyFilters = {
             serviceTypeIds: [],
-            projectStatusIds: [],
-            projectTypeIds: [],
             clientIds: [],
-            managerIds: [],
-            serviceInProgressStatusIds: [],
+            costRange: {
+                costMin: "",
+                costMax: ""
+            },
             dateRange: {
                 startDateFrom: "",
                 startDateTo: "",
                 endDateFrom: "",
                 endDateTo: ""
-            },
-            costRange: {
-                costMin: "",
-                costMax: ""
             }
         };
+
+        // Only add view-specific empty filters
+        if (filters.groupByProject) {
+            emptyFilters.projectStatusIds = [];
+            emptyFilters.projectTypeIds = [];
+            emptyFilters.managerIds = [];
+        } else {
+            emptyFilters.serviceInProgressStatusIds = [];
+        }
 
         setAdvancedFilters(emptyFilters);
         setFilters(prev => ({
@@ -122,18 +148,28 @@ export default function ServiceFilterPanel({
     const countActiveFilters = () => {
         let count = 0;
 
+        // Common filters
         if (filters.serviceTypeIds?.length > 0) count += filters.serviceTypeIds.length;
-        if (filters.projectStatusIds?.length > 0) count += filters.projectStatusIds.length;
-        if (filters.projectTypeIds?.length > 0) count += filters.projectTypeIds.length;
         if (filters.clientIds?.length > 0) count += filters.clientIds.length;
-        if (filters.managerIds?.length > 0) count += filters.managerIds.length;
-        if (filters.serviceInProgressStatusIds?.length > 0) count += filters.serviceInProgressStatusIds.length;
 
+        // Project-specific filters
+        if (filters.groupByProject) {
+            if (filters.projectStatusIds?.length > 0) count += filters.projectStatusIds.length;
+            if (filters.projectTypeIds?.length > 0) count += filters.projectTypeIds.length;
+            if (filters.managerIds?.length > 0) count += filters.managerIds.length;
+        }
+        // Service-specific filters
+        else {
+            if (filters.serviceInProgressStatusIds?.length > 0) count += filters.serviceInProgressStatusIds.length;
+        }
+
+        // Date range filters
         if (filters.dateRange?.startDateFrom) count++;
         if (filters.dateRange?.startDateTo) count++;
         if (filters.dateRange?.endDateFrom) count++;
         if (filters.dateRange?.endDateTo) count++;
 
+        // Cost range filters
         if (filters.costRange?.costMin) count++;
         if (filters.costRange?.costMax) count++;
 
@@ -148,7 +184,9 @@ export default function ServiceFilterPanel({
                 <div className="search-container">
                     <input
                         type="text"
-                        placeholder="Search by service, project, or client name..."
+                        placeholder={filters.groupByProject ?
+                            "Search by project, service, or client name..." :
+                            "Search by service, project, or client name..."}
                         value={filters.searchQuery}
                         onChange={handleSearchChange}
                         className="search-input"
@@ -208,72 +246,36 @@ export default function ServiceFilterPanel({
             <Modal
                 isOpen={showAdvancedFilters}
                 onClose={() => setShowAdvancedFilters(false)}
-                title="Advanced Filters"
+                title={filters.groupByProject ? "Project Filters" : "Service Filters"}
                 size="large"
             >
                 <div className="advanced-filters-container">
                     <div className="filters-grid">
-                        {/* Service Type Filters */}
-                        <div className="filter-section">
-                            <h3 className="filter-section-title">Service Types</h3>
-                            <div className="filter-options-list">
-                                {filterOptions.serviceTypes?.map(type => (
-                                    <label key={type.id} className="filter-option-checkbox">
-                                        <input
-                                            type="checkbox"
-                                            checked={advancedFilters.serviceTypeIds.includes(type.id)}
-                                            onChange={() => handleAdvancedFilterChange('serviceTypeIds', type.id)}
-                                        />
-                                        <span>{type.name}</span>
-                                    </label>
-                                ))}
-                                {!filterOptions.serviceTypes?.length && (
-                                    <div className="no-options-message">No service types available</div>
-                                )}
-                            </div>
-                        </div>
+                        {/* Common Filters Section */}
 
-                        {/* Project Status Filters */}
-                        <div className="filter-section">
-                            <h3 className="filter-section-title">Project Status</h3>
-                            <div className="filter-options-list">
-                                {filterOptions.projectStatuses?.map(status => (
-                                    <label key={status.id} className="filter-option-checkbox">
-                                        <input
-                                            type="checkbox"
-                                            checked={advancedFilters.projectStatusIds.includes(status.id)}
-                                            onChange={() => handleAdvancedFilterChange('projectStatusIds', status.id)}
-                                        />
-                                        <span>{status.name}</span>
-                                    </label>
-                                ))}
-                                {!filterOptions.projectStatuses?.length && (
-                                    <div className="no-options-message">No project statuses available</div>
-                                )}
-                            </div>
-                        </div>
+                        {!filters.groupByProject ? (
+                            <>
+                                <div className="filter-section">
+                                    <h3 className="filter-section-title">Service Types</h3>
+                                    <div className="filter-options-list">
+                                        {filterOptions.serviceTypes?.map(type => (
+                                            <label key={type.id} className="filter-option-checkbox">
+                                                <input
+                                                    type="checkbox"
+                                                    checked={advancedFilters.serviceTypeIds.includes(type.id)}
+                                                    onChange={() => handleAdvancedFilterChange('serviceTypeIds', type.id)}
+                                                />
+                                                <span>{type.name}</span>
+                                            </label>
+                                        ))}
+                                        {!filterOptions.serviceTypes?.length && (
+                                            <div className="no-options-message">No service types available</div>
+                                        )}
+                                    </div>
+                                </div>
+                            </>):<></>
+                        }
 
-                        {/* Project Type Filters */}
-                        <div className="filter-section">
-                            <h3 className="filter-section-title">Project Types</h3>
-                            <div className="filter-options-list">
-                                {filterOptions.projectTypes?.map(type => (
-                                    <label key={type.id} className="filter-option-checkbox">
-                                        <input
-                                            type="checkbox"
-                                            checked={advancedFilters.projectTypeIds.includes(type.id)}
-                                            onChange={() => handleAdvancedFilterChange('projectTypeIds', type.id)}
-                                        />
-                                        <span>{type.name}</span>
-                                    </label>
-                                ))}
-                                {!filterOptions.projectTypes?.length && (
-                                    <div className="no-options-message">No project types available</div>
-                                )}
-                            </div>
-                        </div>
-
-                        {/* Client Filters */}
                         <div className="filter-section">
                             <h3 className="filter-section-title">Clients</h3>
                             <div className="filter-options-list scrollable">
@@ -293,50 +295,95 @@ export default function ServiceFilterPanel({
                             </div>
                         </div>
 
-                        {/* Manager Filters */}
-                        <div className="filter-section">
-                            <h3 className="filter-section-title">Project Managers</h3>
-                            <div className="filter-options-list scrollable">
-                                {filterOptions.managers?.map(manager => (
-                                    <label key={manager.id} className="filter-option-checkbox">
-                                        <input
-                                            type="checkbox"
-                                            checked={advancedFilters.managerIds.includes(manager.id)}
-                                            onChange={() => handleAdvancedFilterChange('managerIds', manager.id)}
-                                        />
-                                        <span>{manager.name} {manager.surname}</span>
-                                    </label>
-                                ))}
-                                {!filterOptions.managers?.length && (
-                                    <div className="no-options-message">No managers available</div>
-                                )}
-                            </div>
-                        </div>
+                        {/* Dynamic Filters - based on the view mode */}
+                        {filters.groupByProject ? (
+                            // Project-specific filters
+                            <>
+                                <div className="filter-section">
+                                    <h3 className="filter-section-title">Project Status</h3>
+                                    <div className="filter-options-list">
+                                        {filterOptions.projectStatuses?.map(status => (
+                                            <label key={status.id} className="filter-option-checkbox">
+                                                <input
+                                                    type="checkbox"
+                                                    checked={advancedFilters.projectStatusIds.includes(status.id)}
+                                                    onChange={() => handleAdvancedFilterChange('projectStatusIds', status.id)}
+                                                />
+                                                <span>{status.name}</span>
+                                            </label>
+                                        ))}
+                                        {!filterOptions.projectStatuses?.length && (
+                                            <div className="no-options-message">No project statuses available</div>
+                                        )}
+                                    </div>
+                                </div>
 
-                        {/* Service Status Filters */}
-                        <div className="filter-section">
-                            <h3 className="filter-section-title">Service Implementation Status</h3>
-                            <div className="filter-options-list">
-                                {filterOptions.serviceStatuses?.map(status => (
-                                    <label key={status.id} className="filter-option-checkbox">
-                                        <input
-                                            type="checkbox"
-                                            checked={advancedFilters.serviceInProgressStatusIds.includes(status.id)}
-                                            onChange={() => handleAdvancedFilterChange('serviceInProgressStatusIds', status.id)}
-                                        />
-                                        <span>{status.name}</span>
-                                    </label>
-                                ))}
-                                {!filterOptions.serviceStatuses?.length && (
-                                    <div className="no-options-message">No service statuses available</div>
-                                )}
+                                <div className="filter-section">
+                                    <h3 className="filter-section-title">Project Types</h3>
+                                    <div className="filter-options-list">
+                                        {filterOptions.projectTypes?.map(type => (
+                                            <label key={type.id} className="filter-option-checkbox">
+                                                <input
+                                                    type="checkbox"
+                                                    checked={advancedFilters.projectTypeIds.includes(type.id)}
+                                                    onChange={() => handleAdvancedFilterChange('projectTypeIds', type.id)}
+                                                />
+                                                <span>{type.name}</span>
+                                            </label>
+                                        ))}
+                                        {!filterOptions.projectTypes?.length && (
+                                            <div className="no-options-message">No project types available</div>
+                                        )}
+                                    </div>
+                                </div>
+
+                                <div className="filter-section">
+                                    <h3 className="filter-section-title">Project Managers</h3>
+                                    <div className="filter-options-list scrollable">
+                                        {filterOptions.managers?.map(manager => (
+                                            <label key={manager.id} className="filter-option-checkbox">
+                                                <input
+                                                    type="checkbox"
+                                                    checked={advancedFilters.managerIds.includes(manager.id)}
+                                                    onChange={() => handleAdvancedFilterChange('managerIds', manager.id)}
+                                                />
+                                                <span>{manager.name} {manager.surname}</span>
+                                            </label>
+                                        ))}
+                                        {!filterOptions.managers?.length && (
+                                            <div className="no-options-message">No managers available</div>
+                                        )}
+                                    </div>
+                                </div>
+                            </>
+                        ) : (
+                            // Service-specific filters
+                            <div className="filter-section">
+                                <h3 className="filter-section-title">Service Implementation Status</h3>
+                                <div className="filter-options-list">
+                                    {filterOptions.serviceStatuses?.map(status => (
+                                        <label key={status.id} className="filter-option-checkbox">
+                                            <input
+                                                type="checkbox"
+                                                checked={advancedFilters.serviceInProgressStatusIds.includes(status.id)}
+                                                onChange={() => handleAdvancedFilterChange('serviceInProgressStatusIds', status.id)}
+                                            />
+                                            <span>{status.name}</span>
+                                        </label>
+                                    ))}
+                                    {!filterOptions.serviceStatuses?.length && (
+                                        <div className="no-options-message">No service statuses available</div>
+                                    )}
+                                </div>
                             </div>
-                        </div>
+                        )}
                     </div>
 
-                    {/* Project Date Range Filters */}
+                    {/* Common filters - Date Range */}
                     <div className="filter-section date-range-section">
-                        <h3 className="filter-section-title">Project Date Range</h3>
+                        <h3 className="filter-section-title">
+                            {filters.groupByProject ? "Project Date Range" : "Service Date Range"}
+                        </h3>
                         <div className="date-range-container">
                             <div className="date-range-group">
                                 <label className="date-range-label">Start Date</label>
@@ -388,7 +435,7 @@ export default function ServiceFilterPanel({
                         </div>
                     </div>
 
-                    {/* Cost Range Filters */}
+                    {/* Common filters - Cost Range */}
                     <div className="filter-section cost-range-section">
                         <h3 className="filter-section-title">Cost Range</h3>
                         <div className="cost-range-container">

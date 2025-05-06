@@ -1,3 +1,4 @@
+// src/pages/ServiceTracker/ServiceTracker.jsx
 import { useState, useEffect } from "react";
 import { useQuery } from "@apollo/client";
 import {
@@ -11,30 +12,30 @@ import {
 } from "./graphql/queries";
 import {
     ServiceTrackerHeader,
-    ServiceFilterPanel,
     ServicesList,
     CreateServiceModal,
     ServiceDetailsModal,
     ProjectGroupView
 } from "./components";
 import Pagination from "../../components/common/Pagination/Pagination";
+import DynamicFilterPanel from "./components/ServiceFilterPanel/DynamicFilterPanel";
 import "./ServiceTracker.css";
 
 export default function ServiceTracker() {
-    // Стан пагінації для сервісів
+    // Pagination state for services
     const [pagination, setPagination] = useState({
-        page: 0, // GraphQL використовує індексацію з 0
+        page: 0, // GraphQL uses zero-based indexing
         size: 10,
         sortField: "projectName",
         sortDirection: "ASC"
     });
 
-    // Стан для управління модальними вікнами сервісів
+    // State for service modals
     const [selectedService, setSelectedService] = useState(null);
     const [showCreateModal, setShowCreateModal] = useState(false);
     const [showDetailsModal, setShowDetailsModal] = useState(false);
 
-    // Стан фільтрів
+    // Filter state
     const [filters, setFilters] = useState({
         onlyMismatched: true,
         searchQuery: "",
@@ -57,7 +58,7 @@ export default function ServiceTracker() {
         }
     });
 
-    // Конвертація фільтрів у формат для GraphQL запиту
+    // Convert filters to GraphQL format
     const getGraphQLFilters = () => {
         const gqlFilters = {
             onlyMismatched: filters.onlyMismatched
@@ -68,31 +69,22 @@ export default function ServiceTracker() {
             gqlFilters.projectNameContains = filters.searchQuery;
         }
 
-        if (filters.serviceTypeIds.length > 0) {
-            gqlFilters.serviceTypeIds = filters.serviceTypeIds;
+        // Only apply service-specific filters when not grouped by project
+        if (!filters.groupByProject) {
+            if (filters.serviceTypeIds.length > 0) {
+                gqlFilters.serviceTypeIds = filters.serviceTypeIds;
+            }
+
+            if (filters.serviceInProgressStatusIds.length > 0) {
+                gqlFilters.serviceInProgressStatusIds = filters.serviceInProgressStatusIds;
+            }
+
+            if (filters.clientIds.length > 0) {
+                gqlFilters.clientIds = filters.clientIds;
+            }
         }
 
-        if (filters.projectStatusIds.length > 0) {
-            gqlFilters.statusIds = filters.projectStatusIds;
-        }
-
-        if (filters.projectTypeIds.length > 0) {
-            gqlFilters.projectTypeIds = filters.projectTypeIds;
-        }
-
-        if (filters.clientIds.length > 0) {
-            gqlFilters.clientIds = filters.clientIds;
-        }
-
-        if (filters.managerIds.length > 0) {
-            gqlFilters.managerIds = filters.managerIds;
-        }
-
-        if (filters.serviceInProgressStatusIds.length > 0) {
-            gqlFilters.serviceInProgressStatusIds = filters.serviceInProgressStatusIds;
-        }
-
-        // Діапазони дат
+        // Date ranges
         if (filters.dateRange.startDateFrom) {
             gqlFilters.startDateFrom = filters.dateRange.startDateFrom;
         }
@@ -109,7 +101,7 @@ export default function ServiceTracker() {
             gqlFilters.endDateTo = filters.dateRange.endDateTo;
         }
 
-        // Діапазони вартості
+        // Cost ranges
         if (filters.costRange.costMin) {
             gqlFilters.costMin = parseFloat(filters.costRange.costMin);
         }
@@ -121,15 +113,15 @@ export default function ServiceTracker() {
         return gqlFilters;
     };
 
-    // Скидання сторінки пагінації при зміні фільтрів
+    // Reset pagination page when filters change
     useEffect(() => {
         setPagination(prev => ({
             ...prev,
-            page: 0 // Скидаємо до першої сторінки при зміні фільтрів
+            page: 0 // Reset to first page when filters change
         }));
     }, [filters]);
 
-    // Отримання довідкових даних для фільтрів
+    // Fetch reference data for filters
     const { data: serviceTypesData } = useQuery(GET_SERVICE_TYPES);
     const { data: projectStatusesData } = useQuery(GET_PROJECT_STATUSES);
     const { data: projectTypesData } = useQuery(GET_PROJECT_TYPES);
@@ -137,7 +129,7 @@ export default function ServiceTracker() {
     const { data: managersData } = useQuery(GET_MANAGERS);
     const { data: serviceStatusesData } = useQuery(GET_SERVICE_STATUSES);
 
-    // Підготовка довідкових даних для фільтрів
+    // Prepare reference data for filters
     const filterOptions = {
         serviceTypes: serviceTypesData?.serviceTypes || [],
         projectStatuses: projectStatusesData?.projectStatuses || [],
@@ -147,7 +139,7 @@ export default function ServiceTracker() {
         serviceStatuses: serviceStatusesData?.serviceInProgressStatuses || []
     };
 
-    // Отримання пагінованих даних сервісів
+    // Fetch paginated service data
     const {
         data: servicesData,
         loading: servicesLoading,
@@ -163,35 +155,35 @@ export default function ServiceTracker() {
                 filter: getGraphQLFilters()
             }
         },
-        skip: filters.groupByProject, // Пропускаємо запит, якщо використовуємо групування за проектами
+        skip: filters.groupByProject, // Skip this query when using project grouping
         fetchPolicy: "network-only"
     });
 
-    // Визначення стану завантаження та помилок
+    // Determine loading and error states
     const loading = servicesLoading;
     const error = servicesError;
 
-    // Обробка зміни сторінки
+    // Handle page change
     const handlePageChange = (newPage) => {
         setPagination(prev => ({
             ...prev,
-            page: newPage - 1 // Конвертуємо до 0-базованої індексації
+            page: newPage - 1 // Convert to zero-based indexing
         }));
     };
 
-    // Обробка зміни розміру сторінки
+    // Handle page size change
     const handlePageSizeChange = (newSize) => {
         setPagination(prev => ({
             ...prev,
             size: newSize,
-            page: 0 // Скидаємо до першої сторінки при зміні розміру сторінки
+            page: 0 // Reset to first page when changing page size
         }));
     };
 
-    // Обробка зміни сортування
+    // Handle sort change
     const handleSortChange = (field) => {
         setPagination(prev => {
-            // Якщо клікаємо те саме поле, переключаємо напрямок
+            // If clicking the same field, toggle direction
             const newDirection = prev.sortField === field && prev.sortDirection === "ASC" ? "DESC" : "ASC";
 
             return {
@@ -202,7 +194,7 @@ export default function ServiceTracker() {
         });
     };
 
-    // Обробка створення та деталей сервісу
+    // Service handlers
     const handleServiceCreated = () => {
         setShowCreateModal(false);
         refetchServices();
@@ -218,16 +210,16 @@ export default function ServiceTracker() {
         setShowDetailsModal(true);
     };
 
-    // Обробка оновлення даних
+    // Handle data refresh
     const handleRefresh = () => {
         refetchServices();
     };
 
-    // Отримання даних для відображення
+    // Get data for display
     const paginatedServices = servicesData?.paginatedProjectServices?.content || [];
     const pageInfo = servicesData?.paginatedProjectServices?.pageInfo;
 
-    // Розрахунок загальної кількості сторінок для пагінації
+    // Calculate pagination info
     const totalPages = pageInfo?.totalPages || 1;
     const totalItems = pageInfo?.totalElements || 0;
 
@@ -235,14 +227,14 @@ export default function ServiceTracker() {
         <div className="service-tracker-container">
             <ServiceTrackerHeader />
 
-            <ServiceFilterPanel
+            <DynamicFilterPanel
                 filters={filters}
                 setFilters={setFilters}
                 onRefresh={handleRefresh}
                 filterOptions={filterOptions}
             />
 
-            {/* Відображаємо або плоский список, або групований за проектами */}
+            {/* Display either flat list or project-grouped view */}
             {filters.groupByProject ? (
                 <ProjectGroupView
                     filters={filters}
@@ -265,10 +257,10 @@ export default function ServiceTracker() {
                         }}
                     />
 
-                    {/* Компонент пагінації */}
+                    {/* Pagination component */}
                     {!loading && !error && paginatedServices.length > 0 && (
                         <Pagination
-                            currentPage={pagination.page + 1} // Конвертуємо до 1-базованої для UI
+                            currentPage={pagination.page + 1} // Convert to one-based for UI
                             totalPages={totalPages}
                             onPageChange={handlePageChange}
                             pageSize={pagination.size}
@@ -280,7 +272,7 @@ export default function ServiceTracker() {
                 </>
             )}
 
-            {/* Модальне вікно створення сервісу з задачами */}
+            {/* Service creation modal */}
             {showCreateModal && selectedService && (
                 <CreateServiceModal
                     isOpen={showCreateModal}
@@ -290,7 +282,7 @@ export default function ServiceTracker() {
                 />
             )}
 
-            {/* Модальне вікно деталей сервісу */}
+            {/* Service details modal */}
             {showDetailsModal && selectedService && (
                 <ServiceDetailsModal
                     isOpen={showDetailsModal}

@@ -6,6 +6,7 @@ import Badge from "../../../../components/common/Badge/Badge";
 import Card from "../../../../components/common/Card/Card";
 // Import queries
 import { GET_FILTER_REFERENCE_DATA } from "../../graphql/reviewerQueries";
+import {toast} from "react-toastify";
 
 export default function ReviewerFilterPanel({
                                                 searchQuery,
@@ -71,9 +72,20 @@ export default function ReviewerFilterPanel({
     };
 
     // Handle changes to multi-select options
+    const pendingReviewStatusId = 2;
+
     const handleOptionToggle = (filterType, optionValue) => {
-        // Ensure optionValue is an integer
         const optionValueInt = parseInt(optionValue, 10);
+
+        // Заборонити вибір Pending Review вручну при активному фільтрі
+        if (
+            filterType === "status" &&
+            filters.reviewStatus === "pending" &&
+            optionValueInt === pendingReviewStatusId
+        ) {
+
+            return;
+        }
 
         const currentValues = filters[filterType] || [];
         let newValues;
@@ -179,14 +191,6 @@ export default function ReviewerFilterPanel({
                             className="filter-button"
                         >
                             Pending Review
-                        </Button>
-                        <Button
-                            variant={filters.reviewStatus === "reviewed" ? "primary" : "outline"}
-                            size="small"
-                            onClick={() => applyFilter('reviewStatus', 'reviewed')}
-                            className="filter-button"
-                        >
-                            Reviewed by Me
                         </Button>
                     </div>
 
@@ -463,15 +467,23 @@ export default function ReviewerFilterPanel({
                                 <div className="filter-section">
                                     <h3 className="filter-section-title">Material Status</h3>
                                     <div className="filter-chips">
-                                        {refData?.materialStatuses.map(status => (
-                                            <div
-                                                key={status.id}
-                                                className={`filter-chip ${(filters.status || []).includes(status.id) ? 'selected' : ''}`}
-                                                onClick={() => handleOptionToggle('status', status.id)}
-                                            >
-                                                {status.name}
-                                            </div>
-                                        ))}
+                                        {refData?.materialStatuses.map(status => {
+                                            const isDisabled = filters.reviewStatus === "pending" && status.id === pendingReviewStatusId;
+                                            const isSelected = (filters.status || []).includes(status.id);
+
+                                            return (
+                                                <div
+                                                    key={status.id}
+                                                    className={`filter-chip ${isSelected ? 'selected' : ''} ${isDisabled ? 'disabled' : ''}`}
+                                                    onClick={() => {
+                                                        if (!isDisabled) handleOptionToggle('status', status.id);
+                                                    }}
+                                                    title={isDisabled ? 'This status is included automatically with "Pending Review"' : ''}
+                                                >
+                                                    {status.name}
+                                                </div>
+                                            );
+                                        })}
                                     </div>
                                 </div>
 
