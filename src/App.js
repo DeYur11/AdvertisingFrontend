@@ -18,23 +18,25 @@ import {useDispatch} from "react-redux";
 import {useEffect} from "react";
 import {jwtDecode} from "jwt-decode";
 import {login} from "./store/userSlice";
+import EmployeeManagement from "./pages/EmployeeManagement/EmployeeManagement";
+import ServiceDashboard from "./pages/ServiceDashboard/ServiceDashboard";
 
 export default function App() {
-    const dispatch = useDispatch();
-
-    useEffect(() => {
-        const token = localStorage.getItem("token");
-        if (token) {
-            const decoded = jwtDecode(token);
-            dispatch(login({
-                username: decoded.username,
-                workerId: parseInt(decoded.sub),
-                role: decoded.role,
-                isReviewer: decoded.isReviewer,
-                token
-            }));
-        }
-    }, []);
+    // const dispatch = useDispatch();
+    //
+    // useEffect(() => {
+    //     const token = localStorage.getItem("token");
+    //     if (token) {
+    //         const decoded = jwtDecode(token);
+    //         dispatch(login({
+    //             username: decoded.username,
+    //             workerId: parseInt(decoded.sub),
+    //             role: decoded.role,
+    //             isReviewer: decoded.isReviewer,
+    //             token
+    //         }));
+    //     }
+    // }, []);
 
     return (
         <BrowserRouter>
@@ -59,6 +61,16 @@ export default function App() {
                     <Route path="/settings" element={
                         <ProtectedRoute>
                             <Settings />
+                        </ProtectedRoute>
+                    } />
+                    <Route path="/employee-management" element={
+                        <ProtectedRoute>
+                            <EmployeeManagement />
+                        </ProtectedRoute>
+                    } />
+                    <Route path="/service-dashboard" element={
+                        <ProtectedRoute>
+                            <ServiceDashboard />
                         </ProtectedRoute>
                     } />
                     <Route path="/projects" element={

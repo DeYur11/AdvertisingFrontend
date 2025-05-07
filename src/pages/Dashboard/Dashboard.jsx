@@ -64,7 +64,7 @@ export default function Dashboard() {
     };
 
     // Check if user is a Worker
-    if (user.mainRole !== "Worker") {
+    if (user.mainRole !== "WORKER") {
         return (
             <div className="dashboard-container">
                 <Card className="access-denied">

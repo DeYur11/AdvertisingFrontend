@@ -188,3 +188,38 @@
         margin-top: 8px;
     }
 }
+
+.project-card-status-completed {
+    border-left: 8px solid #22c55e;
+    background-color: rgba(34, 197, 94, 0.05);
+}
+
+.project-card-status-in-progress {
+    border-left: 8px solid #2563eb;
+    background-color: rgba(37, 99, 235, 0.05);
+}
+
+.project-card-status-pending {
+    border-left: 8px solid #facc15;
+    background-color: rgba(250, 204, 21, 0.07);
+}
+
+.project-card-status-canceled {
+    border-left: 8px solid #ef4444;
+    background-color: rgba(239, 68, 68, 0.05);
+}
+
+.project-card-status-unknown {
+    border-left: 8px solid #94a3b8;
+    background-color: rgba(148, 163, 184, 0.04);
+}
+
+.project-card-status-non-started {
+    border-left: 8px solid #94a3b8;
+    background-color: rgba(148, 163, 184, 0.04);
+}
+
+/* Optional: плавний перехід для стилів */
+.compact-project-card {
+    transition: background-color 0.3s ease, border-left-color 0.3s ease;
+}

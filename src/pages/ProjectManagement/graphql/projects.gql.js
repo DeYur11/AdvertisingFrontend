@@ -16,30 +16,6 @@ export const GET_PROJECTS_SHALLOW = gql`
     }
 `;
 
-export const GET_SERVICES_IN_PROGRESS_BY_PS = gql`
-    query GetServicesInProgressByProjectService($projectServiceId: ID!) {
-        servicesInProgressByProjectService(projectServiceId: $projectServiceId) {
-            id
-            startDate
-            endDate
-            cost
-            status {
-                name
-            }
-            projectService {
-                id
-                service {
-                    id
-                    serviceName
-                }
-            }
-            tasks {
-                id   # потрібен лише для підрахунку кількості завдань
-            }
-        }
-    }
-`;
-
 export const GET_PROJECT_SERVICES = gql`
     query GetProjectServices($projectId: ID!) {
         projectServicesByProject(projectId: $projectId) {
@@ -152,4 +128,91 @@ query GetServiceTasks($serviceInProgressId: ID!) {
         }
     }
 }
+`;
+
+
+export const GET_SERVICES_IN_PROGRESS_BY_PS = gql`
+    query GetServicesInProgressByProjectService($projectServiceId: ID!) {
+        servicesInProgressByProjectService(projectServiceId: $projectServiceId) {
+            id
+            startDate
+            endDate
+            cost
+            status {
+                id
+                name
+            }
+            tasks {
+                id
+                name
+                description
+                deadline
+                priority
+                value
+                taskStatus {
+                    id
+                    name
+                }
+                assignedWorker {
+                    id
+                    name
+                    surname
+                }
+            }
+        }
+    }
+`;
+
+export const GET_PROJECT_DETAILS = gql`
+    query GetProjectDetails($projectId: ID!) {
+        project(id: $projectId) {
+            id
+            name
+            description
+            startDate
+            endDate
+            status {
+                id
+                name
+            }
+            projectType {
+                id
+                name
+            }
+            client {
+                id
+                name
+            }
+            manager {
+                id
+                name
+                surname
+            }
+            projectServices {
+                id
+                amount
+                service {
+                    id
+                    serviceName
+                    estimateCost
+                    serviceType {
+                        id
+                        name
+                    }
+                }
+                servicesInProgress {
+                    id
+                    startDate
+                    endDate
+                    cost
+                    status {
+                        id
+                        name
+                    }
+                }
+            }tasks {
+                id   # потрібен лише для підрахунку кількості завдань
+            }
+        }
+    }
 `;

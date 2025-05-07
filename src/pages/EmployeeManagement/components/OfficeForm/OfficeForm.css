@@ -1,0 +1,13 @@
+/* src/pages/EmployeeManagement/components/OfficeForm/OfficeForm.css */
+.office-form {
+    max-width: 500px;
+    margin: 0 auto;
+    padding: 10px 0;
+}
+
+.help-text {
+    color: #64748b;
+    font-size: 13px;
+    margin-top: 4px;
+    font-style: italic;
+}

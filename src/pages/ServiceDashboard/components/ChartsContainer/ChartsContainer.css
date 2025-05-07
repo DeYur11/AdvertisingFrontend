@@ -1,0 +1,59 @@
+/* src/pages/ServiceDashboard/components/ChartsContainer/ChartsContainer.css */
+.charts-container {
+    padding-bottom: 8px;
+}
+
+.charts-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+    gap: 16px;
+}
+
+.charts-header h2 {
+    font-size: 18px;
+    font-weight: 600;
+    color: #1e293b;
+    margin: 0;
+}
+
+.chart-tabs {
+    display: flex;
+    gap: 8px;
+}
+
+.chart-content {
+    height: 400px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.chart-placeholder {
+    text-align: center;
+    color: #64748b;
+    font-style: italic;
+    background-color: #f8fafc;
+    border-radius: 8px;
+    padding: 20px;
+    width: 100%;
+}
+
+@media screen and (max-width: 768px) {
+    .charts-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .chart-tabs {
+        width: 100%;
+        overflow-x: auto;
+        padding-bottom: 8px;
+    }
+
+    .chart-content {
+        height: 300px;
+    }
+}

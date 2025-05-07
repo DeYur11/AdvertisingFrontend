@@ -1,0 +1,6 @@
+/* src/pages/EmployeeManagement/components/CityForm/CityForm.css */
+.city-form {
+    max-width: 500px;
+    margin: 0 auto;
+    padding: 10px 0;
+}

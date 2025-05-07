@@ -28,6 +28,7 @@
     "react-select": "5.10.1",
     "react-sliding-side-panel": "2.0.5",
     "react-toastify": "11.0.5",
+    "recharts": "^2.15.3",
     "web-vitals": "2.1.4"
   },
   "scripts": {

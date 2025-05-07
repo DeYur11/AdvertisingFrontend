@@ -7,8 +7,6 @@ import "./ProjectCard.css";
 
 export default function ProjectCard({ project, expanded, onToggle, services, searchQuery, onSelect }) {
     // Get project status for styling
-    const projectStatus = project.status?.name?.toLowerCase() || "";
-
     // Calculate project stats
     const tasksCount = services.reduce((count, service) =>
         count + (service.tasks?.length || 0), 0);
@@ -24,6 +22,11 @@ export default function ProjectCard({ project, expanded, onToggle, services, sea
         if (!dateString) return "—";
         return new Date(dateString).toLocaleDateString();
     };
+
+    const normalizeStatus = (name) =>
+        name?.toLowerCase().replace(/\s+/g, "-") || "unknown";
+
+    const projectStatus = normalizeStatus(project.status?.name);
 
     // Create toggle button
     const toggleButton = (
@@ -44,10 +47,8 @@ export default function ProjectCard({ project, expanded, onToggle, services, sea
 
     return (
         <div className="compact-project-wrapper">
-            <Card
-                className="compact-project-card"
-            >
-                <div className="compact-project-header">
+            <Card className={`compact-project-card project-card-status-${projectStatus}`}>
+            <div className="compact-project-header">
                     <div className="project-title">
                         {highlightMatch(project.name, searchQuery)}
                     </div>

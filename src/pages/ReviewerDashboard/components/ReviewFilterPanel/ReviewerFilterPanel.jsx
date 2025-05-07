@@ -223,7 +223,6 @@ export default function ReviewerFilterPanel({
                             ✕
                         </button>
                     )}
-                    <span className="search-icon">🔍</span>
                 </div>
 
                 {/* Search Type Selector */}

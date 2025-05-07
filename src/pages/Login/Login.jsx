@@ -38,11 +38,14 @@ export default function Login() {
             }));
 
 
-            toast.success("✅ Успішний вхід!");
+            toast.success("Успішний вхід!", {
+                autoClose: 850 // 2 секунди
+            });
+
             navigate("/");
         } catch (error) {
             console.error("Login error:", error);
-            toast.error("❌ Невірні дані або сервер недоступний");
+            toast.error("Невірні дані або сервер недоступний");
         }
     }
 

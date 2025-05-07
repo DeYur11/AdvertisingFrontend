@@ -14,7 +14,8 @@ export default function ProjectCard({
                                         onDelete,
                                         setPaymentToDelete,
                                         onAddPayment,
-                                        onEditPayment
+                                        onEditPayment,
+                                        onOpenServiceDetails
                                     }) {
     const [open, setOpen] = useState(false);
 
@@ -118,7 +119,11 @@ export default function ProjectCard({
                         <div className="no-items-message">No services.</div>
                     )}
                     {services.map((ps) => (
-                        <ServiceCard key={ps.id} projectService={ps} />
+                        <ServiceCard
+                            key={ps.id}
+                            projectService={ps}
+                            onOpenDetails={() => onOpenServiceDetails?.(ps)} // ✅
+                        />
                     ))}
 
                     <h4 className="mt-3">Payments</h4>

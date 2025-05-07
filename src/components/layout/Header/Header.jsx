@@ -18,7 +18,7 @@ export default function Header() {
                 </NavLink>
 
                 {/* Access to Admin Panel only for Project Manager */}
-                {user.mainRole === "ProjectManager" && (
+                {user.mainRole === "PROJECT_MANAGER" && (
                     <>
                         <NavLink to="/projects" className={({ isActive }) => isActive ? "nav-button active" : "nav-button"}>
                             Project Management
@@ -26,11 +26,22 @@ export default function Header() {
                         <NavLink to="/service-tracker" className={({ isActive }) => isActive ? "nav-button active" : "nav-button"}>
                             Service Tracker
                         </NavLink>
+                        <NavLink to="/employee-management" className={({ isActive }) => isActive ? "nav-button active" : "nav-button"}>
+                            Employee Management
+                        </NavLink>
+                        <NavLink to="/service-dashboard" className={({ isActive }) => isActive ? "nav-button active" : "nav-button"}>
+                            Service Dashboard
+                        </NavLink>
                     </>
                 )}
 
+                {user.mainRole === "SCRUM_MASTER" && (
+                    <NavLink to="/service-tracker" className={({ isActive }) => isActive ? "nav-button active" : "nav-button"}>
+                        Service Tracker
+                    </NavLink>
+                )}
                 {/* Access to Dashboard only for Worker */}
-                {user.mainRole === "Worker" && (
+                {user.mainRole === "WORKER" && (
                     <NavLink to="/dashboard" className={({ isActive }) => isActive ? "nav-button active" : "nav-button"}>
                         My Tasks
                     </NavLink>

@@ -14,6 +14,9 @@ import EditProjectModal from "./components/EditProjectModal";
 import ConfirmationDialog from "../../components/common/ConfirmationDialog/ConfirmationDialog";
 import PaymentModal from "./components/PaymentModal/PaymentModal";
 import {DELETE_PAYMENT, GET_PAYMENT_PURPOSES} from "./graphql/projects.gql";
+import Card from "../../components/common/Card/Card";
+import {useSelector} from "react-redux";
+import ServiceDetailsView from "./components/ServiceDetailsView/ServiceDetailsView";
 
 const DELETE_PROJECT = gql`
     mutation DeleteProject($id: ID!) {
@@ -25,6 +28,8 @@ export default function ProjectManagement() {
     const [page, setPage] = useState(1);
     const [size, setSize] = useState(10);
     const [paymentToDelete, setPaymentToDelete] = useState(null);
+    const [showServiceDetailsModal, setShowServiceDetailsModal] = useState(false);
+    const [selectedProjectService, setSelectedProjectService] = useState(null);
     const [showPaymentModal, setShowPaymentModal] = useState(false);
     const [paymentToEdit, setPaymentToEdit] = useState(null);
     const [paymentProject, setPaymentProject] = useState(null);
@@ -58,6 +63,17 @@ export default function ProjectManagement() {
         if (filters.cost?.max !== undefined) filterInput.costMax = filters.cost.max;
         return filterInput;
     };
+
+    const handleOpenServiceDetails = (projectService) => {
+        setSelectedProjectService(projectService);
+        setShowServiceDetailsModal(true);
+    };
+
+    const handleCloseServiceDetails = () => {
+        setSelectedProjectService(null);
+        setShowServiceDetailsModal(false);
+    };
+
 
     const { data: paymentPurposesData } = useQuery(GET_PAYMENT_PURPOSES, { fetchPolicy: "cache-first" });
     const { data, loading, error, refetch } = useQuery(GET_PAGINATED_PROJECTS_WITH_TOTAL, {
@@ -120,6 +136,19 @@ export default function ProjectManagement() {
     const total = pageInfo?.totalElements ?? 0;
     const pages = pageInfo?.totalPages ?? 1;
 
+    const user = useSelector(state => state.user);
+    if (user.mainRole !== "PROJECT_MANAGER") {
+        return (
+            <div className="dashboard-container">
+                <Card className="access-denied">
+                    <div className="access-denied-icon">⚠️</div>
+                    <h2>Access Denied</h2>
+                    <p>This page is only accessible to Managers.</p>
+                </Card>
+            </div>
+        );
+    }
+
     return (
         <div className="project-management-container">
             <header className="page-header">
@@ -158,6 +187,7 @@ export default function ProjectManagement() {
                                     onAddPayment={(refetch) => handleAddPayment(p, refetch)}
                                     onEditPayment={(payment, refetch) => handleEditPayment(payment, p, refetch)}
                                     onDeletePayment={(payment) => setConfirmDeletePayment(payment)}
+                                    onOpenServiceDetails={handleOpenServiceDetails} // ✅ додаємо
                                 />
                             ))
                         ) : (
@@ -234,6 +264,13 @@ export default function ProjectManagement() {
                 purposes={paymentPurposesData?.paymentPurposes ?? []}
                 onClose={handleClosePaymentModal}
                 onSave={handlePaymentSaved}
+            />
+
+            {/* Service Details View Modal */}
+            <ServiceDetailsView
+                isOpen={showServiceDetailsModal}
+                onClose={() => handleCloseServiceDetails()}
+                projectService={selectedProjectService}
             />
         </div>
     );

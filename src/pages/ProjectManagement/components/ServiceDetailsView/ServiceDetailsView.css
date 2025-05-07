@@ -1,0 +1,432 @@
+.service-details-container {
+    max-height: 70vh;
+    overflow-y: auto;
+    padding-right: 6px;
+}
+
+.service-overview {
+    margin-bottom: 16px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.service-overview h3,
+.implementations-section h3 {
+    font-size: 16px;
+    font-weight: 600;
+    color: #1e293b;
+    margin-bottom: 12px;
+    padding-bottom: 6px;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+/* Horizontal layout classes */
+.info-horizontal-layout {
+    display: flex;
+    gap: 24px;
+    margin-bottom: 16px;
+}
+
+.service-info-section,
+.project-info-section {
+    flex: 1;
+}
+
+.service-info-section h4,
+.project-info-section h4,
+.project-dates h4,
+.implementation-stats h4 {
+    font-size: 14px;
+    font-weight: 600;
+    color: #334155;
+    margin-bottom: 8px;
+}
+
+.horizontal-detail-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px 20px;
+}
+
+.horizontal-detail-group .detail-item {
+    flex: 1 0 45%;
+    min-width: 160px;
+}
+
+.detail-item {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.detail-label {
+    font-size: 13px;
+    color: #64748b;
+    font-weight: 500;
+}
+
+.detail-value {
+    font-size: 14px;
+    color: #1e293b;
+    font-weight: 500;
+}
+
+.detail-value.cost {
+    color: #047857;
+    font-weight: 600;
+}
+
+.detail-value.project-name {
+    font-weight: 600;
+    color: #1e3a8a;
+}
+
+/* Project description */
+.project-description {
+    background-color: #f8fafc;
+    padding: 12px;
+    border-radius: 6px;
+    margin-bottom: 12px;
+    border: 1px solid #e2e8f0;
+}
+
+.project-description h4 {
+    font-size: 14px;
+    font-weight: 600;
+    color: #334155;
+    margin-bottom: 6px;
+}
+
+.project-description p {
+    font-size: 13px;
+    color: #475569;
+    line-height: 1.5;
+    margin: 0;
+}
+
+/* Horizontal layout for dates and stats */
+.horizontal-layout {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    align-items: flex-start;
+}
+
+.project-dates {
+    flex: 0 0 260px;
+    padding: 12px;
+    background-color: #f8fafc;
+    border-radius: 6px;
+    border: 1px solid #e2e8f0;
+}
+
+.dates-container {
+    display: flex;
+    gap: 12px;
+}
+
+/* Implementation stats */
+.implementation-stats {
+    flex: 0 0 300px;
+    padding: 12px;
+    background-color: #f8fafc;
+    border-radius: 6px;
+    border: 1px solid #e2e8f0;
+}
+
+.stats-container {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+}
+
+.stat-item {
+    text-align: center;
+    flex: 1;
+}
+
+.stat-value {
+    font-size: 20px;
+    font-weight: 600;
+    color: #1e293b;
+    margin-bottom: 2px;
+}
+
+.stat-label {
+    font-size: 12px;
+    color: #64748b;
+}
+
+/* Service Implementations Section */
+.implementations-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+    gap: 12px;
+}
+
+.implementation-card {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 12px;
+}
+
+.implementation-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 6px;
+}
+
+.implementation-header h4 {
+    font-size: 14px;
+    font-weight: 600;
+    color: #334155;
+    margin: 0;
+}
+
+.implementation-status {
+    display: flex;
+    align-items: center;
+}
+
+.implementation-details-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px 16px;
+}
+
+.implementation-details-row .detail-item {
+    flex: 1 0 40%;
+    min-width: 140px;
+}
+
+/* Task progress */
+.task-progress {
+    margin-top: 6px;
+}
+
+.progress-label {
+    display: flex;
+    justify-content: space-between;
+    font-size: 12px;
+    color: #475569;
+    margin-bottom: 4px;
+}
+
+.progress-bar {
+    height: 6px;
+    background-color: #e2e8f0;
+    border-radius: 3px;
+    overflow: hidden;
+}
+
+.progress-fill {
+    height: 100%;
+    background-color: #2563eb;
+    border-radius: 3px;
+}
+
+/* Tasks list */
+.tasks-list {
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid #e2e8f0;
+}
+
+.tasks-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+}
+
+.tasks-header h4 {
+    font-size: 14px;
+    font-weight: 600;
+    color: #1e293b;
+    margin: 0;
+}
+
+/* Compact task table */
+.compact-tasks-table {
+    font-size: 12px;
+    border: 1px solid #e2e8f0;
+    border-radius: 4px;
+}
+
+.task-table-header {
+    display: flex;
+    background-color: #f1f5f9;
+    font-weight: 600;
+    color: #475569;
+    padding: 6px 8px;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.task-table-row {
+    display: flex;
+    padding: 6px 8px;
+    border-bottom: 1px solid #e2e8f0;
+    align-items: center;
+    background-color: #ffffff;
+}
+
+.task-table-row:nth-child(even) {
+    background-color: #f8fafc;
+}
+
+.task-table-row:last-child {
+    border-bottom: none;
+}
+
+.task-col {
+    padding: 0 4px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.task-name-col {
+    flex: 1.5;
+    min-width: 120px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.task-status-col {
+    flex: 0.8;
+    min-width: 80px;
+}
+
+.task-priority-col {
+    flex: 0.6;
+    min-width: 60px;
+}
+
+.task-deadline-col {
+    flex: 0.8;
+    min-width: 80px;
+}
+
+.task-assigned-col {
+    flex: 1;
+    min-width: 100px;
+}
+
+.task-value-col {
+    flex: 0.7;
+    min-width: 70px;
+    text-align: right;
+}
+
+.task-name {
+    font-size: 12px;
+    font-weight: 600;
+    color: #334155;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Description tooltip */
+.task-description-tooltip {
+    position: relative;
+    display: inline-block;
+}
+
+.description-icon {
+    cursor: pointer;
+    color: #64748b;
+    font-size: 11px;
+}
+
+.tooltip-text {
+    visibility: hidden;
+    position: absolute;
+    z-index: 1;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: #334155;
+    color: #ffffff;
+    text-align: left;
+    padding: 6px 8px;
+    border-radius: 4px;
+    width: 200px;
+    font-size: 11px;
+    line-height: 1.4;
+    white-space: normal;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+}
+
+.task-description-tooltip:hover .tooltip-text {
+    visibility: visible;
+}
+
+/* Loading, error and empty state messages */
+.loading-message,
+.error-message,
+.no-implementations,
+.no-tasks-message {
+    padding: 16px;
+    text-align: center;
+    background-color: #f8fafc;
+    border-radius: 6px;
+    border: 1px dashed #cbd5e1;
+    margin: 12px 0;
+    font-size: 13px;
+}
+
+.loading-message {
+    color: #3b82f6;
+}
+
+.error-message {
+    color: #ef4444;
+}
+
+.no-implementations,
+.no-tasks-message {
+    color: #64748b;
+}
+
+/* Responsive styles */
+@media (max-width: 768px) {
+    .info-horizontal-layout {
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .horizontal-layout {
+        flex-direction: column;
+    }
+
+    .project-dates,
+    .implementation-stats {
+        flex: 1 0 100%;
+    }
+
+    .implementations-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .dates-container {
+        flex-direction: column;
+        gap: 6px;
+    }
+
+    .task-priority-col,
+    .task-value-col {
+        display: none;
+    }
+
+    .task-name-col {
+        flex: 1.2;
+    }
+
+    .task-assigned-col {
+        flex: 0.8;
+    }
+}

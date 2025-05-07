@@ -1,0 +1,219 @@
+/* src/pages/EmployeeManagement/components/EmployeeList/EmployeeList.css */
+.employee-list-container {
+    margin-bottom: 24px;
+}
+
+.employee-list-header {
+    display: grid;
+    grid-template-columns: minmax(200px, 2fr) minmax(150px, 1.5fr) minmax(180px, 1.5fr) minmax(180px, 1.5fr) minmax(180px, 1fr);
+    background-color: #f8fafc;
+    border-radius: 8px 8px 0 0;
+    border: 1px solid #e2e8f0;
+    font-weight: 600;
+    color: #1e293b;
+}
+
+.header-cell {
+    padding: 12px 16px;
+    font-size: 14px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+    user-select: none;
+    display: flex;
+    align-items: center;
+}
+
+.header-cell:hover {
+    background-color: #f1f5f9;
+}
+
+.header-cell.sorted {
+    background-color: #eff6ff;
+    color: #2563eb;
+}
+
+.sort-indicator {
+    margin-left: 6px;
+    font-size: 12px;
+}
+
+.employee-actions {
+    justify-content: center;
+}
+
+.employee-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.employee-card {
+    padding: 0 !important;
+    overflow: hidden;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.employee-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.employee-info {
+    display: grid;
+    grid-template-columns: minmax(200px, 2fr) minmax(150px, 1.5fr) minmax(180px, 1.5fr) minmax(180px, 1.5fr) minmax(180px, 1fr);
+    width: 100%;
+}
+
+.employee-name-cell,
+.employee-position-cell,
+.employee-office-cell,
+.employee-contact-cell,
+.employee-actions-cell {
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.employee-name-cell {
+    border-left: 3px solid #2563eb;
+}
+
+.employee-name-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 4px;
+}
+
+.employee-name {
+    font-weight: 600;
+    font-size: 15px;
+    color: #1e293b;
+}
+
+.employee-id {
+    font-size: 12px;
+    color: #64748b;
+}
+
+.position-name {
+    font-weight: 500;
+    color: #334155;
+}
+
+.office-location {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 4px;
+}
+
+.city-name {
+    font-weight: 500;
+    color: #334155;
+}
+
+.country-name {
+    font-size: 12px;
+    color: #64748b;
+    background-color: #f1f5f9;
+    padding: 2px 6px;
+    border-radius: 10px;
+}
+
+.office-address {
+    font-size: 13px;
+    color: #64748b;
+}
+
+.employee-email {
+    font-size: 14px;
+    color: #334155;
+    margin-bottom: 4px;
+}
+
+.employee-phone {
+    font-size: 13px;
+    color: #64748b;
+}
+
+.employee-actions-cell {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+    align-items: center;
+}
+
+.reviewer-badge {
+    background-color: #dbeafe !important;
+    color: #1e40af !important;
+}
+
+.empty-list-card {
+    padding: 24px !important;
+    text-align: center;
+}
+
+.empty-message {
+    color: #64748b;
+    font-size: 15px;
+    font-style: italic;
+}
+
+/* Responsive styles */
+@media (max-width: 1100px) {
+    .employee-list-header,
+    .employee-info {
+        grid-template-columns: minmax(180px, 2fr) minmax(130px, 1fr) minmax(160px, 1.5fr) minmax(120px, 1fr);
+    }
+
+    .employee-actions-cell {
+        display: none;
+    }
+
+    /* Add actions to a new row */
+    .employee-info {
+        position: relative;
+    }
+
+    .employee-card .employee-actions-cell {
+        display: flex;
+        position: absolute;
+        bottom: 0;
+        right: 0;
+        padding: 8px 16px;
+        background-color: #f8fafc;
+        border-top: 1px solid #e2e8f0;
+        border-left: 1px solid #e2e8f0;
+        border-top-left-radius: 8px;
+    }
+}
+
+@media (max-width: 768px) {
+    .employee-list-header {
+        display: none;
+    }
+
+    .employee-info {
+        grid-template-columns: 1fr;
+        gap: 8px;
+    }
+
+    .employee-name-cell,
+    .employee-position-cell,
+    .employee-office-cell,
+    .employee-contact-cell {
+        padding: 12px 16px;
+    }
+
+    .employee-card .employee-actions-cell {
+        position: relative;
+        display: flex;
+        flex-direction: row;
+        width: 100%;
+        padding: 12px 16px;
+        border-top: 1px solid #e2e8f0;
+        justify-content: flex-end;
+    }
+}
