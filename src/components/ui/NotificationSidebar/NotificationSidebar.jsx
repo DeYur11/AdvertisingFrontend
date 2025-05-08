@@ -1,119 +1,173 @@
-// src/components/ui/NotificationSidebar.css/NotificationSidebar.css.jsx
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { useQuery, gql } from '@apollo/client';
 import './NotificationSidebar.css';
+import {useSelector} from "react-redux";
 
-const GET_AUDIT_LOGS = gql`
-    query AuditLogsByMaterialIds($materialIds: [Int!]!, $limit: Int) {
-        auditLogsByMaterialIds(materialIds: $materialIds, limit: $limit) {
-            id
-            worker {
-                id
-                name
-                surname
-            }
-            username
-            role
-            action
-            entity
-            description
-            material {
-                id
-                name
-            }
-            timestamp
+// Запити на кожен тип сповіщень
+// 🔄 Замість GET_REVIEW_LOGS
+const GET_REVIEW_LOGS = gql`
+    query AuditLogsByMaterialIds($materialIds: [Int!]!, $entityList: [AuditEntity!]!) {
+        auditLogsByMaterialIds(materialIds: $materialIds, entityList: $entityList) {
+            id action entity description timestamp username
+            worker { id name surname }
+            material { id name }
         }
     }
 `;
 
-export default function NotificationSidebar({ isOpen, onClose, materialIds = [] }) {
-    const { loading, error, data, refetch } = useQuery(GET_AUDIT_LOGS, {
-        variables: { materialIds, limit: 100 },
-        skip: !isOpen || materialIds.length === 0,
+
+const GET_TASK_LOGS = gql`
+    query AuditLogsByTaskIds(
+        $taskIds: [Int!]!
+        $entityList: [AuditEntity!]!
+    ) {
+        auditLogsByTaskIds(taskIds: $taskIds, entityList: $entityList) {
+            id action entity description timestamp username
+            worker { id name surname }
+        }
+    }
+`;
+
+const GET_PROJECT_LOGS = gql`
+    query AuditLogsByProjectIds(
+        $projectIds: [Int!]!
+        $entityList: [AuditEntity!]!
+    ) {
+        auditLogsByProjectIds(projectIds: $projectIds, entityList: $entityList) {
+            id action entity description timestamp username
+            worker { id name surname }
+        }
+    }
+`;
+
+export default function NotificationSidebar({
+                                                isOpen,
+                                                onClose,
+                                                materialIds = [],
+                                                taskIds = [],         // ← передай список завдань із батьківського компонента
+                                                projectIds = []       // ← передай список проєктів
+                                            }) {
+    const userRole = useSelector((s) => s.user.mainRole);
+
+    const isWorker = userRole === "WORKER";
+    const isScrumMaster = userRole === "SCRUM_MASTER";
+    const isProjectManager = userRole === "PROJECT_MANAGER";
+
+    /* вибір запиту та змінних */
+    const query = isWorker
+        ? GET_REVIEW_LOGS
+        : isScrumMaster
+            ? GET_TASK_LOGS
+            : GET_PROJECT_LOGS;
+
+    const variables = isWorker
+        ? { materialIds, entityList: ["MATERIAL_REVIEW"] }
+        : isScrumMaster
+            ? { taskIds, entityList: ["TASK"] }          // можна додати інші сутності
+            : { projectIds, entityList: ["PROJECT"] };   // за потреби: ["SERVICES_IN_PROGRESS", …]
+
+    const skip =
+        !isOpen ||
+        (isWorker && materialIds.length === 0) ||
+        (isScrumMaster && taskIds.length === 0) ||
+        (isProjectManager && projectIds.length === 0);
+
+    const { data, loading, error, refetch } = useQuery(query, {
+        variables,
+        skip,
         fetchPolicy: "network-only"
     });
 
-    // Оновлюємо дані при відкритті сайдбару
     useEffect(() => {
-        if (isOpen && materialIds.length > 0) {
-            refetch();
-        }
-    }, [isOpen, refetch, materialIds]);
+        if (!skip && isOpen) refetch();
+    }, [isOpen, skip, refetch]);
 
     const getNotificationIcon = (entity, action) => {
-        if (entity === "MATERIAL_REVIEW") {
-            if (action === "CREATE") return { icon: "📝", color: "#2563eb" };
-            if (action === "UPDATE") return { icon: "✏️", color: "#8b5cf6" };
-            if (action === "DELETE") return { icon: "🗑️", color: "#ef4444" };
-        }
+        const iconMap = {
+            MATERIAL_REVIEW: { CREATE: "📝", UPDATE: "✏️", DELETE: "🗑️" },
+            MATERIAL: { CREATE: "📄", UPDATE: "📝", DELETE: "🗑️" },
+            TASK: { CREATE: "🧩", UPDATE: "🔧", DELETE: "🗑️" },
+            PROJECT: { CREATE: "📁", UPDATE: "📝", DELETE: "🗑️" },
+        };
+        const colorMap = {
+            CREATE: "#10b981",
+            UPDATE: "#f59e0b",
+            DELETE: "#ef4444",
+        };
 
-        if (entity === "MATERIAL") {
-            if (action === "CREATE") return { icon: "📄", color: "#10b981" };
-            if (action === "UPDATE") return { icon: "📝", color: "#f59e0b" };
-            if (action === "DELETE") return { icon: "🗑️", color: "#ef4444" };
-        }
-
-        // Default
-        return { icon: "📢", color: "#64748b" };
+        return {
+            icon: iconMap[entity]?.[action] || "📢",
+            color: colorMap[action] || "#64748b",
+        };
     };
 
     const formatTimestamp = (timestamp) => {
         const date = new Date(timestamp);
-        return date.toLocaleString();
+        const now = new Date();
+        const diff = Math.floor((now - date) / 60000);
+        if (diff < 60) return `${diff} хв тому`;
+        if (diff < 1440) return `${Math.floor(diff / 60)} год тому`;
+        if (diff < 10080) return `${Math.floor(diff / 1440)} дн тому`;
+        return date.toLocaleDateString();
     };
+
+    const getActionText = (entity, action) => {
+        const dict = {
+            MATERIAL_REVIEW: { CREATE: "Створено відгук", UPDATE: "Оновлено відгук", DELETE: "Видалено відгук" },
+            MATERIAL: { CREATE: "Створено матеріал", UPDATE: "Оновлено матеріал", DELETE: "Видалено матеріал" },
+            TASK: { CREATE: "Створено завдання", UPDATE: "Оновлено завдання", DELETE: "Видалено завдання" },
+            PROJECT: { CREATE: "Створено проєкт", UPDATE: "Оновлено проєкт", DELETE: "Видалено проєкт" },
+        };
+        return dict[entity]?.[action] || `${action.toLowerCase()} ${entity.toLowerCase()}`;
+    };
+
+    const notifications = isWorker
+        ? data?.auditLogsByMaterialIds
+        : isScrumMaster
+            ? data?.auditLogsByTaskIds
+            : data?.auditLogsByProjectIds;
+
+    const headingText = isWorker
+        ? "Сповіщення про відгуки"
+        : isScrumMaster
+            ? "Сповіщення про завдання"
+            : "Сповіщення про проєкти";
 
     return (
         <>
             <div id="notificationBackdrop" className={`backdrop ${isOpen ? 'open' : ''}`} onClick={onClose}></div>
             <div className={`notification-sidebar ${isOpen ? 'open' : ''}`}>
                 <div className="notification-sidebar-header">
-                    <h2>Сповіщення про відгуки</h2>
-                    <button className="close-button" onClick={onClose} aria-label="Закрити панель сповіщень">
-                        ✕
-                    </button>
+                    <h2>{headingText}</h2>
+                    <button className="close-button" onClick={onClose}>✕</button>
                 </div>
 
                 <div className="notification-sidebar-content">
                     {loading && <div className="notification-loading">Завантаження сповіщень...</div>}
                     {error && <div className="notification-error">Помилка завантаження: {error.message}</div>}
-
-                    {!loading && !error && (!data?.auditLogsByMaterialIds || data.auditLogsByMaterialIds.length === 0) && (
+                    {!loading && !error && (!notifications || notifications.length === 0) && (
                         <div className="no-notifications">Немає сповіщень для відображення</div>
                     )}
 
-                    {!loading && !error && data?.auditLogsByMaterialIds && data.auditLogsByMaterialIds.length > 0 && (
+                    {!loading && !error && notifications?.length > 0 && (
                         <ul className="notifications-list">
-                            {data.auditLogsByMaterialIds.map(notification => {
-                                const { icon, color } = getNotificationIcon(notification.entity, notification.action);
-
+                            {notifications.map((n) => {
+                                const { icon, color } = getNotificationIcon(n.entity, n.action);
+                                const actionText = getActionText(n.entity, n.action);
                                 return (
-                                    <li key={notification.id} className="notification-item">
+                                    <li key={n.id} className="notification-item">
                                         <div className="notification-icon" style={{ color }}>{icon}</div>
                                         <div className="notification-content">
                                             <div className="notification-header">
-                        <span className="notification-type">
-                          {notification.entity === "MATERIAL_REVIEW" ? "Відгук" :
-                              notification.entity === "MATERIAL" ? "Матеріал" : notification.entity}
-                        </span>
-                                                <span className="notification-action" style={{ color }}>
-                          {notification.action === "CREATE" ? "створено" :
-                              notification.action === "UPDATE" ? "оновлено" : "видалено"}
-                        </span>
+                                                <span className="notification-type">{n.material?.name || n.entity}</span>
+                                                <span className="notification-action" style={{ color }}>{actionText}</span>
                                             </div>
-                                            <p className="notification-description">{notification.description}</p>
+                                            {n.description && <p className="notification-description">{n.description}</p>}
                                             <div className="notification-details">
-                                                {notification.material && (
-                                                    <div className="notification-material">
-                                                        Матеріал: {notification.material.name}
-                                                    </div>
-                                                )}
                                                 <div className="notification-user">
-                                                    {notification.worker
-                                                        ? `${notification.worker.name} ${notification.worker.surname}`
-                                                        : notification.username}
-                                                    {notification.role && ` (${notification.role})`}
+                                                    {n.worker ? `${n.worker.name} ${n.worker.surname}` : n.username || "Користувач"}
+                                                    <span className="notification-time">{formatTimestamp(n.timestamp)}</span>
                                                 </div>
-                                                <div className="notification-time">{formatTimestamp(notification.timestamp)}</div>
                                             </div>
                                         </div>
                                     </li>
