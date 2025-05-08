@@ -1,0 +1,79 @@
+/* src/pages/ServiceTracker Page/components/TaskItem/TaskItem.css */
+.task-list-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    padding: 16px;
+    background-color: #f8fafc;
+    border-radius: 8px;
+    border: 1px solid #e2e8f0;
+    transition: all 0.2s;
+}
+
+.task-list-item:hover {
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+    border-color: #cbd5e1;
+}
+
+.task-info {
+    flex: 1;
+}
+
+.task-name {
+    font-weight: 600;
+    font-size: 16px;
+    color: #1e293b;
+    margin-bottom: 8px;
+}
+
+.task-details {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    margin-bottom: 8px;
+}
+
+.task-detail {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 14px;
+}
+
+.detail-label {
+    color: #64748b;
+    font-weight: 500;
+}
+
+.detail-value {
+    color: #334155;
+}
+
+.task-description {
+    font-size: 14px;
+    color: #475569;
+    margin-top: 8px;
+    font-style: italic;
+}
+
+.task-actions {
+    display: flex;
+    gap: 8px;
+}
+
+@media (max-width: 768px) {
+    .task-list-item {
+        flex-direction: column;
+    }
+
+    .task-actions {
+        margin-top: 12px;
+        width: 100%;
+        justify-content: flex-end;
+    }
+
+    .task-details {
+        flex-direction: column;
+        gap: 8px;
+    }
+}

@@ -1,55 +1,81 @@
-import Card   from "../../../../components/common/Card/Card";
-import Chip   from "../../../../components/common/Chip/Chip";
+import Card from "../../../../components/common/Card/Card";
+import StatusBadge from "../../../../components/common/StatusBadge/StatusBadge";
 import InfoRow from "../../../../components/common/InfoRow/InfoRow";
-import {
-    CalendarMonth, MonetizationOn, ListAlt
-} from "@mui/icons-material";
+import { CalendarMonth, MonetizationOn, ListAlt } from "@mui/icons-material";
+import "./ServiceInProgressItem.css";
 
 export default function ServiceInProgressItem({ serviceInProgress }) {
-    /* підготовка даних – як у попередньому варіанті */
-    const status = serviceInProgress.status?.name?.toLowerCase() || "unknown";
-    const statusChip = (
-        <Chip variant={
-            status==="completed"   ? "success":
-                status==="in progress" ? "primary":
-                    status==="pending"     ? "warning":"default"}
-              size="sm"
-        >
-            {serviceInProgress.status?.name || "Unknown"}
-        </Chip>
-    );
+    const status = serviceInProgress.status?.name || "Unknown";
 
-    /* рендер */
+    // Format dates nicely
+    const formatDate = (dateString) => {
+        if (!dateString) return "—";
+        return new Date(dateString).toLocaleDateString();
+    };
+
+    // Calculate task completion stats if tasks are available
+    const totalTasks = serviceInProgress.tasks?.length || 0;
+    const completedTasks = serviceInProgress.tasks?.filter(
+        task => task.taskStatus?.name?.toLowerCase() === "completed"
+    ).length || 0;
+    const taskCompletionPercent = totalTasks ? Math.round((completedTasks / totalTasks) * 100) : 0;
+
     return (
-        <Card variant="outlined" size="md" className={`sip-card status-${status}`}>
-            <div style={{display:"flex", alignItems:"center", gap:8, marginBottom:8}}>
-                {statusChip}
-                <Chip size="sm">{serviceInProgress.projectService?.service?.serviceName ?? "—"}</Chip>
+        <Card
+            variant="outlined"
+            className="sip-item"
+        >
+            <div className="sip-header">
+                <StatusBadge
+                    status={status}
+                    type="service"
+                    size="small"
+                />
+
+                <h4 className="sip-title">
+                    {serviceInProgress.projectService?.service?.serviceName || "Service Implementation"}
+                </h4>
             </div>
 
-            <InfoRow
-                icon={<CalendarMonth fontSize="small"/>}
-                label="Start – End:"
-                value={`${new Date(serviceInProgress.startDate).toLocaleDateString()} — ${
-                    serviceInProgress.endDate
-                        ? new Date(serviceInProgress.endDate).toLocaleDateString()
-                        : "—"}`}
-            />
+            <div className="sip-content">
+                <div className="sip-info-rows">
+                    <InfoRow
+                        icon={<CalendarMonth fontSize="small"/>}
+                        label="Period:"
+                        value={`${formatDate(serviceInProgress.startDate)} — ${formatDate(serviceInProgress.endDate)}`}
+                    />
 
-            <InfoRow
-                icon={<MonetizationOn fontSize="small"/>}
-                label="Cost:"
-                value={
-                    serviceInProgress.cost!=null
-                        ? `$${(+serviceInProgress.cost).toFixed(2)}`
-                        : "—"}
-            />
+                    <InfoRow
+                        icon={<MonetizationOn fontSize="small"/>}
+                        label="Cost:"
+                        value={
+                            serviceInProgress.cost != null
+                                ? `$${(+serviceInProgress.cost).toFixed(2)}`
+                                : "—"}
+                    />
 
-            <InfoRow
-                icon={<ListAlt fontSize="small"/>}
-                label="Tasks:"
-                value={serviceInProgress.tasks?.length ?? 0}
-            />
+                    <InfoRow
+                        icon={<ListAlt fontSize="small"/>}
+                        label="Tasks:"
+                        value={`${completedTasks}/${totalTasks} completed`}
+                    />
+                </div>
+
+                {totalTasks > 0 && (
+                    <div className="task-progress">
+                        <div className="progress-label">
+                            <span>Task Completion</span>
+                            <span>{taskCompletionPercent}%</span>
+                        </div>
+                        <div className="progress-bar">
+                            <div
+                                className="progress-fill"
+                                style={{ width: `${taskCompletionPercent}%` }}
+                            ></div>
+                        </div>
+                    </div>
+                )}
+            </div>
         </Card>
     );
 }

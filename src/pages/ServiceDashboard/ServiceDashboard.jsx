@@ -1,14 +1,18 @@
-// src/pages/ServiceDashboard/ServiceDashboard.jsx
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useQuery, useMutation, gql } from "@apollo/client";
 import { toast } from "react-toastify";
 import Button from "../../components/common/Button/Button";
 import Card from "../../components/common/Card/Card";
 import Modal from "../../components/common/Modal/Modal";
 import ConfirmationDialog from "../../components/common/ConfirmationDialog/ConfirmationDialog";
-
 import "./ServiceDashboard.css";
-import {ChartsContainer, FilterPanel, ServiceForm, ServiceStats, ServiceTable} from "./components";
+import {
+    ChartsContainer,
+    FilterPanel,
+    ServiceForm,
+    ServiceStats,
+    ServiceTable,
+} from "./components";
 
 // GraphQL Queries
 const GET_SERVICES = gql`
@@ -40,7 +44,7 @@ const GET_SERVICE_TYPES = gql`
     }
 `;
 
-// GraphQL Mutations
+// Mutations
 const CREATE_SERVICE = gql`
     mutation CreateService($input: CreateServiceInput!) {
         createService(input: $input) {
@@ -81,6 +85,7 @@ export default function ServiceDashboard() {
     const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
     const [editingService, setEditingService] = useState(null);
     const [serviceToDelete, setServiceToDelete] = useState(null);
+    const [showStats, setShowStats] = useState(false);
     const [filters, setFilters] = useState({
         search: "",
         serviceType: "",
@@ -93,12 +98,12 @@ export default function ServiceDashboard() {
         data: servicesData,
         loading: servicesLoading,
         error: servicesError,
-        refetch: refetchServices
+        refetch: refetchServices,
     } = useQuery(GET_SERVICES);
 
     const {
         data: serviceTypesData,
-        loading: serviceTypesLoading
+        loading: serviceTypesLoading,
     } = useQuery(GET_SERVICE_TYPES);
 
     // Mutations
@@ -106,19 +111,25 @@ export default function ServiceDashboard() {
     const [updateService] = useMutation(UPDATE_SERVICE);
     const [deleteService] = useMutation(DELETE_SERVICE);
 
-    // Filter services based on selected filters
+    // Filtering
     const filteredServices = servicesData?.services
         ? servicesData.services.filter((service) => {
-            const matchesSearch = !filters.search ||
-                service.serviceName.toLowerCase().includes(filters.search.toLowerCase());
+            const matchesSearch =
+                !filters.search ||
+                service.serviceName
+                    .toLowerCase()
+                    .includes(filters.search.toLowerCase());
 
-            const matchesType = !filters.serviceType ||
+            const matchesType =
+                !filters.serviceType ||
                 service.serviceType.id === filters.serviceType;
 
-            const matchesMinCost = !filters.costMin ||
+            const matchesMinCost =
+                !filters.costMin ||
                 service.estimateCost >= parseFloat(filters.costMin);
 
-            const matchesMaxCost = !filters.costMax ||
+            const matchesMaxCost =
+                !filters.costMax ||
                 service.estimateCost <= parseFloat(filters.costMax);
 
             return matchesSearch && matchesType && matchesMinCost && matchesMaxCost;
@@ -143,10 +154,7 @@ export default function ServiceDashboard() {
 
     const handleConfirmDelete = async () => {
         try {
-            await deleteService({
-                variables: { id: serviceToDelete.id },
-            });
-
+            await deleteService({ variables: { id: serviceToDelete.id } });
             toast.success(`Service "${serviceToDelete.serviceName}" deleted successfully`);
             refetchServices();
         } catch (error) {
@@ -160,7 +168,6 @@ export default function ServiceDashboard() {
     const handleServiceSubmit = async (serviceData) => {
         try {
             if (editingService) {
-                // Update existing service
                 await updateService({
                     variables: {
                         id: editingService.id,
@@ -173,7 +180,6 @@ export default function ServiceDashboard() {
                 });
                 toast.success(`Service "${serviceData.serviceName}" updated successfully`);
             } else {
-                // Create new service
                 await createService({
                     variables: {
                         input: {
@@ -197,6 +203,7 @@ export default function ServiceDashboard() {
         setFilters(newFilters);
     };
 
+    // Loading / error
     if (servicesLoading || serviceTypesLoading) {
         return <div className="loading-message">Loading services data...</div>;
     }
@@ -205,35 +212,42 @@ export default function ServiceDashboard() {
         return <div className="error-message">Error loading services: {servicesError.message}</div>;
     }
 
+    // Render
     return (
         <div className="service-dashboard">
             <header className="dashboard-header">
                 <h1>Service Dashboard</h1>
-                <Button
-                    variant="primary"
-                    onClick={handleAddService}
-                    icon="+"
-                >
-                    Add Service
-                </Button>
+                <div className="header-controls">
+                    <Button variant="primary" onClick={handleAddService} icon="+">
+                        Add Service
+                    </Button>
+                    <Button
+                        variant="secondary"
+                        onClick={() => setShowStats((prev) => !prev)}
+                    >
+                        {showStats ? "Hide Stats and Charts" : "Show Stats and Charts"}
+                    </Button>
+                </div>
             </header>
 
             <div className="dashboard-content">
+                {/* Stats and Charts */}
+                {showStats && (
+                    <div className="stats-and-charts">
+                        <ServiceStats services={filteredServices} />
+                        <ChartsContainer
+                            services={servicesData?.services || []}
+                            filteredServices={filteredServices}
+                        />
+                    </div>
+                )}
+
                 {/* Filters Panel */}
                 <FilterPanel
                     filters={filters}
                     onFilterChange={handleFilterChange}
                     serviceTypes={serviceTypesData?.serviceTypes || []}
                 />
-
-                {/* Stats and Charts Section */}
-                <div className="stats-and-charts">
-                    <ServiceStats services={filteredServices} />
-                    <ChartsContainer
-                        services={servicesData?.services || []}
-                        filteredServices={filteredServices}
-                    />
-                </div>
 
                 {/* Services Table */}
                 <Card className="services-table-card">
@@ -246,7 +260,7 @@ export default function ServiceDashboard() {
                 </Card>
             </div>
 
-            {/* Service Form Modal */}
+            {/* Modal: Create/Edit */}
             <Modal
                 isOpen={isFormOpen}
                 onClose={() => setIsFormOpen(false)}

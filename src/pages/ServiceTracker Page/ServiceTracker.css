@@ -1,0 +1,64 @@
+/* src/pages/ServiceTracker Page/ServiceTracker Page.css */
+.service-tracker-container {
+    width: 100%;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 12px;
+}
+
+/* Form styling */
+.form-group {
+    margin-bottom: 12px;
+}
+
+.form-label {
+    display: block;
+    font-size: 13px;
+    font-weight: 500;
+    color: #334155;
+    margin-bottom: 4px;
+}
+
+.form-control {
+    width: 100%;
+    padding: 8px 10px;
+    border: 1px solid #cbd5e1;
+    border-radius: 4px;
+    font-size: 13px;
+    color: #1e293b;
+    background-color: white;
+    transition: all 0.2s ease;
+}
+
+.form-control:focus {
+    border-color: #2563eb;
+    box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.1);
+    outline: none;
+}
+
+.form-control:disabled {
+    background-color: #f1f5f9;
+    cursor: not-allowed;
+}
+
+/* Condensed spacing for components */
+.service-tracker-container > * + * {
+    margin-top: 12px;
+}
+
+/* Button styling */
+.service-tracker-container .button {
+    padding: 6px 10px;
+    font-size: 13px;
+}
+
+/* Badge styling */
+.service-tracker-container .badge {
+    padding: 2px 6px;
+    font-size: 11px;
+}
+
+/* Card styling */
+.service-tracker-container .card {
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}

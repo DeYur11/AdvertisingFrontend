@@ -7,3 +7,4 @@ export { default as OfficeManagement } from './OfficeManagement/OfficeManagement
 export { default as OfficeForm } from './OfficeForm/OfficeForm';
 export { default as CityForm } from './CityForm/CityForm';
 export { default as CountryForm } from './CountryForm/CountryForm';
+export { default as EmployeeDashboard} from './EmployeeDashboard';

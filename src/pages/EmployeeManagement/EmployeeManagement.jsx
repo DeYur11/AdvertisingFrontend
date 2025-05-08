@@ -1,4 +1,4 @@
-// src/pages/EmployeeManagement/EmployeeManagement.jsx
+// src/pages/EmployeeManagement/EmployeeManagement.jsx - Updated to include WorkerTasks
 import { useState, useMemo } from "react";
 import { useQuery, useMutation, gql } from "@apollo/client";
 import Button from "../../components/common/Button/Button";
@@ -8,8 +8,11 @@ import EmployeeList from "./components/EmployeeList/EmployeeList";
 import AccountForm from "./components/AccountForm/AccountForm";
 import OfficeManagement from "./components/OfficeManagement/OfficeManagement";
 import FilterPanel from "./components/FilterPanel/FilterPanel";
+import EmployeeDashboard from "./components/EmployeeDashboard/EmployeeDashboard"; // Import the new component
 import "./EmployeeManagement.css";
+//TODO Зробити відображення позиції працівника коли призначаєш його
 
+// GraphQL queries and mutations remain the same...
 const GET_WORKERS = gql`
     query GetWorkers {
         workers {
@@ -130,7 +133,8 @@ export default function EmployeeManagement() {
     const [sortField, setSortField] = useState("surname");
     const [sortDirection, setSortDirection] = useState("ASC");
 
-    const [activeTab, setActiveTab] = useState("employees");
+    // Update tabs to include dashboard
+    const [activeTab, setActiveTab] = useState('employees');
     const [showEmployeeForm, setShowEmployeeForm] = useState(false);
     const [selectedEmployee, setSelectedEmployee] = useState(null);
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -185,6 +189,7 @@ export default function EmployeeManagement() {
     const offices = officesData?.offices || [];
     const account = accountData?.workerAccountByWorkerId;
 
+    // The rest of the handlers remain the same...
     const handleAddEmployee = () => {
         setSelectedEmployee(null);
         setShowEmployeeForm(true);
@@ -302,6 +307,12 @@ export default function EmployeeManagement() {
                         Employees
                     </button>
                     <button
+                        className={`tab-btn ${activeTab === 'dashboard' ? 'active' : ''}`}
+                        onClick={() => setActiveTab('dashboard')}
+                    >
+                        Dashboard
+                    </button>
+                    <button
                         className={`tab-btn ${activeTab === 'offices' ? 'active' : ''}`}
                         onClick={() => setActiveTab('offices')}
                     >
@@ -310,7 +321,7 @@ export default function EmployeeManagement() {
                 </div>
             </header>
 
-            {activeTab === 'employees' ? (
+            {activeTab === 'employees' && (
                 <>
                     <div className="actions-bar">
                         <Button variant="primary" size="small" onClick={handleAddEmployee} icon="➕">
@@ -338,7 +349,13 @@ export default function EmployeeManagement() {
                         onSortChange={handleSortChange}
                     />
                 </>
-            ) : (
+            )}
+
+            {activeTab === 'dashboard' && (
+                <EmployeeDashboard />
+            )}
+
+            {activeTab === 'offices' && (
                 <OfficeManagement />
             )}
 

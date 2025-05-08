@@ -1,0 +1,120 @@
+.status-badge {
+    display: inline-flex;
+    align-items: center;
+    border-radius: 16px;
+    padding: 3px 10px;
+    font-weight: 600;
+    white-space: nowrap;
+    gap: 6px;
+    transition: all 0.2s ease;
+    border: 1px solid transparent;
+}
+
+/* Status indicator dot */
+.status-indicator {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    display: inline-block;
+}
+
+/* Size variants */
+.status-badge.small {
+    padding: 2px 8px;
+    font-size: 11px;
+    border-radius: 12px;
+}
+
+.status-badge.small .status-indicator {
+    width: 6px;
+    height: 6px;
+}
+
+.status-badge.medium {
+    padding: 3px 10px;
+    font-size: 13px;
+    border-radius: 16px;
+}
+
+.status-badge.large {
+    padding: 4px 12px;
+    font-size: 14px;
+    border-radius: 18px;
+}
+
+/* Status variants */
+.status-badge.success {
+    background-color: rgba(16, 185, 129, 0.1);
+    color: #059669;
+    border-color: rgba(16, 185, 129, 0.3);
+}
+
+.status-badge.success .status-indicator {
+    background-color: #10b981;
+    box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.2);
+}
+
+.status-badge.primary {
+    background-color: rgba(37, 99, 235, 0.1);
+    color: #2563eb;
+    border-color: rgba(37, 99, 235, 0.3);
+}
+
+.status-badge.primary .status-indicator {
+    background-color: #2563eb;
+    box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2);
+}
+
+.status-badge.warning {
+    background-color: rgba(245, 158, 11, 0.1);
+    color: #d97706;
+    border-color: rgba(245, 158, 11, 0.3);
+}
+
+.status-badge.warning .status-indicator {
+    background-color: #f59e0b;
+    box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.2);
+}
+
+.status-badge.danger {
+    background-color: rgba(239, 68, 68, 0.1);
+    color: #dc2626;
+    border-color: rgba(239, 68, 68, 0.3);
+}
+
+.status-badge.danger .status-indicator {
+    background-color: #ef4444;
+    box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.2);
+}
+
+.status-badge.default {
+    background-color: rgba(100, 116, 139, 0.1);
+    color: #475569;
+    border-color: rgba(100, 116, 139, 0.3);
+}
+
+.status-badge.default .status-indicator {
+    background-color: #64748b;
+    box-shadow: 0 0 0 2px rgba(100, 116, 139, 0.2);
+}
+
+/* Type variants - allows for specific styling by entity type */
+.status-badge.project {
+    font-weight: 600;
+}
+
+.status-badge.service {
+    font-style: normal;
+}
+
+.status-badge.task {
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-size: 90%;
+}
+
+/* Hover effect */
+.status-badge:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}

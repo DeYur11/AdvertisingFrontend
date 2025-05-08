@@ -8,12 +8,12 @@ import './styles/global.css';
 import Layout from './components/layout/Layout';
 import Login from './pages/Login/Login';
 import Home from './pages/Home/Home'
-import Dashboard from './pages/Dashboard/Dashboard';
+import WorkerTasks from './pages/WorkerTasks/WorkerTasks';
 import Settings from './pages/Settings/Settings';
 import ProjectManagement from "./pages/ProjectManagement/ProjectManagement";
 import ReviewerDashboard from './pages/ReviewerDashboard/ReviewerDashboard';
 import ProtectedRoute from "./components/common/ProtectedRoute";
-import ServiceTracker from "./pages/ServiceTracker/ServiceTracker";
+import ServiceTracker from "./pages/ServiceTracker Page/ServiceTracker";
 import {useDispatch} from "react-redux";
 import {useEffect} from "react";
 import {jwtDecode} from "jwt-decode";
@@ -55,7 +55,7 @@ export default function App() {
                     } />
                     <Route path="/dashboard" element={
                         <ProtectedRoute>
-                            <Dashboard />
+                            <WorkerTasks />
                         </ProtectedRoute>
                     } />
                     <Route path="/settings" element={

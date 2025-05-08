@@ -33,7 +33,7 @@
 .projects-list {
     display: flex;
     flex-direction: column;
-    gap: 24px;
+    gap: 20px;
 }
 
 /* Project Card */
@@ -41,6 +41,8 @@
     transition: all 0.3s ease;
     overflow: hidden;
     cursor: pointer;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
 }
 
 .project-card:hover {
@@ -55,10 +57,11 @@
 .project-header {
     display: flex;
     flex-wrap: wrap;
-    align-items: flex-start;
+    align-items: center;
     justify-content: space-between;
     gap: 16px;
     padding: 16px;
+    border-bottom: 1px solid #f1f5f9;
 }
 
 .project-title {
@@ -80,23 +83,24 @@
     flex: 2;
     display: flex;
     flex-wrap: wrap;
-    gap: 16px;
+    gap: 24px;
 }
 
 .meta-item {
     display: flex;
     flex-direction: column;
-    min-width: 150px;
+    min-width: 120px;
 }
 
 .meta-label {
     font-size: 13px;
     color: #64748b;
     font-weight: 500;
+    margin-bottom: 2px;
 }
 
 .meta-value {
-    font-size: 15px;
+    font-size: 14px;
     color: #334155;
     font-weight: 500;
 }
@@ -108,11 +112,31 @@
     margin-left: auto;
 }
 
+.stat-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-width: 80px;
+}
+
+.stat-label {
+    font-size: 12px;
+    color: #64748b;
+    margin-bottom: 2px;
+}
+
+.stat-value {
+    font-size: 16px;
+    font-weight: 600;
+    color: #334155;
+}
+
 /* Project Actions */
 .project-actions {
     display: flex;
     gap: 8px;
-    margin-left: auto;
+    margin: 0 16px 16px auto;
+    padding-top: 12px;
 }
 
 .project-actions button {
@@ -124,19 +148,18 @@
     padding: 0 16px 16px;
     margin-top: 8px;
     animation: fadeIn 0.3s ease;
-}
-
-.project-description h3 {
-    font-size: 16px;
-    font-weight: 600;
-    margin: 0 0 8px 0;
-    color: #1e293b;
-}
-
-.project-description p {
-    margin: 0;
     color: #475569;
     line-height: 1.6;
+}
+
+/* Section Titles */
+.section-title {
+    font-size: 18px;
+    font-weight: 600;
+    margin: 16px 16px 12px;
+    color: #1e293b;
+    padding-bottom: 8px;
+    border-bottom: 1px solid #e2e8f0;
 }
 
 /* Services Section */
@@ -147,29 +170,24 @@
     animation: fadeIn 0.3s ease;
 }
 
-.services-section h3 {
-    font-size: 18px;
-    font-weight: 600;
-    margin: 0 0 16px 0;
-    color: #1e293b;
-}
-
 .services-list {
     display: flex;
     flex-direction: column;
     gap: 16px;
+    padding: 0 16px;
 }
 
 /* Status and Loading Messages */
 .loading-indicator,
 .error-message,
 .no-items-message {
-    padding: 20px;
+    padding: 16px;
     text-align: center;
     background-color: #f8fafc;
     border-radius: 8px;
     border: 1px dashed #cbd5e1;
-    margin: 16px 0;
+    margin: 16px;
+    font-size: 14px;
 }
 
 .loading-indicator {
@@ -183,6 +201,24 @@
 .no-items-message {
     color: #64748b;
     font-style: italic;
+}
+
+/* Access Denied */
+.access-denied {
+    padding: 30px;
+    text-align: center;
+    max-width: 500px;
+    margin: 100px auto;
+}
+
+.access-denied-icon {
+    font-size: 48px;
+    margin-bottom: 16px;
+}
+
+.access-denied h2 {
+    margin-bottom: 12px;
+    color: #ef4444;
 }
 
 /* Utility classes */

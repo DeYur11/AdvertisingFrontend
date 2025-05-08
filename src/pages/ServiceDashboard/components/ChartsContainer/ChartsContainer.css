@@ -1,6 +1,7 @@
 /* src/pages/ServiceDashboard/components/ChartsContainer/ChartsContainer.css */
 .charts-container {
     padding-bottom: 8px;
+    flex: 1;
 }
 
 .charts-header {

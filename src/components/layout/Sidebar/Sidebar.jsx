@@ -1,29 +1,26 @@
+import { NavLink } from "react-router-dom";
 import "./Sidebar.css";
-import TaskDetails from "../../../pages/Dashboard/components/details/TaskDetails/TaskDetails";
-import ServiceDetails from "../../../pages/Dashboard/components/details/ServiceDetails/ServiceDetails";
+import CloseIcon from "@mui/icons-material/Close";
 
-export default function Sidebar({ selectedItem, onClose }) {
-    if (!selectedItem || selectedItem.type === "project") return null;
-
-    const { type, data } = selectedItem;
-    const detailType = type === "service" ? "Service" : "Task";
-
+export default function Sidebar({ isOpen, onClose, navLinks }) {
     return (
-        <>
-            <div id="sidebarBackdrop" onClick={onClose}></div>
-            <div id="taskSidebar" className="sidebar">
-                <div className="sidebar-header">
-                    <h5 className="sidebar-title">{detailType} Details</h5>
-                    <button className="close-button" onClick={onClose} aria-label="Close sidebar">
-                        ✕
-                    </button>
-                </div>
-
-                <div className="sidebar-content">
-                    {type === "service" && <ServiceDetails data={data} />}
-                    {type === "task" && <TaskDetails data={data} />}
-                </div>
+        <div className={`sidebar ${isOpen ? "open" : ""}`}>
+            <div className="sidebar-header">
+                <span>Navigation</span>
+                <CloseIcon className="close-icon" onClick={onClose} />
             </div>
-        </>
+            <nav className="sidebar-nav">
+                {navLinks.map(link => (
+                    <NavLink
+                        key={link.to}
+                        to={link.to}
+                        className={({ isActive }) => isActive ? "sidebar-link active" : "sidebar-link"}
+                        onClick={onClose}
+                    >
+                        {link.label}
+                    </NavLink>
+                ))}
+            </nav>
+        </div>
     );
 }

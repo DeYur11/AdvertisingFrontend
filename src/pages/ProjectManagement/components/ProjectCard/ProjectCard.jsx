@@ -5,7 +5,7 @@ import { GET_PROJECT_SERVICES, GET_PROJECT_PAYMENTS } from "../../graphql/projec
 import Button from "../../../../components/common/Button/Button";
 import ServiceCard from "../ServiceCard/ServiceCard";
 import Card from "../../../../components/common/Card/Card";
-import Badge from "../../../../components/common/Badge/Badge";
+import StatusBadge from "../../../../components/common/StatusBadge/StatusBadge";
 import PaymentsList from "../PaymentsList/PaymentsList";
 
 export default function ProjectCard({
@@ -52,46 +52,71 @@ export default function ProjectCard({
 
     const handleDeletePayment = (payment) => {
         setPaymentToDelete?.(payment);
-        refetchPayments()
+        refetchPayments();
+    };
+
+    // Get status for styling the left border
+    const getStatusClass = () => {
+        const status = project.status?.name?.toLowerCase() || '';
+
+        if (status.includes('completed') || status.includes('done') || status.includes('finished')) {
+            return 'status-completed';
+        } else if (status.includes('in progress') || status.includes('active') || status.includes('ongoing')) {
+            return 'status-in-progress';
+        } else if (status.includes('pending') || status.includes('scheduled') || status.includes('planned')) {
+            return 'status-pending';
+        } else if (status.includes('cancelled') || status.includes('on-hold') || status.includes('blocked')) {
+            return 'status-cancelled';
+        }
+        return '';
     };
 
     return (
-        <Card className={`project-card ${open ? "expanded" : ""}`}>
+        <Card className={`project-card ${open ? "expanded" : ""} ${getStatusClass()}`}>
             <div className="project-header" onClick={() => setOpen(prev => !prev)} style={{ cursor: "pointer" }}>
                 <div className="project-title">
                     <h2>{project.name}</h2>
                     {project.status && (
-                        <Badge
-                            variant={
-                                project.status.name.toLowerCase() === "completed"
-                                    ? "success"
-                                    : project.status.name.toLowerCase() === "in progress"
-                                        ? "primary"
-                                        : "default"
-                            }
-                        >
-                            {project.status.name}
-                        </Badge>
+                        <StatusBadge
+                            status={project.status.name}
+                            type="project"
+                            size={open ? "medium" : "small"}
+                        />
                     )}
                 </div>
 
                 <div className="project-meta">
-                    <span>{project.client?.name}</span> ·
-                    <span>{project.projectType?.name}</span> ·
-                    <span>
-                        {project.manager
-                            ? `${project.manager.name} ${project.manager.surname}`
-                            : "—"}
-                    </span>
+                    <div className="meta-item">
+                        <span className="meta-label">Client</span>
+                        <span className="meta-value">{project.client?.name || "—"}</span>
+                    </div>
+                    <div className="meta-item">
+                        <span className="meta-label">Type</span>
+                        <span className="meta-value">{project.projectType?.name || "—"}</span>
+                    </div>
+                    {project.manager && (
+                        <div className="meta-item">
+                            <span className="meta-label">Manager</span>
+                            <span className="meta-value">
+                                {project.manager.name} {project.manager.surname}
+                            </span>
+                        </div>
+                    )}
                 </div>
 
                 <div className="project-stats">
-                    <span>${(+project.estimateCost).toFixed(2)} est.</span>
-                    <span>${(+project.cost).toFixed(2)} act.</span>
+                    <div className="stat-item">
+                        <span className="stat-label">Estimated</span>
+                        <span className="stat-value">${(+project.estimateCost).toFixed(2)}</span>
+                    </div>
+                    <div className="stat-item">
+                        <span className="stat-label">Actual</span>
+                        <span className="stat-value">${(+project.cost).toFixed(2)}</span>
+                    </div>
                 </div>
             </div>
 
-            <div className="project-actions" style={{ marginTop: 8 }}>
+            <div className="project-actions">
                 <Button variant="outline" size="small" icon="✏️" onClick={handleEdit}>Edit</Button>
                 <Button variant="danger" size="small" icon="🗑️" onClick={handleDelete}>Delete</Button>
                 <Button
@@ -113,7 +138,7 @@ export default function ProjectCard({
                         <p className="project-description">{project.description}</p>
                     )}
 
-                    <h4 className="mt-2">Services</h4>
+                    <h4 className="section-title">Services</h4>
                     {loadingServices && <div className="loading-indicator">Loading services...</div>}
                     {!loadingServices && !services.length && (
                         <div className="no-items-message">No services.</div>
@@ -122,19 +147,19 @@ export default function ProjectCard({
                         <ServiceCard
                             key={ps.id}
                             projectService={ps}
-                            onOpenDetails={() => onOpenServiceDetails?.(ps)} // ✅
+                            onOpenDetails={() => onOpenServiceDetails?.(ps)}
                         />
                     ))}
 
-                    <h4 className="mt-3">Payments</h4>
+                    <h4 className="section-title">Payments</h4>
                     <PaymentsList
                         project={project}
                         payments={payments}
                         loading={loadingPayments}
                         error={errorPayments}
                         onAddPayment={() => {
-                            onAddPayment?.(refetchPayments)
-                            refetchPayments()
+                            onAddPayment?.(refetchPayments);
+                            refetchPayments();
                         }}
                         onEditPayment={(payment) => onEditPayment?.(payment, refetchPayments)}
                         onDeletePayment={handleDeletePayment}

@@ -65,7 +65,7 @@ export default function ReviewFormTab({
                 </div>
 
                 <div className="form-group">
-                    <label htmlFor="materialSummaryId">Матеріал для рецензії</label>
+                    <label htmlFor="materialSummaryId">Кінцеве рішення</label>
                     <select
                         id="materialSummaryId"
                         name="materialSummaryId"
