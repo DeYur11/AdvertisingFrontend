@@ -1,88 +1,120 @@
 // src/components/ui/NotificationBell/NotificationBell.jsx
-import { useState, useRef, useEffect } from 'react';
-import { useQuery, useSubscription, gql } from '@apollo/client';
-import './NotificationBell.css';
-import * as logger from "react-toastify";
+import { useState, useRef, useEffect } from "react";
+import { useSubscription, gql } from "@apollo/client";
+import { useSelector } from "react-redux";
+import "./NotificationBell.css";
 
-const GET_AUDIT_LOGS = gql`
-    query AuditLogsByMaterialIds($materialIds: [Int!]!, $limit: Int) {
-        auditLogsByMaterialIds(materialIds: $materialIds, limit: $limit) {
-            id
-            worker {
-                id
-                name
-                surname
-            }
-            username
-            role
-            action
-            entity
-            description
-            material {
-                id
-                name
-            }
-            timestamp
+/* ───── GraphQL subscriptions ───── */
+
+/* 1. WORKER → матеріали (лише рецензії) */
+const SUB_MATERIAL_REVIEW = gql`
+    subscription OnAuditLogByMaterialIds(
+        $materialIds: [Int!]!
+        $entityList: [AuditEntity!]!
+    ) {
+        onAuditLogByMaterialIds(
+            materialIds: $materialIds
+            entityList: $entityList
+        ) {
+            id action entity description timestamp
+            worker { id name surname }
+            material { id name }
+            username role
         }
     }
 `;
 
-const REVIEW_AUDIT_LOG_SUBSCRIPTION = gql`
-    subscription OnReviewAuditLogByMaterialIds($materialIds: [Int!]!) {
-        onReviewAuditLogByMaterialIds(materialIds: $materialIds) {
-            id
-            worker {
-                id
-                name
-                surname
-            }
-            username
-            role
-            action
-            entity
-            description
-            material {
-                id
-                name
-            }
-            timestamp
+/* 2. SCRUM-MASTER → завдання (можна лишити тільки TASK) */
+const SUB_TASK = gql`
+    subscription OnAuditLogByTaskIds(
+        $taskIds: [Int!]!
+        $entityList: [AuditEntity!]!
+    ) {
+        onAuditLogByTaskIds(taskIds: $taskIds, entityList: $entityList) {
+            id action entity description timestamp
+            worker { id name surname }
+            username role
         }
     }
 `;
 
-export default function NotificationBell({ materialIds = [], onToggleSidebar }) {
+/* 3. PROJECT-MANAGER → проєкти (лише PROJECT) */
+const SUB_PROJECT = gql`
+    subscription OnAuditLogByProjectIds(
+        $projectIds: [Int!]!
+        $entityList: [AuditEntity!]!
+    ) {
+        onAuditLogByProjectIds(
+            projectIds: $projectIds
+            entityList: $entityList
+        ) {
+            id action entity description timestamp
+            worker { id name surname }
+            username role
+        }
+    }
+`;
+
+export default function NotificationBell({
+                                             materialIds = [],
+                                             taskIds = [],
+                                             projectIds = [],
+                                             onToggleSidebar
+                                         }) {
     const [hasNewNotification, setHasNewNotification] = useState(false);
     const notificationSound = useRef(null);
 
-    // Ініціалізуємо звук сповіщення
+    /* ── роль користувача ── */
+    const role = useSelector((s) => s.user.mainRole);
+    const isWorker = role === "WORKER";
+    const isScrum = role === "SCRUM_MASTER";
+    const isPm = role === "PROJECT_MANAGER";
+
+    /* ── ініціал звуку ── */
     useEffect(() => {
-        notificationSound.current = new Audio('/notification-sound.mp3');
+        notificationSound.current = new Audio("/notification-sound.mp3");
     }, []);
 
-    // Підписка на нові повідомлення
-    const { data: subscriptionData } = useSubscription(REVIEW_AUDIT_LOG_SUBSCRIPTION, {
-        variables: { materialIds },
-        skip: materialIds.length === 0,
-        onError: (error) => {
-            console.error(error);
-        }
+    /* ── вибір підписки та змінних ── */
+    const [subscriptionDoc, variables, skip] = (() => {
+        if (isWorker)
+            return [
+                SUB_MATERIAL_REVIEW,
+                { materialIds, entityList: ["MATERIAL_REVIEW"] },
+                materialIds.length === 0
+            ];
+        if (isScrum)
+            return [
+                SUB_TASK,
+                { taskIds, entityList: ["TASK"] },
+                taskIds.length === 0
+            ];
+        if (isPm)
+            return [
+                SUB_PROJECT,
+                { projectIds, entityList: ["PROJECT"] },
+                projectIds.length === 0
+            ];
+        /* інші ролі не слухають нічого */
+        return [null, {}, true];
+    })();
+
+    /* ── підписка ── */
+    const { data } = useSubscription(subscriptionDoc, {
+        variables,
+        skip,
+        onError: console.error
     });
 
-    // Обробка нових сповіщень
+    /* ── індикатор + звук ── */
     useEffect(() => {
-        if (subscriptionData?.onReviewAuditLogByMaterialIds) {
-            // Показуємо індикатор нового сповіщення
+        if (data) {
             setHasNewNotification(true);
-
-            // Відтворюємо звук
-            if (notificationSound.current) {
-                notificationSound.current.play().catch(e => {
-                    console.log("Не вдалося автоматично відтворити звук", e);
-                });
-            }
+            notificationSound.current?.play().catch(() => {});
         }
-    }, [subscriptionData]);
+    }, [data]);
 
+    /* ── клік по дзвіночку ── */
     const handleClick = () => {
         onToggleSidebar();
         setHasNewNotification(false);
@@ -97,7 +129,7 @@ export default function NotificationBell({ materialIds = [], onToggleSidebar }) 
             >
                 <span className="bell-icon">🔔</span>
                 {hasNewNotification && (
-                    <span className="notification-indicator"></span>
+                    <span className="notification-indicator" />
                 )}
             </button>
         </div>

@@ -10,92 +10,142 @@ import Sidebar from "../Sidebar/Sidebar";
 import MenuIcon from "@mui/icons-material/Menu";
 import "./Header.css";
 
-// Query to get all materials associated with this worker
-const GET_WORKER_MATERIALS = gql`
+/* ───── GraphQL: ID-переліки для кожної ролі ───── */
+
+/* WORKER → матеріали, які він створив / яким призначений */
+const GET_WORKER_MATERIAL_IDS = gql`
     query GetWorkerMaterials($workerId: ID!) {
-        materialsByWorker(workerId: $workerId) {
+        materialsByWorker(workerId: $workerId) { id }
+    }
+`;
+
+/* SCRUM_MASTER → завдання, за які він відповідає
+   (припустимо бек має такий запит; заміни на свій) */
+const GET_SCRUM_TASK_IDS = gql`
+    query GetScrumTasks {
+        activeProjectTasks {
             id
         }
     }
 `;
 
+/* PROJECT_MANAGER → проєкти, де він менеджер */
+const GET_PM_PROJECT_IDS = gql`
+    query GetManagerProjects($managerId: ID!) {
+        projectsByManager(managerId: $managerId) { id }
+    }
+`;
+
 export default function Header() {
-    const user = useSelector(state => state.user);
+    const user = useSelector((s) => s.user);
+
+    /* ────────── локальний стан ────────── */
     const [materialIds, setMaterialIds] = useState([]);
+    const [taskIds, setTaskIds] = useState([]);
+    const [projectIds, setProjectIds] = useState([]);
+
     const [notificationSidebarOpen, setNotificationSidebarOpen] = useState(false);
     const [navigationSidebarOpen, setNavigationSidebarOpen] = useState(false);
 
-    // Check if user is a manager
-    const isManager = user.mainRole === "PROJECT_MANAGER";
+    const role = user.mainRole;
+    const isWorker = role === "WORKER";
+    const isScrum = role === "SCRUM_MASTER";
+    const isPm = role === "PROJECT_MANAGER";
 
-    // Fetch all material IDs associated with this worker
-    const { data } = useQuery(GET_WORKER_MATERIALS, {
+    /* ────────── запити ідентифікаторів ────────── */
+
+    const { data: matData } = useQuery(GET_WORKER_MATERIAL_IDS, {
         variables: { workerId: user.workerId },
-        skip: !user.workerId,
-        fetchPolicy: "network-only"
+        skip: !isWorker || !user.workerId
     });
 
-    useEffect(() => {
-        if (data?.materialsByWorker) {
-            setMaterialIds(data.materialsByWorker.map(material => parseInt(material.id)));
+    const { data: taskData } = useQuery(GET_SCRUM_TASK_IDS, {
+        skip: !isScrum,
+        onCompleted: (data) => {
+            console.log("Отримані завдання:", data);
+            setTaskIds(data.activeProjectTasks.map(t => +t.id));
         }
-    }, [data]);
+    });
 
-    const toggleNotificationSidebar = () => {
-        setNotificationSidebarOpen(!notificationSidebarOpen);
-    };
+    const { data: projData } = useQuery(GET_PM_PROJECT_IDS, {
+        variables: { managerId: user.workerId },
+        skip: !isPm || !user.workerId
+    });
 
-    const toggleNavigationSidebar = () => {
-        setNavigationSidebarOpen(!navigationSidebarOpen);
-    };
+    /* оновлюємо стани, коли приходять дані */
+    useEffect(() => {
+        if (matData?.materialsByWorker) {
+            setMaterialIds(matData.materialsByWorker.map(m => +m.id));
+        }
+    }, [matData]);
 
-    // Navigation links for the sidebar when user is a manager
+    useEffect(() => {
+        if (projData?.projectsByManager) {
+            setProjectIds(projData.projectsByManager.map(p => +p.id));
+        }
+    }, [projData]);
+
+// окремий useEffect для логування taskIds після оновлення
+    useEffect(() => {
+        console.log("Нові taskIds:", taskIds);
+    }, [taskIds]);
+
+    /* ────────── обробники ────────── */
+    const toggleNotificationSidebar = () =>
+        setNotificationSidebarOpen(o => !o);
+    const toggleNavigationSidebar = () =>
+        setNavigationSidebarOpen(o => !o);
+
+    /* ────────── менеджерське меню ────────── */
     const managerNavLinks = [
         { to: "/", label: "Home" },
-        { to: "/projects", label: "Project Management" },
-        { to: "/service-tracker", label: "Service Tracker" },
-        { to: "/employee-management", label: "Employee Management" },
-        { to: "/service-dashboard", label: "Service Dashboard" }
+        { to: "/projects", label: "Проектний менеджмент" },
+        { to: "/service-tracker", label: "Призначення сервісів" },
+        { to: "/employee-management", label: "Менеджмент" },
+        { to: "/service-dashboard", label: "Огляд сервісів" },
+        { to: "/reviewer", label: "Рецензування" }
     ];
 
+    /* ────────── UI ────────── */
     return (
         <>
             <header className="header">
+
+                {/* ███ left ███ */}
                 <div className="left-section">
-                    {isManager ? (
+                    {isPm ? (
                         <button
                             className="burger-menu-button"
                             onClick={toggleNavigationSidebar}
-                            aria-label="Toggle navigation menu"
                         >
                             <MenuIcon />
                         </button>
-                    ): (
+                    ) : (
                         <div className="logo">AdManager</div>
-                    )
-                    }
+                    )}
                 </div>
 
-                {isManager && (
+                {/* ███ center (для PM) ███ */}
+                {isPm && (
                     <div className="center-section">
                         <div className="logo">AdManager</div>
                     </div>
                 )}
 
-                {!isManager && (
+                {/* ███ nav (для SCRUM/WORKER) ███ */}
+                {!isPm && (
                     <nav className="nav">
-                    {/* Navigation for non-manager roles */}
                         <NavLink to="/" end className={({ isActive }) => isActive ? "nav-button active" : "nav-button"}>
                             Home
                         </NavLink>
 
-                        {user.mainRole === "SCRUM_MASTER" && (
+                        {isScrum && (
                             <NavLink to="/service-tracker" className={({ isActive }) => isActive ? "nav-button active" : "nav-button"}>
                                 Service Tracker
                             </NavLink>
                         )}
 
-                        {user.mainRole === "WORKER" && (
+                        {isWorker && (
                             <NavLink to="/dashboard" className={({ isActive }) => isActive ? "nav-button active" : "nav-button"}>
                                 My Tasks
                             </NavLink>
@@ -109,28 +159,32 @@ export default function Header() {
                     </nav>
                 )}
 
+                {/* ███ right ███ */}
                 <div className="right-section">
-                    {/* Add NotificationBell */}
                     <NotificationBell
                         materialIds={materialIds}
+                        taskIds={taskIds}
+                        projectIds={projectIds}
                         onToggleSidebar={toggleNotificationSidebar}
                     />
                     <ProfileMenu />
                 </div>
             </header>
 
-            {/* Navigation Sidebar for Managers */}
+            {/* менеджерська навігація */}
             <Sidebar
                 isOpen={navigationSidebarOpen}
                 onClose={() => setNavigationSidebarOpen(false)}
                 navLinks={managerNavLinks}
             />
 
-            {/* Notification Sidebar */}
+            {/* сайдбар сповіщень */}
             <NotificationSidebar
                 isOpen={notificationSidebarOpen}
                 onClose={() => setNotificationSidebarOpen(false)}
                 materialIds={materialIds}
+                taskIds={taskIds}
+                projectIds={projectIds}
             />
         </>
     );
