@@ -19,5 +19,3 @@ root.render(
     </StrictMode>
 
 );
-
-reportWebVitals();

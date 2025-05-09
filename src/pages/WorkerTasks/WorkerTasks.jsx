@@ -2,10 +2,13 @@ import { useState } from "react";
 import { useSelector } from "react-redux";
 import TaskList from "./components/TaskList/TaskList";
 import Card from "../../components/common/Card/Card";
+import Button from "../../components/common/Button/Button";
+import ExportDataModal from "./components/ExportDataModal/ExportDataModal";
 import "./WorkerTasks.css";
 
 export default function WorkerTasks() {
     const user = useSelector(state => state.user);
+    const [exportModalOpen, setExportModalOpen] = useState(false);
 
     // State for pagination and filtering
     const [pageState, setPageState] = useState({
@@ -84,7 +87,14 @@ export default function WorkerTasks() {
                     {user.isReviewer && <div className="user-role">Worker + Reviewer</div>}
                 </div>
                 <div className="dashboard-actions">
-                    {/* Future action buttons can go here */}
+                    <Button
+                        variant="outline"
+                        size="medium"
+                        icon="📊"
+                        onClick={() => setExportModalOpen(true)}
+                    >
+                        Експорт даних
+                    </Button>
                 </div>
             </div>
 
@@ -98,6 +108,16 @@ export default function WorkerTasks() {
                     clearAllFilters={clearAllFilters}
                 />
             </div>
+
+            {/* Модальне вікно експорту даних */}
+            <ExportDataModal
+                isOpen={exportModalOpen}
+                onClose={() => setExportModalOpen(false)}
+                workerId={user.workerId}
+                filter={pageState.filter}
+                currentSortField={pageState.sortField}
+                currentSortDirection={pageState.sortDirection}
+            />
         </div>
     );
 }

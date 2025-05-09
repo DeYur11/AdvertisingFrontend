@@ -1,41 +1,78 @@
 import { useEffect } from 'react';
 import { useQuery, gql } from '@apollo/client';
 import './NotificationSidebar.css';
-import {useSelector} from "react-redux";
+import { useSelector } from "react-redux";
 
-// Запити на кожен тип сповіщень
-// 🔄 Замість GET_REVIEW_LOGS
+// GraphQL queries aligned with the schema
 const GET_REVIEW_LOGS = gql`
     query AuditLogsByMaterialIds($materialIds: [Int!]!, $entityList: [AuditEntity!]!) {
         auditLogsByMaterialIds(materialIds: $materialIds, entityList: $entityList) {
-            id action entity description timestamp username
-            worker { id name surname }
-            material { id name }
+            id
+            action
+            entity
+            description
+            timestamp
+            username
+            role
+            worker {
+                id
+                name
+                surname
+            }
+            material {
+                id
+                name
+            }
+            review {
+                id
+                comments
+            }
         }
     }
 `;
 
-
 const GET_TASK_LOGS = gql`
-    query AuditLogsByTaskIds(
-        $taskIds: [Int!]!
-        $entityList: [AuditEntity!]!
-    ) {
+    query AuditLogsByTaskIds($taskIds: [Int!]!, $entityList: [AuditEntity!]!) {
         auditLogsByTaskIds(taskIds: $taskIds, entityList: $entityList) {
-            id action entity description timestamp username
-            worker { id name surname }
+            id
+            action
+            entity
+            description
+            timestamp
+            username
+            role
+            worker {
+                id
+                name
+                surname
+            }
+            task {
+                id
+                name
+            }
         }
     }
 `;
 
 const GET_PROJECT_LOGS = gql`
-    query AuditLogsByProjectIds(
-        $projectIds: [Int!]!
-        $entityList: [AuditEntity!]!
-    ) {
+    query AuditLogsByProjectIds($projectIds: [Int!]!, $entityList: [AuditEntity!]!) {
         auditLogsByProjectIds(projectIds: $projectIds, entityList: $entityList) {
-            id action entity description timestamp username
-            worker { id name surname }
+            id
+            action
+            entity
+            description
+            timestamp
+            username
+            role
+            worker {
+                id
+                name
+                surname
+            }
+            project {
+                id
+                name
+            }
         }
     }
 `;
@@ -44,8 +81,8 @@ export default function NotificationSidebar({
                                                 isOpen,
                                                 onClose,
                                                 materialIds = [],
-                                                taskIds = [],         // ← передай список завдань із батьківського компонента
-                                                projectIds = []       // ← передай список проєктів
+                                                taskIds = [],
+                                                projectIds = []
                                             }) {
     const userRole = useSelector((s) => s.user.mainRole);
 
@@ -53,18 +90,22 @@ export default function NotificationSidebar({
     const isScrumMaster = userRole === "SCRUM_MASTER";
     const isProjectManager = userRole === "PROJECT_MANAGER";
 
-    /* вибір запиту та змінних */
+    /* Select the appropriate query and variables */
     const query = isWorker
         ? GET_REVIEW_LOGS
         : isScrumMaster
             ? GET_TASK_LOGS
             : GET_PROJECT_LOGS;
 
+    // Зверніть увагу на ієрархію сутностей
+    // - для матеріалів ми хочемо бачити рецензії (MATERIAL_REVIEW)
+    // - для завдань ми хочемо бачити TASK події
+    // - для проектів ми хочемо бачити PROJECT події
     const variables = isWorker
         ? { materialIds, entityList: ["MATERIAL_REVIEW"] }
         : isScrumMaster
-            ? { taskIds, entityList: ["TASK"] }          // можна додати інші сутності
-            : { projectIds, entityList: ["PROJECT"] };   // за потреби: ["SERVICES_IN_PROGRESS", …]
+            ? { taskIds, entityList: ["MATERIAL_REVIEW", "TASK", "MATERIAL"] }
+            : { projectIds, entityList: ["MATERIAL_REVIEW", "TASK", "MATERIAL", "SERVICES_IN_PROGRESS"] };
 
     const skip =
         !isOpen ||
@@ -121,11 +162,30 @@ export default function NotificationSidebar({
         return dict[entity]?.[action] || `${action.toLowerCase()} ${entity.toLowerCase()}`;
     };
 
+    // Get the appropriate data field based on user role
     const notifications = isWorker
         ? data?.auditLogsByMaterialIds
         : isScrumMaster
             ? data?.auditLogsByTaskIds
             : data?.auditLogsByProjectIds;
+
+    // Get entity name based on entity type
+    const getEntityName = (notification) => {
+        // Якщо це рецензія, показуємо ім'я матеріалу
+        if (notification.entity === 'MATERIAL_REVIEW' && notification.material)
+            return notification.material.name;
+        // Якщо це конкретний матеріал
+        else if (notification.entity === 'MATERIAL' && notification.material)
+            return notification.material.name;
+        // Якщо це завдання
+        else if (notification.entity === 'TASK' && notification.task)
+            return notification.task.name;
+        // Якщо це проект
+        else if (notification.entity === 'PROJECT' && notification.project)
+            return notification.project.name;
+        // Якщо немає конкретного імені, повертаємо тип сутності
+        return notification.entity;
+    };
 
     const headingText = isWorker
         ? "Сповіщення про відгуки"
@@ -154,12 +214,14 @@ export default function NotificationSidebar({
                             {notifications.map((n) => {
                                 const { icon, color } = getNotificationIcon(n.entity, n.action);
                                 const actionText = getActionText(n.entity, n.action);
+                                const entityName = getEntityName(n);
+
                                 return (
                                     <li key={n.id} className="notification-item">
                                         <div className="notification-icon" style={{ color }}>{icon}</div>
                                         <div className="notification-content">
                                             <div className="notification-header">
-                                                <span className="notification-type">{n.material?.name || n.entity}</span>
+                                                <span className="notification-type">{entityName}</span>
                                                 <span className="notification-action" style={{ color }}>{actionText}</span>
                                             </div>
                                             {n.description && <p className="notification-description">{n.description}</p>}

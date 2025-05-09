@@ -1,0 +1,140 @@
+/* src/pages/WorkerTasks/components/ExportDataModal/ExportDataModal.css */
+.export-modal-content {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.export-loading,
+.export-error {
+    padding: 16px;
+    text-align: center;
+    border-radius: 8px;
+}
+
+.export-loading {
+    background-color: #f0f9ff;
+    color: #0369a1;
+}
+
+.export-error {
+    background-color: #fee2e2;
+    color: #b91c1c;
+}
+
+.export-info {
+    padding: 12px;
+    background-color: #f8fafc;
+    border: 1px solid #e2e8f0;
+}
+
+.export-info p {
+    margin: 0;
+    font-size: 14px;
+}
+
+.export-sections {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+.export-section {
+    background-color: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 16px;
+}
+
+.export-section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+}
+
+.export-section-title {
+    font-size: 16px;
+    font-weight: 600;
+    color: #1e293b;
+    margin: 0 0 12px 0;
+}
+
+.export-select-all {
+    display: flex;
+    gap: 8px;
+}
+
+.export-format-options {
+    display: flex;
+    gap: 24px;
+    padding: 8px 0;
+}
+
+.export-radio,
+.export-checkbox {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    font-size: 14px;
+    color: #334155;
+    user-select: none;
+}
+
+.export-radio input,
+.export-checkbox input {
+    cursor: pointer;
+}
+
+.radio-label {
+    font-weight: 500;
+}
+
+.export-fields-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 24px;
+}
+
+.export-field-column {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.export-column-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: #64748b;
+    margin: 0 0 8px 0;
+    padding-bottom: 8px;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.export-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 1px solid #e2e8f0;
+}
+
+/* Responsive adjustments */
+@media (max-width: 640px) {
+    .export-section-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+    }
+
+    .export-fields-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .export-format-options {
+        flex-direction: column;
+        gap: 12px;
+    }
+}

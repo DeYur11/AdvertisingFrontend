@@ -19,8 +19,7 @@ const GET_WORKER_MATERIAL_IDS = gql`
     }
 `;
 
-/* SCRUM_MASTER → завдання, за які він відповідає
-   (припустимо бек має такий запит; заміни на свій) */
+/* SCRUM_MASTER → завдання, за які він відповідає */
 const GET_SCRUM_TASK_IDS = gql`
     query GetScrumTasks {
         activeProjectTasks {
@@ -59,12 +58,8 @@ export default function Header() {
         skip: !isWorker || !user.workerId
     });
 
-    const { data: taskData } = useQuery(GET_SCRUM_TASK_IDS, {
+    const { data: taskData, error: taskError, loading: taskLoading } = useQuery(GET_SCRUM_TASK_IDS, {
         skip: !isScrum,
-        onCompleted: (data) => {
-            console.log("Отримані завдання:", data);
-            setTaskIds(data.activeProjectTasks.map(t => +t.id));
-        }
     });
 
     const { data: projData } = useQuery(GET_PM_PROJECT_IDS, {
@@ -75,9 +70,21 @@ export default function Header() {
     /* оновлюємо стани, коли приходять дані */
     useEffect(() => {
         if (matData?.materialsByWorker) {
-            setMaterialIds(matData.materialsByWorker.map(m => +m.id));
+            setMaterialIds(matData.materialsByWorker.map(m => parseInt(m.id)));
         }
     }, [matData]);
+
+    // Виправляємо обробку даних для taskIds
+    useEffect(() => {
+        if (taskData?.activeProjectTasks) {
+            // Перевіряємо що дані приходять і є масивом
+            console.log("Отримані завдання:", taskData.activeProjectTasks);
+
+            // Перетворюємо кожен id в числовий і встановлюємо в стан
+            const ids = taskData.activeProjectTasks.map(task => parseInt(task.id));
+            setTaskIds(ids);
+        }
+    }, [taskData]);
 
     useEffect(() => {
         if (projData?.projectsByManager) {
@@ -85,10 +92,13 @@ export default function Header() {
         }
     }, [projData]);
 
-// окремий useEffect для логування taskIds після оновлення
+    // Для відлагодження
     useEffect(() => {
         console.log("Нові taskIds:", taskIds);
-    }, [taskIds]);
+        if (taskError) {
+            console.error("Помилка завантаження taskIds:", taskError);
+        }
+    }, [taskIds, taskError]);
 
     /* ────────── обробники ────────── */
     const toggleNotificationSidebar = () =>
