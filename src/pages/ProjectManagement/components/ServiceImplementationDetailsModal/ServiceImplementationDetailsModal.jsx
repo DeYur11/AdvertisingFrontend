@@ -12,13 +12,13 @@ export default function ServiceImplementationDetailsModal({
                                                           }) {
     if (!isOpen || !serviceImplementation) return null;
 
-    // Format date nicely
+    // Форматування дати
     const formatDate = (dateString) => {
         if (!dateString) return "—";
-        return new Date(dateString).toLocaleDateString();
+        return new Date(dateString).toLocaleDateString('uk-UA');
     };
 
-    // Calculate task completion stats
+    // Розрахунок статистики виконання завдань
     const totalTasks = serviceImplementation.tasks?.length || 0;
     const completedTasks = serviceImplementation.tasks?.filter(
         task => task.taskStatus?.name?.toLowerCase() === "completed"
@@ -29,12 +29,12 @@ export default function ServiceImplementationDetailsModal({
         <Modal
             isOpen={isOpen}
             onClose={onClose}
-            title="Service Implementation Details"
+            title="Деталі виконання сервісу"
             size="large"
         >
             <div className="sipm-details-container">
                 <section className="sipm-overview">
-                    <h3>Implementation Overview</h3>
+                    <h3>Огляд виконання</h3>
                     <div className="sipm-header-info">
                         <div className="sipm-status">
                             <Badge
@@ -47,24 +47,24 @@ export default function ServiceImplementationDetailsModal({
 
                         <div className="sipm-dates">
                             <div className="sipm-date-item">
-                                <span className="sipm-date-label">Start Date:</span>
+                                <span className="sipm-date-label">Дата початку:</span>
                                 <span className="sipm-date-value">{formatDate(serviceImplementation.startDate)}</span>
                             </div>
                             <div className="sipm-date-item">
-                                <span className="sipm-date-label">End Date:</span>
+                                <span className="sipm-date-label">Дата завершення:</span>
                                 <span className="sipm-date-value">{formatDate(serviceImplementation.endDate)}</span>
                             </div>
                         </div>
 
                         <div className="sipm-cost">
-                            <span className="sipm-cost-label">Cost:</span>
-                            <span className="sipm-cost-value">${parseFloat(serviceImplementation.cost || 0).toFixed(2)}</span>
+                            <span className="sipm-cost-label">Вартість:</span>
+                            <span className="sipm-cost-value">{parseFloat(serviceImplementation.cost || 0).toFixed(2)} ₴</span>
                         </div>
                     </div>
 
                     <div className="sipm-task-progress-container">
                         <div className="sipm-progress-header">
-                            <h4>Task Completion</h4>
+                            <h4>Виконання завдань</h4>
                             <span className="sipm-progress-percent">{taskCompletionPercent}%</span>
                         </div>
                         <div className="sipm-progress-bar">
@@ -74,16 +74,16 @@ export default function ServiceImplementationDetailsModal({
                             ></div>
                         </div>
                         <div className="sipm-progress-stats">
-                            <span className="sipm-progress-stat">{completedTasks} of {totalTasks} tasks completed</span>
+                            <span className="sipm-progress-stat">{completedTasks} з {totalTasks} завдань виконано</span>
                         </div>
                     </div>
                 </section>
 
                 <section className="sipm-tasks-section">
-                    <h3>Tasks</h3>
+                    <h3>Завдання</h3>
 
                     {!serviceImplementation.tasks?.length ? (
-                        <div className="sipm-no-tasks-message">No tasks have been added for this implementation.</div>
+                        <div className="sipm-no-tasks-message">Для цього виконання завдань ще не додано.</div>
                     ) : (
                         <div className="sipm-tasks-list">
                             {serviceImplementation.tasks.map(task => (
@@ -110,15 +110,15 @@ export default function ServiceImplementationDetailsModal({
 
                                     <div className="sipm-task-details">
                                         <div className="sipm-task-detail-item">
-                                            <span className="sipm-detail-label">Priority:</span>
+                                            <span className="sipm-detail-label">Пріоритет:</span>
                                             <span className="sipm-detail-value">{task.priority || "—"}</span>
                                         </div>
                                         <div className="sipm-task-detail-item">
-                                            <span className="sipm-detail-label">Deadline:</span>
+                                            <span className="sipm-detail-label">Термін:</span>
                                             <span className="sipm-detail-value">{formatDate(task.deadline)}</span>
                                         </div>
                                         <div className="sipm-task-detail-item">
-                                            <span className="sipm-detail-label">Assigned to:</span>
+                                            <span className="sipm-detail-label">Виконує:</span>
                                             <span className="sipm-detail-value">
                                                 {task.assignedWorker
                                                     ? `${task.assignedWorker.name || ""} ${task.assignedWorker.surname || ""}`
@@ -127,8 +127,8 @@ export default function ServiceImplementationDetailsModal({
                                         </div>
                                         {task.value && (
                                             <div className="sipm-task-detail-item">
-                                                <span className="sipm-detail-label">Value:</span>
-                                                <span className="sipm-detail-value">${parseFloat(task.value).toFixed(2)}</span>
+                                                <span className="sipm-detail-label">Оцінка:</span>
+                                                <span className="sipm-detail-value">{parseFloat(task.value).toFixed(2)} ₴</span>
                                             </div>
                                         )}
                                     </div>

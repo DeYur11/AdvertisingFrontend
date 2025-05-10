@@ -80,7 +80,7 @@ export default function ProjectCard({
                 <div className="project-main-row">
                     <div className="project-title-section">
                         <h2 className="project-name">{project.name}</h2>
-                        <StatusBadge status={project.status?.name || "Невідомо"} type="project" size="small" />
+                        <StatusBadge className="project-status-cust" status={project.status?.name || "Невідомо"} type="project" size="large" />
                     </div>
 
                     <div className="project-actions">

@@ -39,7 +39,6 @@ export default function StatusBadge({ status, type = 'default', size = 'medium',
 
     return (
         <div className={`status-badge ${variant} ${type} ${size} ${className}`}>
-            <div className="status-indicator"></div>
             <span className="status-text">{status}</span>
         </div>
     );

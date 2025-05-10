@@ -6,6 +6,7 @@ import Button from "../../../../components/common/Button/Button";
 import Card from "../../../../components/common/Card/Card";
 import StatusBadge from "../../../../components/common/StatusBadge/StatusBadge";
 import ServiceInProgressItem from "../ServiceInProgressItem/ServiceInProgressItem";
+import "./ServiceCard.css";
 
 export default function ServiceCard({ projectService, onOpenDetails, onShowImplementationDetails }) {
     const [open, setOpen] = useState(false);
@@ -21,11 +22,15 @@ export default function ServiceCard({ projectService, onOpenDetails, onShowImple
     const est = (svc.estimateCost * qty).toFixed(2);
     const sips = data?.servicesInProgressByProjectService ?? [];
 
-    // Calculate completion percentage
+    // Розрахунок відсотка виконання
     const totalOrders = projectService.servicesInProgress?.length || 0;
     const completedOrders = projectService.servicesInProgress?.filter(
         sip => sip.status?.name?.toLowerCase() === "completed"
     ).length || 0;
+    const inProgressOrders = projectService.servicesInProgress?.filter(
+        sip => sip.status?.name?.toLowerCase() === "in progress"
+    ).length || 0;
+    const pendingOrders = totalOrders - completedOrders - inProgressOrders;
     const completionPercent = totalOrders ? Math.round((completedOrders / totalOrders) * 100) : 0;
 
     const handleViewDetails = (e) => {
@@ -33,25 +38,14 @@ export default function ServiceCard({ projectService, onOpenDetails, onShowImple
         onOpenDetails?.();
     };
 
-    // Get status for the left border
+    // Отримання класу статусу для лівої рамки картки
     const getStatusClass = () => {
-        // Check if we have any service implementations to determine status
         if (projectService.servicesInProgress && projectService.servicesInProgress.length > 0) {
-            // Count statuses
-            const totalOrders = projectService.servicesInProgress.length;
-            const completedCount = projectService.servicesInProgress.filter(
-                sip => sip.status?.name?.toLowerCase() === "completed"
-            ).length;
-            const pendingCount = projectService.servicesInProgress.filter(
-                sip => sip.status?.name?.toLowerCase() === "pending"
-            ).length;
-
-            // Determine overall status based on implementation statuses
-            if (completedCount === totalOrders) {
+            if (completedOrders === totalOrders) {
                 return 'status-completed';
-            } else if (completedCount > 0) {
+            } else if (completedOrders > 0) {
                 return 'status-in-progress';
-            } else if (pendingCount === totalOrders) {
+            } else if (pendingOrders === totalOrders) {
                 return 'status-pending';
             } else {
                 return 'status-in-progress';
@@ -67,7 +61,7 @@ export default function ServiceCard({ projectService, onOpenDetails, onShowImple
                 <div className="service-title">
                     <h5>{svc.serviceName}</h5>
                     <StatusBadge
-                        status={svc.serviceType?.name || "Service"}
+                        status={svc.serviceType?.name || "Сервіс"}
                         type="service"
                         size="small"
                     />
@@ -75,19 +69,19 @@ export default function ServiceCard({ projectService, onOpenDetails, onShowImple
 
                 <div className="service-info">
                     <div className="service-quantity">
-                        <span className="quantity-label">Quantity</span>
+                        <span className="quantity-label">Кількість</span>
                         <span className="quantity-value">{qty}×</span>
                     </div>
                     <div className="service-estimate">
-                        <span className="estimate-label">Estimate</span>
-                        <span className="estimate-value">${est}</span>
+                        <span className="estimate-label">Вартість</span>
+                        <span className="estimate-value">₴{est}</span>
                     </div>
                 </div>
 
                 <div className="service-completion">
                     <div className="completion-info">
-                        <span className="completion-text">{completionPercent}% Complete</span>
-                        <span className="completion-details">{completedOrders}/{totalOrders} orders</span>
+                        <span className="completion-text">{completionPercent}% Виконано</span>
+                        <span className="completion-details">{completedOrders}/{totalOrders} замовлень</span>
                     </div>
                     <div className="progress-bar">
                         <div
@@ -103,7 +97,7 @@ export default function ServiceCard({ projectService, onOpenDetails, onShowImple
                         size="small"
                         onClick={handleViewDetails}
                     >
-                        Details
+                        Деталі
                     </Button>
                     <Button
                         variant={open ? "primary" : "outline"}
@@ -116,17 +110,40 @@ export default function ServiceCard({ projectService, onOpenDetails, onShowImple
 
             {open && (
                 <div className="service-orders">
-                    {loading && <div className="loading-indicator">Loading orders...</div>}
-                    {!loading && !sips.length && <div className="no-items-message">No orders.</div>}
-                    <div className="orders-list">
-                        {sips.map(sip => (
-                            <ServiceInProgressItem
-                                key={sip.id}
-                                serviceInProgress={sip}
-                                onShowDetails={onShowImplementationDetails}
-                            />
-                        ))}
+                    <div className="orders-header">
+                        <h4 className="orders-title">Реалізації сервісу</h4>
+                        <div className="orders-summary">
+                            <div className="summary-item">
+                                <span className="summary-indicator completed"></span>
+                                <span className="summary-value">{completedOrders}</span>
+                                <span className="summary-label">Завершено</span>
+                            </div>
+                            <div className="summary-item">
+                                <span className="summary-indicator in-progress"></span>
+                                <span className="summary-value">{inProgressOrders}</span>
+                                <span className="summary-label">В процесі</span>
+                            </div>
+                            <div className="summary-item">
+                                <span className="summary-indicator pending"></span>
+                                <span className="summary-value">{pendingOrders}</span>
+                                <span className="summary-label">Очікують</span>
+                            </div>
+                        </div>
                     </div>
+
+                    {loading && <div className="loading-indicator">Завантаження реалізацій...</div>}
+                    {!loading && !sips.length && <div className="no-items-message">Немає реалізацій сервісу.</div>}
+                    {!loading && sips.length > 0 && (
+                        <div className="orders-list">
+                            {sips.map(sip => (
+                                <ServiceInProgressItem
+                                    key={sip.id}
+                                    serviceInProgress={sip}
+                                    onShowDetails={onShowImplementationDetails}
+                                />
+                            ))}
+                        </div>
+                    )}
                 </div>
             )}
         </Card>
