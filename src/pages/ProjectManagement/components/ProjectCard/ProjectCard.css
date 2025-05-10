@@ -96,6 +96,7 @@
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    padding-left: 10px;;
 }
 
 /* Special styling for various info values */

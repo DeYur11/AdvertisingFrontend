@@ -201,10 +201,14 @@ export default function ProjectFilterPanel({
                         <button className={`sort-option ${currentSortField === 'startDate' ? 'active' : ''}`}
                                 onClick={() => handleSortChange('startDate')}>Дата
                             початку {renderSortIndicator('startDate')}</button>
+                        <button className={`sort-option ${currentSortField === 'startDate' ? 'active' : ''}`}
+                                onClick={() => handleSortChange('registrationDate')}>Дата
+                            реєстрації {renderSortIndicator('registrationDate')}</button>
                         <button className={`sort-option ${currentSortField === 'cost' ? 'active' : ''}`}
                                 onClick={() => handleSortChange('cost')}>Вартість {renderSortIndicator('cost')}</button>
                         <button className={`sort-option ${currentSortField === 'estimateCost' ? 'active' : ''}`}
-                                onClick={() => handleSortChange('estimateCost')}>Орієнтовна вартість {renderSortIndicator('estimateCost')}</button>
+                                onClick={() => handleSortChange('estimateCost')}>Орієнтовна
+                            вартість {renderSortIndicator('estimateCost')}</button>
                     </div>
                 </div>
             </div>

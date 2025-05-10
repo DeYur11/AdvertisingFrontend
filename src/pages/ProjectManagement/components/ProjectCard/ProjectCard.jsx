@@ -57,14 +57,14 @@ export default function ProjectCard({
         refetchPayments();
     };
 
-    // Format date in a compact way
+    // Форматування дати в компактному вигляді
     const formatDate = (dateString) => {
         if (!dateString) return "—";
         const date = new Date(dateString);
         return date.toLocaleDateString(undefined, {year: '2-digit', month: '2-digit', day: '2-digit'});
     };
 
-    // Get status for styling the left border
+    // Отримання статусу для стилізації лівої межі
     const getStatusClass = () => {
         const status = project.status?.name?.toLowerCase() || '';
         if (status.includes('completed') || status.includes('done')) return 'project-status-completed';
@@ -80,7 +80,7 @@ export default function ProjectCard({
                 <div className="project-main-row">
                     <div className="project-title-section">
                         <h2 className="project-name">{project.name}</h2>
-                        <StatusBadge status={project.status?.name || "Unknown"} type="project" size="small" />
+                        <StatusBadge status={project.status?.name || "Невідомо"} type="project" size="small" />
                     </div>
 
                     <div className="project-actions">
@@ -101,57 +101,54 @@ export default function ProjectCard({
                 <div className="project-info-row">
                     <div className="project-info-column">
                         <div className="project-info-item">
-                            <span className="project-info-label">Client:</span>
+                            <span className="project-info-label">Клієнт:</span>
                             <span className="project-info-value project-client">{project.client?.name || "—"}</span>
                         </div>
                         <div className="project-info-item">
-                            <span className="project-info-label">Type:</span>
+                            <span className="project-info-label">Тип:</span>
                             <span className="project-info-value">{project.projectType?.name || "—"}</span>
                         </div>
                         <div className="project-info-item">
-                            <span className="project-info-label">Manager:</span>
+                            <span className="project-info-label">Менеджер:</span>
                             <span className="project-info-value">{project.manager ? `${project.manager.name} ${project.manager.surname}` : "—"}</span>
                         </div>
                     </div>
 
                     <div className="project-info-column">
                         <div className="project-info-item">
-                            <span className="project-info-label">Registration:</span>
-                            <span className="project-info-value project-date">{formatDate(project.registrationDate)}</span>
+                            <span className="project-info-label">Реєстрація:</span>
+                            <span
+                                className="project-info-value project-date">{formatDate(project.registrationDate)}</span>
                         </div>
+
                         <div className="project-info-item">
-                            <span className="project-info-label">Period:</span>
-                            <span className="project-info-value project-date">
-                {formatDate(project.startDate)} - {formatDate(project.endDate)}
-              </span>
+                            <span className="project-info-label">Дата початку:</span>
+                            <span className="project-info-value project-date">{formatDate(project.startDate)}</span>
                         </div>
+
                         <div className="project-info-item">
-                            <span className="project-info-label">Payment due:</span>
-                            <span className="project-info-value project-date">{formatDate(project.paymentDeadline)}</span>
+                            <span className="project-info-label">Дата закінчення:</span>
+                            <span className="project-info-value project-date">{formatDate(project.endDate)}</span>
                         </div>
                     </div>
 
                     <div className="project-info-column">
                         <div className="project-info-item">
-                            <span className="project-info-label">Est. cost:</span>
+                            <span className="project-info-label">Оцін. вартість:</span>
                             <span className="project-info-value project-cost">
                 ${(+project.estimateCost || 0).toFixed(2)}
               </span>
                         </div>
                         <div className="project-info-item">
-                            <span className="project-info-label">Actual cost:</span>
+                            <span className="project-info-label">Вартість:</span>
                             <span className="project-info-value project-cost">
                 ${(+project.cost || 0).toFixed(2)}
               </span>
                         </div>
                         <div className="project-info-item">
-                            <span className="project-info-label">Diff:</span>
-                            <span className={`project-info-value project-cost ${
-                                (project.estimateCost || 0) >= (project.cost || 0) ? 'cost-under' : 'cost-over'
-                            }`}>
-                ${Math.abs((+project.estimateCost || 0) - (+project.cost || 0)).toFixed(2)}
-                                {(project.estimateCost || 0) >= (project.cost || 0) ? ' under' : ' over'}
-              </span>
+                            <span className="project-info-label">Термін оплати:</span>
+                            <span
+                                className="project-info-value project-date">{formatDate(project.paymentDeadline)}</span>
                         </div>
                     </div>
                 </div>
@@ -161,16 +158,16 @@ export default function ProjectCard({
                 <div className="project-expanded-content">
                     {project.description && (
                         <div className="project-description-section">
-                            <h5 className="project-section-title">Description</h5>
+                            <h5 className="project-section-title">Опис</h5>
                             <p className="project-description">{project.description}</p>
                         </div>
                     )}
 
-                    <h5 className="project-section-title">Services</h5>
+                    <h5 className="project-section-title">Послуги</h5>
                     <div className="project-services-section">
-                        {loadingServices && <div className="project-loading-indicator">Loading services...</div>}
+                        {loadingServices && <div className="project-loading-indicator">Завантаження послуг...</div>}
                         {!loadingServices && !services.length && (
-                            <div className="project-no-items-message">No services added to this project.</div>
+                            <div className="project-no-items-message">До цього проекту не додано послуг.</div>
                         )}
                         {services.map((ps) => (
                             <ServiceCard
@@ -182,7 +179,7 @@ export default function ProjectCard({
                         ))}
                     </div>
 
-                    <h5 className="project-section-title">Payments</h5>
+                    <h5 className="project-section-title">Платежі</h5>
                     <div className="project-payments-section">
                         <PaymentsList
                             project={project}
