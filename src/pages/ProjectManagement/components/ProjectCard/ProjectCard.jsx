@@ -16,7 +16,8 @@ export default function ProjectCard({
                                         setPaymentToDelete,
                                         onAddPayment,
                                         onEditPayment,
-                                        onOpenServiceDetails
+                                        onOpenServiceDetails,
+                                        onShowImplementationDetails
                                     }) {
     const [open, setOpen] = useState(false);
 
@@ -176,6 +177,7 @@ export default function ProjectCard({
                                 key={ps.id}
                                 projectService={ps}
                                 onOpenDetails={() => onOpenServiceDetails?.(ps)}
+                                onShowImplementationDetails={onShowImplementationDetails}
                             />
                         ))}
                     </div>

@@ -4,7 +4,7 @@ import InfoRow from "../../../../components/common/InfoRow/InfoRow";
 import { CalendarMonth, MonetizationOn, ListAlt } from "@mui/icons-material";
 import "./ServiceInProgressItem.css";
 
-export default function ServiceInProgressItem({ serviceInProgress }) {
+export default function ServiceInProgressItem({ serviceInProgress, onShowDetails }) {
     const status = serviceInProgress.status?.name || "Unknown";
 
     // Format dates nicely
@@ -20,10 +20,18 @@ export default function ServiceInProgressItem({ serviceInProgress }) {
     ).length || 0;
     const taskCompletionPercent = totalTasks ? Math.round((completedTasks / totalTasks) * 100) : 0;
 
+    const handleClick = (e) => {
+        e.stopPropagation();
+        if (onShowDetails) {
+            onShowDetails(serviceInProgress);
+        }
+    };
+
     return (
         <Card
             variant="outlined"
             className="sip-item"
+            onClick={handleClick}
         >
             <div className="sip-header">
                 <StatusBadge

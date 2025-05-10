@@ -18,6 +18,8 @@ import {DELETE_PAYMENT, GET_PAYMENT_PURPOSES} from "./graphql/projects.gql";
 import Card from "../../components/common/Card/Card";
 import {useSelector} from "react-redux";
 import ServiceDetailsView from "./components/ServiceDetailsView/ServiceDetailsView";
+import ServiceImplementationDetailsModal
+    from "./components/ServiceImplementationDetailsModal/ServiceImplementationDetailsModal";
 
 const DELETE_PROJECT = gql`
     mutation DeleteProject($id: ID!) {
@@ -48,6 +50,8 @@ export default function ProjectManagement() {
     const [editProjectId, setEditProjectId] = useState(null);
     const [deleteProjectId, setDeleteProjectId] = useState(null);
     const [deleteProjectName, setDeleteProjectName] = useState("");
+    const [selectedServiceImplementation, setSelectedServiceImplementation] = useState(null);
+    const [showImplementationDetailsModal, setShowImplementationDetailsModal] = useState(false);
 
     const buildFilterInput = () => {
         const filterInput = {};
@@ -154,6 +158,17 @@ export default function ProjectManagement() {
         );
     }
 
+    const handleShowImplementationDetails = (implementation) => {
+        setSelectedServiceImplementation(implementation);
+        setShowImplementationDetailsModal(true);
+    };
+
+// Додати функцію для закриття модального вікна
+    const handleCloseImplementationDetails = () => {
+        setShowImplementationDetailsModal(false);
+        setSelectedServiceImplementation(null);
+    };
+
     return (
         <div className="project-management-container">
             <header className="page-header">
@@ -208,6 +223,7 @@ export default function ProjectManagement() {
                                     onEditPayment={(payment, refetch) => handleEditPayment(payment, p, refetch)}
                                     onDeletePayment={(payment) => setConfirmDeletePayment(payment)}
                                     onOpenServiceDetails={handleOpenServiceDetails}
+                                    onShowImplementationDetails={handleShowImplementationDetails}
                                 />
                             ))
                         ) : (
@@ -298,6 +314,12 @@ export default function ProjectManagement() {
                 filters={buildFilterInput()}
                 currentSortField={sortField}
                 currentSortDirection={sortDirection}
+            />
+
+            <ServiceImplementationDetailsModal
+                isOpen={showImplementationDetailsModal}
+                onClose={handleCloseImplementationDetails}
+                serviceImplementation={selectedServiceImplementation}
             />
         </div>
     );

@@ -4,6 +4,7 @@
     overflow: hidden;
     transition: all 0.2s ease;
     margin-bottom: 8px;
+    cursor: pointer; /* Added cursor pointer to indicate clickable */
 }
 
 .sip-item:hover {
@@ -80,6 +81,21 @@
 
 .status-danger ~ .sip-content .progress-fill {
     background-color: #ef4444;
+}
+
+/* Added to emphasize that the card is clickable */
+.sip-item::after {
+    content: "👁️";
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    font-size: 14px;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+}
+
+.sip-item:hover::after {
+    opacity: 0.7;
 }
 
 /* Responsive adjustments */

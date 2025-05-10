@@ -7,7 +7,7 @@ import Card from "../../../../components/common/Card/Card";
 import StatusBadge from "../../../../components/common/StatusBadge/StatusBadge";
 import ServiceInProgressItem from "../ServiceInProgressItem/ServiceInProgressItem";
 
-export default function ServiceCard({ projectService, onOpenDetails }) {
+export default function ServiceCard({ projectService, onOpenDetails, onShowImplementationDetails }) {
     const [open, setOpen] = useState(false);
     const [fetchSIP, { data, loading }] = useLazyQuery(
         GET_SERVICES_IN_PROGRESS_BY_PS,
@@ -119,7 +119,13 @@ export default function ServiceCard({ projectService, onOpenDetails }) {
                     {loading && <div className="loading-indicator">Loading orders...</div>}
                     {!loading && !sips.length && <div className="no-items-message">No orders.</div>}
                     <div className="orders-list">
-                        {sips.map(sip => <ServiceInProgressItem key={sip.id} serviceInProgress={sip} />)}
+                        {sips.map(sip => (
+                            <ServiceInProgressItem
+                                key={sip.id}
+                                serviceInProgress={sip}
+                                onShowDetails={onShowImplementationDetails}
+                            />
+                        ))}
                     </div>
                 </div>
             )}
