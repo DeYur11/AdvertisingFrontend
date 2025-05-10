@@ -1,8 +1,11 @@
-/* src/pages/WorkerTasks/components/ExportDataModal/ExportProjectDataModal.css */
+/* src/pages/ProjectManagement/components/ExportDataModal/ExportProjectDataModal.css */
 .export-modal-content {
     display: flex;
     flex-direction: column;
     gap: 16px;
+    max-height: 70vh;
+    overflow-y: auto;
+    padding-right: 10px;
 }
 
 .export-loading,
@@ -22,13 +25,14 @@
     color: #b91c1c;
 }
 
-.export-info {
+.project-export-info {
+    overflow: hidden !important;
     padding: 12px;
     background-color: #f8fafc;
     border: 1px solid #e2e8f0;
 }
 
-.export-info p {
+.project-export-info-export-info p {
     margin: 0;
     font-size: 14px;
 }
@@ -80,6 +84,7 @@
     font-size: 14px;
     color: #334155;
     user-select: none;
+    padding: 4px 0;
 }
 
 .export-radio input,
@@ -91,25 +96,68 @@
     font-weight: 500;
 }
 
-.export-fields-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+.fields-container {
+    display: flex;
+    flex-direction: column;
     gap: 24px;
 }
 
-.export-field-column {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
+.fields-section {
+    background-color: #fff;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    padding: 16px;
+    margin-bottom: 8px;
 }
 
-.export-column-title {
-    font-size: 14px;
+.fields-section-title {
+    font-size: 15px;
     font-weight: 600;
-    color: #64748b;
-    margin: 0 0 8px 0;
+    color: #1e293b;
+    margin: 0 0 16px 0;
     padding-bottom: 8px;
     border-bottom: 1px solid #e2e8f0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.fields-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 8px 16px;
+}
+
+.section-toggle {
+    margin: 0;
+    font-weight: 600;
+}
+
+.section-toggle-title {
+    font-size: 15px;
+    font-weight: 600;
+    color: #1e293b;
+}
+
+.nested-fields-section {
+    margin-left: 16px;
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 1px dashed #e2e8f0;
+}
+
+.nested-fields-section .fields-section-title {
+    font-size: 14px;
+}
+
+.nested-fields-section .nested-fields-section {
+    margin-left: 24px;
+}
+
+.options-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
 }
 
 .export-actions {
@@ -129,7 +177,7 @@
         gap: 12px;
     }
 
-    .export-fields-grid {
+    .fields-grid {
         grid-template-columns: 1fr;
     }
 

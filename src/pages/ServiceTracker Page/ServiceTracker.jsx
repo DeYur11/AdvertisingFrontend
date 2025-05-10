@@ -1,4 +1,5 @@
-// src/pages/ServiceTracker Page/ServiceTracker Page.jsx
+// src/pages/ServiceTracker Page/ServiceTracker.jsx
+// Updated with export functionality
 import { useState, useEffect } from "react";
 import { useQuery } from "@apollo/client";
 import {
@@ -17,11 +18,32 @@ import {
     ServiceDetailsModal,
     ProjectGroupView
 } from "./components";
+import ExportServiceModal from "./components/ExportServiceModal/ExportServiceModal";
 import Pagination from "../../components/common/Pagination/Pagination";
 import DynamicFilterPanel from "./components/ServiceFilterPanel/DynamicFilterPanel";
+import Button from "../../components/common/Button/Button";
 import "./ServiceTracker.css";
 
 export default function ServiceTracker() {
+    // Add service tracker header with export button
+    const renderHeader = () => {
+        return (
+            <div className="service-tracker-header">
+                <ServiceTrackerHeader />
+                <div className="header-actions">
+                    <Button
+                        variant="outline"
+                        size="medium"
+                        icon="📊"
+                        onClick={() => setExportModalOpen(true)}
+                    >
+                        Export Data
+                    </Button>
+                </div>
+            </div>
+        );
+    };
+
     // Pagination state for services
     const [pagination, setPagination] = useState({
         page: 0, // GraphQL uses zero-based indexing
@@ -34,12 +56,13 @@ export default function ServiceTracker() {
     const [selectedService, setSelectedService] = useState(null);
     const [showCreateModal, setShowCreateModal] = useState(false);
     const [showDetailsModal, setShowDetailsModal] = useState(false);
+    const [exportModalOpen, setExportModalOpen] = useState(false);
 
     // Filter state
     const [filters, setFilters] = useState({
         onlyMismatched: true,
         searchQuery: "",
-        groupByProject: false,
+        groupByProject: true,
         serviceTypeIds: [],
         projectStatusIds: [],
         projectTypeIds: [],
@@ -225,7 +248,7 @@ export default function ServiceTracker() {
 
     return (
         <div className="service-tracker-container">
-            <ServiceTrackerHeader />
+            {renderHeader()}
 
             <DynamicFilterPanel
                 filters={filters}
@@ -291,6 +314,15 @@ export default function ServiceTracker() {
                     onCreateService={handleCreateServiceClick}
                 />
             )}
+
+            {/* Export data modal */}
+            <ExportServiceModal
+                isOpen={exportModalOpen}
+                onClose={() => setExportModalOpen(false)}
+                filters={filters}
+                currentSortField={pagination.sortField}
+                currentSortDirection={pagination.sortDirection}
+            />
         </div>
     );
 }

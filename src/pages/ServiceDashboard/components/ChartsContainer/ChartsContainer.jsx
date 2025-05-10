@@ -28,7 +28,6 @@ export default function ChartsContainer({ services = [], filteredServices = [] }
     };
 
     const prepareCostBucketData = (data) => {
-        // Filter out services with no cost
         const servicesWithCost = data.filter(service =>
             service.estimateCost !== null && service.estimateCost !== undefined
         );
@@ -37,17 +36,14 @@ export default function ChartsContainer({ services = [], filteredServices = [] }
             return [];
         }
 
-        // Determine cost range
         const costs = servicesWithCost.map(s => parseFloat(s.estimateCost));
         const minCost = Math.min(...costs);
         const maxCost = Math.max(...costs);
 
-        // Create buckets
         const numBuckets = 5;
         const bucketSize = (maxCost - minCost) / numBuckets;
         const buckets = Array(numBuckets).fill(0);
 
-        // Assign services to buckets
         servicesWithCost.forEach(service => {
             const cost = parseFloat(service.estimateCost);
             const bucketIndex = Math.min(
@@ -57,7 +53,6 @@ export default function ChartsContainer({ services = [], filteredServices = [] }
             buckets[bucketIndex]++;
         });
 
-        // Create formatted data for chart
         return buckets.map((count, index) => {
             const lowerBound = minCost + (bucketSize * index);
             const upperBound = minCost + (bucketSize * (index + 1));

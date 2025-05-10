@@ -299,7 +299,6 @@ export default function TaskFilterPanel({
                             ✕
                         </button>
                     )}
-                    <span className="search-icon">🔍</span>
                 </div>
 
                 {/* Sort Controls */}

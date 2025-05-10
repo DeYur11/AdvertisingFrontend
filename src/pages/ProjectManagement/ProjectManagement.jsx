@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useQuery, useMutation, gql } from "@apollo/client";
-
+import { useTranslation } from "react-i18next";
 import { GET_PAGINATED_PROJECTS_WITH_TOTAL } from "./graphql/projectsPagination.gql";
 import "./ProjectManagement.css";
 import ProjectCard from "./components/ProjectCard/ProjectCard";
@@ -13,6 +13,7 @@ import AddProjectModal from "./components/AddProjectModal";
 import EditProjectModal from "./components/EditProjectModal";
 import ConfirmationDialog from "../../components/common/ConfirmationDialog/ConfirmationDialog";
 import PaymentModal from "./components/PaymentModal/PaymentModal";
+import ExportProjectDataModal from "./components/ExportDataModal/ExportProjectDataModal";
 import {DELETE_PAYMENT, GET_PAYMENT_PURPOSES} from "./graphql/projects.gql";
 import Card from "../../components/common/Card/Card";
 import {useSelector} from "react-redux";
@@ -31,6 +32,7 @@ export default function ProjectManagement() {
     const [showServiceDetailsModal, setShowServiceDetailsModal] = useState(false);
     const [selectedProjectService, setSelectedProjectService] = useState(null);
     const [showPaymentModal, setShowPaymentModal] = useState(false);
+    const [showExportModal, setShowExportModal] = useState(false);
     const [paymentToEdit, setPaymentToEdit] = useState(null);
     const [paymentProject, setPaymentProject] = useState(null);
     const [refetchPayments, setRefetchPayments] = useState(() => () => {});
@@ -41,7 +43,7 @@ export default function ProjectManagement() {
     const [searchQuery, setSearchQuery] = useState("");
     const [filters, setFilters] = useState({});
     const [filterPanelExpanded, setFilterPanelExpanded] = useState(false);
-
+    const { t } = useTranslation("projectManagement");
     const [showAddProject, setShowAddProject] = useState(false);
     const [editProjectId, setEditProjectId] = useState(null);
     const [deleteProjectId, setDeleteProjectId] = useState(null);
@@ -73,7 +75,6 @@ export default function ProjectManagement() {
         setSelectedProjectService(null);
         setShowServiceDetailsModal(false);
     };
-
 
     const { data: paymentPurposesData } = useQuery(GET_PAYMENT_PURPOSES, { fetchPolicy: "cache-first" });
     const { data, loading, error, refetch } = useQuery(GET_PAGINATED_PROJECTS_WITH_TOTAL, {
@@ -131,6 +132,10 @@ export default function ProjectManagement() {
         refetchPayments?.();
     };
 
+    const handleExportData = () => {
+        setShowExportModal(true);
+    };
+
     const projects = data?.paginatedProjects?.content ?? [];
     const pageInfo = data?.paginatedProjects?.pageInfo;
     const total = pageInfo?.totalElements ?? 0;
@@ -142,8 +147,8 @@ export default function ProjectManagement() {
             <div className="dashboard-container">
                 <Card className="access-denied">
                     <div className="access-denied-icon">⚠️</div>
-                    <h2>Access Denied</h2>
-                    <p>This page is only accessible to Managers.</p>
+                    <h2>Доступ заборонено</h2>
+                    <p>Ця сторінка доступна лише менеджерам проєктів.</p>
                 </Card>
             </div>
         );
@@ -152,10 +157,25 @@ export default function ProjectManagement() {
     return (
         <div className="project-management-container">
             <header className="page-header">
-                <h1>Project Management</h1>
-                <Button variant="primary" size="small" icon="➕" onClick={() => setShowAddProject(true)}>
-                    Add Project
-                </Button>
+                <h1>Управління проєктами</h1>
+                <div className="header-actions">
+                    <Button
+                        variant="outline"
+                        size="small"
+                        icon="📊"
+                        onClick={handleExportData}
+                    >
+                        Експортувати дані
+                    </Button>
+                    <Button
+                        variant="primary"
+                        size="small"
+                        icon="➕"
+                        onClick={() => setShowAddProject(true)}
+                    >
+                        Додати проєкт
+                    </Button>
+                </div>
             </header>
 
             <ProjectFilterPanel
@@ -170,8 +190,8 @@ export default function ProjectManagement() {
                 currentSortDirection={sortDirection}
             />
 
-            {loading && <div className="loading-indicator">Loading projects...</div>}
-            {error && <div className="error-message">Error: {error.message}</div>}
+            {loading && <div className="loading-indicator">Завантаження проєктів...</div>}
+            {error && <div className="error-message">Помилка: {error.message}</div>}
 
             {!loading && !error && (
                 <>
@@ -187,14 +207,14 @@ export default function ProjectManagement() {
                                     onAddPayment={(refetch) => handleAddPayment(p, refetch)}
                                     onEditPayment={(payment, refetch) => handleEditPayment(payment, p, refetch)}
                                     onDeletePayment={(payment) => setConfirmDeletePayment(payment)}
-                                    onOpenServiceDetails={handleOpenServiceDetails} // ✅ додаємо
+                                    onOpenServiceDetails={handleOpenServiceDetails}
                                 />
                             ))
                         ) : (
                             <div className="no-items-message">
                                 {Object.keys(filters).length > 0 || searchQuery
-                                    ? "No projects match your search criteria."
-                                    : "No projects found. Click 'Add Project'."}
+                                    ? "Жоден проєкт не відповідає критеріям пошуку."
+                                    : "Проєкти відсутні. Натисніть «Додати проєкт»."}
                             </div>
                         )}
                     </div>
@@ -238,10 +258,10 @@ export default function ProjectManagement() {
                     setDeleteProjectId(null);
                     setDeleteProjectName("");
                 }}
-                title="Delete Project"
-                message={`Are you sure you want to delete the project "${deleteProjectName}"?`}
-                confirmText="Delete"
-                cancelText="Cancel"
+                title="Видалення проєкту"
+                message={`Ви впевнені, що хочете видалити проєкт «${deleteProjectName}»?`}
+                confirmText="Видалити"
+                cancelText="Скасувати"
                 variant="danger"
             />
 
@@ -249,10 +269,10 @@ export default function ProjectManagement() {
                 isOpen={!!confirmDeletePayment}
                 onClose={() => setConfirmDeletePayment(null)}
                 onConfirm={handleConfirmDeletePayment}
-                title="Delete Payment"
-                message={`Are you sure you want to delete payment #${confirmDeletePayment?.transactionNumber}?`}
-                confirmText="Delete"
-                cancelText="Cancel"
+                title="Видалення платежу"
+                message={`Ви впевнені, що хочете видалити платіж №${confirmDeletePayment?.transactionNumber}?`}
+                confirmText="Видалити"
+                cancelText="Скасувати"
                 variant="danger"
             />
 
@@ -266,11 +286,18 @@ export default function ProjectManagement() {
                 onSave={handlePaymentSaved}
             />
 
-            {/* Service Details View Modal */}
             <ServiceDetailsView
                 isOpen={showServiceDetailsModal}
-                onClose={() => handleCloseServiceDetails()}
+                onClose={handleCloseServiceDetails}
                 projectService={selectedProjectService}
+            />
+
+            <ExportProjectDataModal
+                isOpen={showExportModal}
+                onClose={() => setShowExportModal(false)}
+                filters={buildFilterInput()}
+                currentSortField={sortField}
+                currentSortDirection={sortDirection}
             />
         </div>
     );

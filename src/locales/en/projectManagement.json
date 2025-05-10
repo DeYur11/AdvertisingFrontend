@@ -1,0 +1,15 @@
+{
+  "title": "Project Management",
+  "exportData": "Export Data",
+  "addProject": "Add Project",
+  "loading": "Loading projects...",
+  "error": "Error",
+  "noProjects": "No projects found. Click 'Add Project'.",
+  "noMatches": "No projects match your search criteria.",
+  "deleteProjectTitle": "Delete Project",
+  "deleteProjectMessage": "Are you sure you want to delete the project \"{{name}}\"?",
+  "deletePaymentTitle": "Delete Payment",
+  "deletePaymentMessage": "Are you sure you want to delete payment #{{number}}?",
+  "accessDenied": "Access Denied",
+  "onlyManagers": "This page is only accessible to Managers."
+}

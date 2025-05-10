@@ -222,14 +222,14 @@ export default function DynamicFilterPanel({
                         <span>Show only pending services</span>
                     </label>
 
-                    <label className="filter-checkbox">
-                        <input
-                            type="checkbox"
-                            checked={filters.groupByProject}
-                            onChange={handleGroupToggle}
-                        />
-                        <span>Group by project</span>
-                    </label>
+                    {/*<label className="filter-checkbox">*/}
+                    {/*    <input*/}
+                    {/*        type="checkbox"*/}
+                    {/*        checked={filters.groupByProject}*/}
+                    {/*        onChange={handleGroupToggle}*/}
+                    {/*    />*/}
+                    {/*    <span>Group by project</span>*/}
+                    {/*</label>*/}
 
                     <Button
                         variant={activeFilterCount > 0 ? "primary" : "outline"}
@@ -477,7 +477,7 @@ export default function DynamicFilterPanel({
                     </div>
 
                     {/* Filter Actions */}
-                    <div className="filter-actions">
+                    <div className="service-filter-actions">
                         <Button
                             variant="outline"
                             onClick={resetAllFilters}

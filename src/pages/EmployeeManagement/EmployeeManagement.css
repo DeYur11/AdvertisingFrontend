@@ -123,3 +123,23 @@
         grid-template-columns: 1fr;
     }
 }
+
+/* Update to ProjectManagement.css to include styles for header-actions */
+.header-actions {
+    display: flex;
+    gap: 12px;
+}
+
+/* Update the existing media query for page-header to account for header-actions */
+@media (max-width: 576px) {
+    .page-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+    }
+
+    .header-actions {
+        width: 100%;
+        justify-content: flex-start;
+    }
+}

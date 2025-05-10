@@ -238,7 +238,7 @@
 }
 
 /* Filter Actions */
-.filter-actions {
+.service-filter-actions {
     display: flex;
     justify-content: flex-end;
     gap: 12px;

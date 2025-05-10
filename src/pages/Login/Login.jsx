@@ -37,7 +37,6 @@ export default function Login() {
                 token
             }));
 
-
             toast.success("Успішний вхід!", {
                 autoClose: 850 // 2 секунди
             });

@@ -7,6 +7,7 @@ import ServiceCard from "../ServiceCard/ServiceCard";
 import Card from "../../../../components/common/Card/Card";
 import StatusBadge from "../../../../components/common/StatusBadge/StatusBadge";
 import PaymentsList from "../PaymentsList/PaymentsList";
+import "./ProjectCard.css";
 
 export default function ProjectCard({
                                         project,
@@ -55,116 +56,146 @@ export default function ProjectCard({
         refetchPayments();
     };
 
+    // Format date in a compact way
+    const formatDate = (dateString) => {
+        if (!dateString) return "—";
+        const date = new Date(dateString);
+        return date.toLocaleDateString(undefined, {year: '2-digit', month: '2-digit', day: '2-digit'});
+    };
+
     // Get status for styling the left border
     const getStatusClass = () => {
         const status = project.status?.name?.toLowerCase() || '';
-
-        if (status.includes('completed') || status.includes('done') || status.includes('finished')) {
-            return 'status-completed';
-        } else if (status.includes('in progress') || status.includes('active') || status.includes('ongoing')) {
-            return 'status-in-progress';
-        } else if (status.includes('pending') || status.includes('scheduled') || status.includes('planned')) {
-            return 'status-pending';
-        } else if (status.includes('cancelled') || status.includes('on-hold') || status.includes('blocked')) {
-            return 'status-cancelled';
-        }
+        if (status.includes('completed') || status.includes('done')) return 'project-status-completed';
+        if (status.includes('in progress') || status.includes('active')) return 'project-status-in-progress';
+        if (status.includes('pending') || status.includes('scheduled')) return 'project-status-pending';
+        if (status.includes('cancelled') || status.includes('on-hold')) return 'project-status-cancelled';
         return '';
     };
 
     return (
-        <Card className={`project-card ${open ? "expanded" : ""} ${getStatusClass()}`}>
-            <div className="project-header" onClick={() => setOpen(prev => !prev)} style={{ cursor: "pointer" }}>
-                <div className="project-title">
-                    <h2>{project.name}</h2>
-                    {project.status && (
-                        <StatusBadge
-                            status={project.status.name}
-                            type="project"
-                            size={open ? "medium" : "small"}
+        <Card className={`project-card ${open ? "project-expanded" : ""} ${getStatusClass()}`}>
+            <div className="project-header" onClick={() => setOpen(prev => !prev)}>
+                <div className="project-main-row">
+                    <div className="project-title-section">
+                        <h2 className="project-name">{project.name}</h2>
+                        <StatusBadge status={project.status?.name || "Unknown"} type="project" size="small" />
+                    </div>
+
+                    <div className="project-actions">
+                        <Button variant="outline" size="small" icon="✏️" onClick={handleEdit} />
+                        <Button variant="danger" size="small" icon="🗑️" onClick={handleDelete} />
+                        <Button
+                            variant={open ? "primary" : "outline"}
+                            icon={open ? "▲" : "▼"}
+                            size="small"
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                setOpen(!open);
+                            }}
                         />
-                    )}
+                    </div>
                 </div>
 
-                <div className="project-meta">
-                    <div className="meta-item">
-                        <span className="meta-label">Client</span>
-                        <span className="meta-value">{project.client?.name || "—"}</span>
-                    </div>
-                    <div className="meta-item">
-                        <span className="meta-label">Type</span>
-                        <span className="meta-value">{project.projectType?.name || "—"}</span>
-                    </div>
-                    {project.manager && (
-                        <div className="meta-item">
-                            <span className="meta-label">Manager</span>
-                            <span className="meta-value">
-                                {project.manager.name} {project.manager.surname}
-                            </span>
+                <div className="project-info-row">
+                    <div className="project-info-column">
+                        <div className="project-info-item">
+                            <span className="project-info-label">Client:</span>
+                            <span className="project-info-value project-client">{project.client?.name || "—"}</span>
                         </div>
-                    )}
-                </div>
-
-                <div className="project-stats">
-                    <div className="stat-item">
-                        <span className="stat-label">Estimated</span>
-                        <span className="stat-value">${(+project.estimateCost).toFixed(2)}</span>
+                        <div className="project-info-item">
+                            <span className="project-info-label">Type:</span>
+                            <span className="project-info-value">{project.projectType?.name || "—"}</span>
+                        </div>
+                        <div className="project-info-item">
+                            <span className="project-info-label">Manager:</span>
+                            <span className="project-info-value">{project.manager ? `${project.manager.name} ${project.manager.surname}` : "—"}</span>
+                        </div>
                     </div>
-                    <div className="stat-item">
-                        <span className="stat-label">Actual</span>
-                        <span className="stat-value">${(+project.cost).toFixed(2)}</span>
+
+                    <div className="project-info-column">
+                        <div className="project-info-item">
+                            <span className="project-info-label">Registration:</span>
+                            <span className="project-info-value project-date">{formatDate(project.registrationDate)}</span>
+                        </div>
+                        <div className="project-info-item">
+                            <span className="project-info-label">Period:</span>
+                            <span className="project-info-value project-date">
+                {formatDate(project.startDate)} - {formatDate(project.endDate)}
+              </span>
+                        </div>
+                        <div className="project-info-item">
+                            <span className="project-info-label">Payment due:</span>
+                            <span className="project-info-value project-date">{formatDate(project.paymentDeadline)}</span>
+                        </div>
+                    </div>
+
+                    <div className="project-info-column">
+                        <div className="project-info-item">
+                            <span className="project-info-label">Est. cost:</span>
+                            <span className="project-info-value project-cost">
+                ${(+project.estimateCost || 0).toFixed(2)}
+              </span>
+                        </div>
+                        <div className="project-info-item">
+                            <span className="project-info-label">Actual cost:</span>
+                            <span className="project-info-value project-cost">
+                ${(+project.cost || 0).toFixed(2)}
+              </span>
+                        </div>
+                        <div className="project-info-item">
+                            <span className="project-info-label">Diff:</span>
+                            <span className={`project-info-value project-cost ${
+                                (project.estimateCost || 0) >= (project.cost || 0) ? 'cost-under' : 'cost-over'
+                            }`}>
+                ${Math.abs((+project.estimateCost || 0) - (+project.cost || 0)).toFixed(2)}
+                                {(project.estimateCost || 0) >= (project.cost || 0) ? ' under' : ' over'}
+              </span>
+                        </div>
                     </div>
                 </div>
-            </div>
-
-            <div className="project-actions">
-                <Button variant="outline" size="small" icon="✏️" onClick={handleEdit}>Edit</Button>
-                <Button variant="danger" size="small" icon="🗑️" onClick={handleDelete}>Delete</Button>
-                <Button
-                    variant={open ? "primary" : "outline"}
-                    icon={open ? "▲" : "▼"}
-                    size="small"
-                    onClick={(e) => {
-                        e.stopPropagation();
-                        setOpen(!open);
-                    }}
-                >
-                    {open ? "Collapse" : "Expand"}
-                </Button>
             </div>
 
             {open && (
-                <>
+                <div className="project-expanded-content">
                     {project.description && (
-                        <p className="project-description">{project.description}</p>
+                        <div className="project-description-section">
+                            <h5 className="project-section-title">Description</h5>
+                            <p className="project-description">{project.description}</p>
+                        </div>
                     )}
 
-                    <h4 className="section-title">Services</h4>
-                    {loadingServices && <div className="loading-indicator">Loading services...</div>}
-                    {!loadingServices && !services.length && (
-                        <div className="no-items-message">No services.</div>
-                    )}
-                    {services.map((ps) => (
-                        <ServiceCard
-                            key={ps.id}
-                            projectService={ps}
-                            onOpenDetails={() => onOpenServiceDetails?.(ps)}
+                    <h5 className="project-section-title">Services</h5>
+                    <div className="project-services-section">
+                        {loadingServices && <div className="project-loading-indicator">Loading services...</div>}
+                        {!loadingServices && !services.length && (
+                            <div className="project-no-items-message">No services added to this project.</div>
+                        )}
+                        {services.map((ps) => (
+                            <ServiceCard
+                                key={ps.id}
+                                projectService={ps}
+                                onOpenDetails={() => onOpenServiceDetails?.(ps)}
+                            />
+                        ))}
+                    </div>
+
+                    <h5 className="project-section-title">Payments</h5>
+                    <div className="project-payments-section">
+                        <PaymentsList
+                            project={project}
+                            payments={payments}
+                            loading={loadingPayments}
+                            error={errorPayments}
+                            onAddPayment={() => {
+                                onAddPayment?.(refetchPayments);
+                                refetchPayments();
+                            }}
+                            onEditPayment={(payment) => onEditPayment?.(payment, refetchPayments)}
+                            onDeletePayment={handleDeletePayment}
                         />
-                    ))}
-
-                    <h4 className="section-title">Payments</h4>
-                    <PaymentsList
-                        project={project}
-                        payments={payments}
-                        loading={loadingPayments}
-                        error={errorPayments}
-                        onAddPayment={() => {
-                            onAddPayment?.(refetchPayments);
-                            refetchPayments();
-                        }}
-                        onEditPayment={(payment) => onEditPayment?.(payment, refetchPayments)}
-                        onDeletePayment={handleDeletePayment}
-                    />
-                </>
+                    </div>
+                </div>
             )}
         </Card>
     );

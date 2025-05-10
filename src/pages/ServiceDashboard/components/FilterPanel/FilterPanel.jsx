@@ -109,7 +109,7 @@ export default function FilterPanel({
                 </div>
             </div>
 
-            <div className="filter-actions">
+            <div className="service-filter-actions">
                 <Button
                     variant="outline"
                     onClick={resetFilters}

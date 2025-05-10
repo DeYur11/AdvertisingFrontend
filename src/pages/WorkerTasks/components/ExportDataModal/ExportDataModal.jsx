@@ -312,16 +312,6 @@ export default function ExportDataModal({ isOpen, onClose, workerId, filter = {}
                                         />
                                         <span className="radio-label">JSON</span>
                                     </label>
-                                    <label className="export-radio">
-                                        <input
-                                            type="radio"
-                                            name="exportFormat"
-                                            value="excel"
-                                            checked={exportFormat === "excel"}
-                                            onChange={() => setExportFormat("excel")}
-                                        />
-                                        <span className="radio-label">Excel</span>
-                                    </label>
                                 </div>
                             </div>
 

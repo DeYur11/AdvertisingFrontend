@@ -11,11 +11,13 @@ import "./ReviewerDashboard.css";
 import MaterialReviewModal from "./components/MaterialReviewModal";
 import ReviewerFilterPanel from "./components/ReviewFilterPanel/ReviewerFilterPanel";
 import { GET_PAGINATED_MATERIALS_WITH_TOTAL } from "./graphql/reviewerQueries";
+import ExportMaterialsModal from "./components/ExportMaterialsModal/ExportMaterialsModal";
 
 export default function ReviewerDashboard() {
     const user = useSelector(state => state.user);
     const [selectedMaterial, setSelectedMaterial] = useState(null);
     const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
+    const [exportModalOpen, setExportModalOpen] = useState(false);
 
     // Filter and pagination state
     const [filters, setFilters] = useState({
@@ -48,18 +50,17 @@ export default function ReviewerDashboard() {
             filterInput.usageRestrictionIds = filters.usageRestriction.map(id => parseInt(id, 10));
         }
 
-// Add licenceType filters - ensure integers
+        // Add licenceType filters - ensure integers
         if (filters.licenceType && filters.licenceType.length > 0) {
             filterInput.licenceTypeIds = filters.licenceType.map(id => parseInt(id, 10));
         }
 
-// Add targetAudience filters - ensure integers
+        // Add targetAudience filters - ensure integers
         if (filters.targetAudience && filters.targetAudience.length > 0) {
             filterInput.targetAudienceIds = filters.targetAudience.map(id => parseInt(id, 10));
         }
 
-
-        // Add status filte rs - ensure integers
+        // Add status filters - ensure integers
         if (filters.status && filters.status.length > 0) {
             filterInput.statusIds = filters.status.map(id => parseInt(id, 10));
         }
@@ -95,7 +96,16 @@ export default function ReviewerDashboard() {
         } else if (filters.reviewStatus === 'pending') {
             filterInput.statusIds = [2]; // лише Pending Review
         }
-        // Date range filters are handled in post-query filtering
+
+        // Date range filters
+        if (filters.dateRange) {
+            if (filters.dateRange.from) {
+                filterInput.createDatetimeFrom = filters.dateRange.from;
+            }
+            if (filters.dateRange.to) {
+                filterInput.createDatetimeTo = filters.dateRange.to;
+            }
+        }
 
         return filterInput;
     };
@@ -165,6 +175,16 @@ export default function ReviewerDashboard() {
                 <div className="header-title">
                     <h1>Material Reviews</h1>
                     <p className="subtitle">Review and provide feedback on materials</p>
+                </div>
+                <div className="dashboard-actions">
+                    <Button
+                        variant="outline"
+                        size="medium"
+                        icon="📊"
+                        onClick={() => setExportModalOpen(true)}
+                    >
+                        Export Materials
+                    </Button>
                 </div>
             </div>
 
@@ -274,6 +294,9 @@ export default function ReviewerDashboard() {
                                     )}
 
                                     <div className="material-footer">
+                                        <span className="created-date">
+                                            Created: {formatDate(material.createDatetime)}
+                                        </span>
 
                                         {material.status?.name === "Accepted" ? (
                                             <Button variant="outline" size="small" disabled>
@@ -334,6 +357,16 @@ export default function ReviewerDashboard() {
                     onReviewSubmitted={handleReviewSubmitted}
                 />
             )}
+
+            {/* Export Materials Modal */}
+            <ExportMaterialsModal
+                isOpen={exportModalOpen}
+                onClose={() => setExportModalOpen(false)}
+                workerId={user.workerId}
+                filters={buildFilterInput()}
+                currentSortField={sortField}
+                currentSortDirection={sortDirection}
+            />
         </div>
     );
 }

@@ -168,15 +168,6 @@ export default function ServiceFilterPanel({
                     <label className="filter-checkbox">
                         <input
                             type="checkbox"
-                            checked={filters.onlyMismatched}
-                            onChange={handleFilterToggle}
-                        />
-                        <span>Show only pending services</span>
-                    </label>
-
-                    <label className="filter-checkbox">
-                        <input
-                            type="checkbox"
                             checked={filters.groupByProject}
                             onChange={handleGroupToggle}
                         />
@@ -420,7 +411,7 @@ export default function ServiceFilterPanel({
                     </div>
 
                     {/* Filter Actions */}
-                    <div className="filter-actions">
+                    <div className="service-filter-actions">
                         <Button
                             variant="outline"
                             onClick={resetAllFilters}
