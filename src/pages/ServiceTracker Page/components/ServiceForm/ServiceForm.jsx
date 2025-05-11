@@ -39,18 +39,18 @@ export default function ServiceForm({
                     />
                 </div>
 
-                {/* Дата початку (обовʼязково) */}
-                <div className="form-group">
-                    <label className="form-label">Дата початку *</label>
-                    <input
-                        type="date"
-                        name="startDate"
-                        value={serviceForm.startDate}
-                        onChange={handleChange}
-                        className="form-control"
-                        required
-                    />
-                </div>
+                {/*/!* Дата початку (обовʼязково) *!/*/}
+                {/*<div className="form-group">*/}
+                {/*    <label className="form-label">Дата початку *</label>*/}
+                {/*    <input*/}
+                {/*        type="date"*/}
+                {/*        name="startDate"*/}
+                {/*        value={serviceForm.startDate}*/}
+                {/*        onChange={handleChange}*/}
+                {/*        className="form-control"*/}
+                {/*        required*/}
+                {/*    />*/}
+                {/*</div>*/}
                 {/* /TODO Зробити щоб завдання відкривались */}
                 {/* Вартість (необовʼязково) */}
                 <div className="form-group">

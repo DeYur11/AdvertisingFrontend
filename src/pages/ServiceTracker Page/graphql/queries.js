@@ -117,6 +117,7 @@ export const GET_PAGINATED_PROJECTS = gql`
                             id
                             name
                         }
+                        estimateCost
                     }
                     servicesInProgress {
                         id

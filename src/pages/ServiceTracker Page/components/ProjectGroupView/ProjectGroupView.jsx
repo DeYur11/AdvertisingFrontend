@@ -92,7 +92,7 @@ export default function ProjectGroupView({
         fetchPolicy: "network-only"
     });
 
-    // Повторно отримуємо дані при зміні фільтрів або пагінації
+    // Повторно отримуємо дані при зміні фільтрування або пагінації
     useEffect(() => {
         refetch({
             input: {
@@ -142,11 +142,11 @@ export default function ProjectGroupView({
     };
 
     if (loading) {
-        return <Card className="loading-card">Loading projects...</Card>;
+        return <Card className="loading-card">Завантаження проектів...</Card>;
     }
 
     if (error) {
-        return <Card className="error-card">Error loading projects: {error.message}</Card>;
+        return <Card className="error-card">Помилка при завантаженні проектів: {error.message}</Card>;
     }
 
     if (projects.length === 0) {
@@ -165,30 +165,30 @@ export default function ProjectGroupView({
         <>
             {/* Панель сортування проектів */}
             <div className="sort-controls">
-                <span className="sort-label">Sort by:</span>
+                <span className="sort-label">Сортувати за:</span>
                 <button
                     className={`sort-button ${pagination.sortField === "name" ? "active" : ""}`}
                     onClick={() => handleSortChange("name")}
                 >
-                    Project Name {pagination.sortField === "name" ? (pagination.sortDirection === "ASC" ? "↑" : "↓") : null}
+                    Назва проекту {pagination.sortField === "name" ? (pagination.sortDirection === "ASC" ? "↑" : "↓") : null}
                 </button>
                 <button
                     className={`sort-button ${pagination.sortField === "cost" ? "active" : ""}`}
                     onClick={() => handleSortChange("cost")}
                 >
-                    Cost {pagination.sortField === "cost" ? (pagination.sortDirection === "ASC" ? "↑" : "↓") : null}
+                    Вартість {pagination.sortField === "cost" ? (pagination.sortDirection === "ASC" ? "↑" : "↓") : null}
                 </button>
                 <button
                     className={`sort-button ${pagination.sortField === "startDate" ? "active" : ""}`}
                     onClick={() => handleSortChange("startDate")}
                 >
-                    Start Date {pagination.sortField === "startDate" ? (pagination.sortDirection === "ASC" ? "↑" : "↓") : null}
+                    Дата початку {pagination.sortField === "startDate" ? (pagination.sortDirection === "ASC" ? "↑" : "↓") : null}
                 </button>
                 <button
                     className={`sort-button ${pagination.sortField === "endDate" ? "active" : ""}`}
                     onClick={() => handleSortChange("endDate")}
                 >
-                    End Date {pagination.sortField === "endDate" ? (pagination.sortDirection === "ASC" ? "↑" : "↓") : null}
+                    Дата завершення {pagination.sortField === "endDate" ? (pagination.sortDirection === "ASC" ? "↑" : "↓") : null}
                 </button>
             </div>
 
@@ -223,13 +223,13 @@ export default function ProjectGroupView({
                                             variant={project.status?.name?.toLowerCase() === "completed" ? "success" : "primary"}
                                             size="small"
                                         >
-                                            {project.status?.name || "Unknown"}
+                                            {project.status?.name || "Невідомо"}
                                         </Badge>
                                         <span className="project-client">{project.client.name}</span>
                                         {project.startDate && (
                                             <span className="project-date">
                                                 {new Date(project.startDate).toLocaleDateString()} -
-                                                {project.endDate ? new Date(project.endDate).toLocaleDateString() : "Present"}
+                                                {project.endDate ? new Date(project.endDate).toLocaleDateString() : "Теперішній час"}
                                             </span>
                                         )}
                                     </div>
@@ -238,7 +238,7 @@ export default function ProjectGroupView({
                                 <div className="project-summary">
                                     <div className="project-progress">
                                         <div className="progress-label">
-                                            <span>Services: {totalImpl}/{totalReq}</span>
+                                            <span>Сервіси: {totalImpl}/{totalReq}</span>
                                             <span>{progress}%</span>
                                         </div>
                                         <div className="progress-bar">
@@ -247,7 +247,7 @@ export default function ProjectGroupView({
                                     </div>
                                     {incompleteCnt > 0 && (
                                         <span className="incomplete-count">
-                                            {incompleteCnt} service{incompleteCnt !== 1 ? "s" : ""} pending
+                                            {incompleteCnt} сервіс{incompleteCnt !== 1 ? "ів" : ""} у процесі
                                         </span>
                                     )}
                                 </div>
@@ -260,7 +260,7 @@ export default function ProjectGroupView({
                                         toggleProject(project.id);
                                     }}
                                 >
-                                    {expandedProjects[project.id] ? "Collapse" : "Expand"}
+                                    {expandedProjects[project.id] ? "Згорнути" : "Розгорнути"}
                                 </Button>
                             </div>
 
