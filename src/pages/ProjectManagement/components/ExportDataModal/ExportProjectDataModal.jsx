@@ -197,6 +197,7 @@ export default function ExportProjectDataModal({
     }
 
     // Toggle all fields in a section
+    // Toggle all fields in a section
     const toggleSectionFields = (section, checked) => {
         const newState = { ...selectedFields };
 
@@ -205,16 +206,32 @@ export default function ExportProjectDataModal({
             project: ['projectName', 'projectDescription', 'projectType', 'status', 'startDate', 'endDate', 'estimateCost', 'actualCost', 'paymentDeadline'],
             client: ['clientName', 'clientEmail', 'clientPhone'],
             manager: ['managerName'],
-            services: ['includeServices', 'serviceName', 'serviceType', 'serviceDescription', 'serviceAmount', 'serviceEstimateCost'],
-            implementations: ['includeImplementations', 'implementationStartDate', 'implementationEndDate', 'implementationCost', 'implementationStatus'],
-            tasks: ['includeTasks', 'taskName', 'taskDescription', 'taskPriority', 'taskStatus', 'taskDeadline', 'taskAssignee'],
-            payments: ['includePayments', 'paymentAmount', 'paymentDate', 'paymentPurpose', 'transactionNumber']
+            services: ['serviceName', 'serviceType', 'serviceDescription', 'serviceAmount', 'serviceEstimateCost'],
+            implementations: ['implementationStartDate', 'implementationEndDate', 'implementationCost', 'implementationStatus'],
+            tasks: ['taskName', 'taskDescription', 'taskPriority', 'taskStatus', 'taskDeadline', 'taskAssignee'],
+            payments: ['paymentAmount', 'paymentDate', 'paymentPurpose', 'transactionNumber']
         };
 
         // Update all fields in the section
         (sectionFields[section] || []).forEach(field => {
             newState[field] = checked;
         });
+
+        // If we're enabling a section, make sure its parent sections are also enabled
+        if (checked) {
+            if (section === 'services') {
+                newState.includeServices = true;
+            } else if (section === 'implementations') {
+                newState.includeImplementations = true;
+                newState.includeServices = true;
+            } else if (section === 'tasks') {
+                newState.includeTasks = true;
+                newState.includeImplementations = true;
+                newState.includeServices = true;
+            } else if (section === 'payments') {
+                newState.includePayments = true;
+            }
+        }
 
         setSelectedFields(newState);
     };
@@ -229,35 +246,63 @@ export default function ExportProjectDataModal({
     };
 
     // Handle individual field change
+    // Handle individual field change
     const handleFieldChange = (field) => {
         // Special handling for section toggles
         if (field === 'includeServices' || field === 'includeImplementations' ||
             field === 'includeTasks' || field === 'includePayments') {
 
             setSelectedFields(prev => {
-                const newState = { ...prev, [field]: !prev[field] };
+                const newState = { ...prev };
+                // Toggle the current field
+                newState[field] = !prev[field];
 
                 // If disabling a section, disable all fields in that section
                 if (!newState[field]) {
                     if (field === 'includeServices') {
-                        toggleSectionFields('services', false);
+                        // Disable all service fields
+                        ['serviceName', 'serviceType', 'serviceDescription', 'serviceAmount', 'serviceEstimateCost'].forEach(f => {
+                            newState[f] = false;
+                        });
+
                         // Also disable implementations and tasks if services are disabled
                         newState.includeImplementations = false;
-                        toggleSectionFields('implementations', false);
+                        // Disable all implementation fields
+                        ['implementationStartDate', 'implementationEndDate', 'implementationCost', 'implementationStatus'].forEach(f => {
+                            newState[f] = false;
+                        });
+
+                        // Also disable tasks
                         newState.includeTasks = false;
-                        toggleSectionFields('tasks', false);
+                        // Disable all task fields
+                        ['taskName', 'taskDescription', 'taskPriority', 'taskStatus', 'taskDeadline', 'taskAssignee'].forEach(f => {
+                            newState[f] = false;
+                        });
                     }
                     else if (field === 'includeImplementations') {
-                        toggleSectionFields('implementations', false);
+                        // Disable all implementation fields
+                        ['implementationStartDate', 'implementationEndDate', 'implementationCost', 'implementationStatus'].forEach(f => {
+                            newState[f] = false;
+                        });
+
                         // Also disable tasks if implementations are disabled
                         newState.includeTasks = false;
-                        toggleSectionFields('tasks', false);
+                        // Disable all task fields
+                        ['taskName', 'taskDescription', 'taskPriority', 'taskStatus', 'taskDeadline', 'taskAssignee'].forEach(f => {
+                            newState[f] = false;
+                        });
                     }
                     else if (field === 'includeTasks') {
-                        toggleSectionFields('tasks', false);
+                        // Disable all task fields
+                        ['taskName', 'taskDescription', 'taskPriority', 'taskStatus', 'taskDeadline', 'taskAssignee'].forEach(f => {
+                            newState[f] = false;
+                        });
                     }
                     else if (field === 'includePayments') {
-                        toggleSectionFields('payments', false);
+                        // Disable all payment fields
+                        ['paymentAmount', 'paymentDate', 'paymentPurpose', 'transactionNumber'].forEach(f => {
+                            newState[f] = false;
+                        });
                     }
                 }
 

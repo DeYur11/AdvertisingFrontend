@@ -201,7 +201,7 @@ export default function ProjectFilterPanel({
                         <button className={`sort-option ${currentSortField === 'startDate' ? 'active' : ''}`}
                                 onClick={() => handleSortChange('startDate')}>Дата
                             початку {renderSortIndicator('startDate')}</button>
-                        <button className={`sort-option ${currentSortField === 'startDate' ? 'active' : ''}`}
+                        <button className={`sort-option ${currentSortField === 'registrationDate' ? 'active' : ''}`}
                                 onClick={() => handleSortChange('registrationDate')}>Дата
                             реєстрації {renderSortIndicator('registrationDate')}</button>
                         <button className={`sort-option ${currentSortField === 'cost' ? 'active' : ''}`}
