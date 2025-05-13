@@ -40,7 +40,7 @@ export default function ProjectFilterPanel({
                                                expanded,
                                                setExpanded,
                                                onSortChange,
-                                               currentSortField = "name",
+                                               currentSortField = "status",
                                                currentSortDirection = "ASC"
                                            }) {
     // Локальний стан для кількості активних фільтрів
@@ -209,6 +209,8 @@ export default function ProjectFilterPanel({
                         <button className={`sort-option ${currentSortField === 'estimateCost' ? 'active' : ''}`}
                                 onClick={() => handleSortChange('estimateCost')}>Орієнтовна
                             вартість {renderSortIndicator('estimateCost')}</button>
+                        <button className={`sort-option ${currentSortField === 'status' ? 'active' : ''}`}
+                                onClick={() => handleSortChange('status')}>Статус {renderSortIndicator('status')}</button>
                     </div>
                 </div>
             </div>

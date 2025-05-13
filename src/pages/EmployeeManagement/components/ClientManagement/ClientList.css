@@ -1,0 +1,517 @@
+/* src/pages/EmployeeManagement/components/ClientManagement/ClientList.css */
+.client-list-container {
+    margin-bottom: 24px;
+}
+
+.client-list-header {
+    display: grid;
+    grid-template-columns: minmax(200px, 2fr) minmax(180px, 1.5fr) minmax(150px, 1fr) minmax(120px, 1fr) minmax(120px, 1fr) minmax(180px, 1fr);
+    background-color: #f8fafc;
+    border-radius: 8px 8px 0 0;
+    border: 1px solid #e2e8f0;
+    font-weight: 600;
+    color: #1e293b;
+}
+
+.header-cell {
+    padding: 12px 16px;
+    font-size: 14px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+    user-select: none;
+    display: flex;
+    align-items: center;
+}
+
+.header-cell:hover {
+    background-color: #f1f5f9;
+}
+
+.header-cell.sorted {
+    background-color: #eff6ff;
+    color: #2563eb;
+}
+
+.sort-indicator {
+    margin-left: 6px;
+    font-size: 12px;
+}
+
+.client-actions {
+    justify-content: center;
+}
+
+.client-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.client-card {
+    padding: 0 !important;
+    overflow: hidden;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.client-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.client-info {
+    display: grid;
+    grid-template-columns: minmax(200px, 2fr) minmax(180px, 1.5fr) minmax(150px, 1fr) minmax(120px, 1fr) minmax(120px, 1fr) minmax(180px, 1fr);
+    width: 100%;
+}
+
+.client-name-cell,
+.client-email-cell,
+.client-phone-cell,
+.client-created-cell,
+.client-updated-cell,
+.client-actions-cell {
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.client-name-cell {
+    border-left: 3px solid #2563eb;
+}
+
+.client-name-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 4px;
+}
+
+.client-name {
+    font-weight: 600;
+    font-size: 15px;
+    color: #1e293b;
+}
+
+.client-email {
+    font-size: 14px;
+    color: #334155;
+}
+
+.client-phone {
+    font-size: 14px;
+    color: #334155;
+}
+
+.client-created,
+.client-updated {
+    font-size: 14px;
+    color: #64748b;
+}
+
+.client-actions-cell {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+    align-items: center;
+}
+
+.empty-list-card {
+    padding: 24px !important;
+    text-align: center;
+}
+
+.empty-message {
+    color: #64748b;
+    font-size: 15px;
+    font-style: italic;
+}
+
+/* Responsive styles */
+@media (max-width: 1200px) {
+    .client-list-header,
+    .client-info {
+        grid-template-columns: minmax(180px, 2fr) minmax(160px, 1.5fr) minmax(140px, 1fr) minmax(120px, 1fr) minmax(120px, 1fr);
+    }
+
+    .client-actions-cell {
+        display: none;
+    }
+
+    /* Add actions to a new row */
+    .client-info {
+        position: relative;
+    }
+
+    .client-card .client-actions-cell {
+        display: flex;
+        position: absolute;
+        bottom: 0;
+        right: 0;
+        padding: 8px 16px;
+        background-color: #f8fafc;
+        border-top: 1px solid #e2e8f0;
+        border-left: 1px solid #e2e8f0;
+        border-top-left-radius: 8px;
+    }
+}
+
+@media (max-width: 992px) {
+    .client-list-header,
+    .client-info {
+        grid-template-columns: minmax(180px, 2fr) minmax(160px, 1.5fr) minmax(140px, 1fr) minmax(120px, 1fr);
+    }
+
+    .client-updated-cell {
+        display: none;
+    }
+}
+
+@media (max-width: 768px) {
+    .client-list-header,
+    .client-info {
+        grid-template-columns: minmax(180px, 2fr) minmax(160px, 1.5fr) minmax(140px, 1fr);
+    }
+
+    .client-created-cell {
+        display: none;
+    }
+}
+
+@media (max-width: 576px) {
+    .client-list-header {
+        display: none;
+    }
+
+    .client-info {
+        grid-template-columns: 1fr;
+        gap: 8px;
+    }
+
+    .client-name-cell,
+    .client-email-cell,
+    .client-phone-cell,
+    .client-created-cell,
+    .client-updated-cell {
+        padding: 12px 16px;
+    }
+
+    .client-created-cell,
+    .client-updated-cell {
+        display: flex;
+    }
+
+    .client-card .client-actions-cell {
+        position: relative;
+        display: flex;
+        flex-direction: row;
+        width: 100%;
+        padding: 12px 16px;
+        border-top: 1px solid #e2e8f0;
+        justify-content: flex-end;
+    }
+}
+
+.client-name-cell,
+.client-email-cell,
+.client-phone-cell,
+.client-created-cell,
+.client-updated-cell,
+.client-actions-cell {
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.client-name-cell {
+    border-left: 3px solid #2563eb;
+}
+
+.client-name-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 4px;
+}
+
+.client-name {
+    font-weight: 600;
+    font-size: 15px;
+    color: #1e293b;
+}
+
+.client-email {
+    font-size: 14px;
+    color: #334155;
+}
+
+.client-phone {
+    font-size: 14px;
+    color: #334155;
+}
+
+.client-created,
+.client-updated {
+    font-size: 14px;
+    color: #64748b;
+}
+
+.client-actions-cell {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+    align-items: center;
+}
+
+.empty-list-card {
+    padding: 24px !important;
+    text-align: center;
+}
+
+.empty-message {
+    color: #64748b;
+    font-size: 15px;
+    font-style: italic;
+}
+
+/* Responsive styles */
+@media (max-width: 1200px) {
+    .client-list-header,
+    .client-info {
+        grid-template-columns: minmax(180px, 2fr) minmax(160px, 1.5fr) minmax(140px, 1fr) minmax(120px, 1fr) minmax(120px, 1fr);
+    }
+
+    .client-actions-cell {
+        display: none;
+    }
+
+    /* Add actions to a new row */
+    .client-info {
+        position: relative;
+    }
+
+    .client-card .client-actions-cell {
+        display: flex;
+        position: absolute;
+        bottom: 0;
+        right: 0;
+        padding: 8px 16px;
+        background-color: #f8fafc;
+        border-top: 1px solid #e2e8f0;
+        border-left: 1px solid #e2e8f0;
+        border-top-left-radius: 8px;
+    }
+}
+
+@media (max-width: 992px) {
+    .client-list-header,
+    .client-info {
+        grid-template-columns: minmax(180px, 2fr) minmax(160px, 1.5fr) minmax(140px, 1fr) minmax(120px, 1fr);
+    }
+
+    .client-updated-cell {
+        display: none;
+    }
+}
+
+@media (max-width: 768px) {
+    .client-list-header,
+    .client-info {
+        grid-template-columns: minmax(180px, 2fr) minmax(160px, 1.5fr) minmax(140px, 1fr);
+    }
+
+    .client-created-cell {
+        display: none;
+    }
+}
+
+@media (max-width: 576px) {
+    .client-list-header {
+        display: none;
+    }
+
+    .client-info {
+        grid-template-columns: 1fr;
+        gap: 8px;
+    }
+
+    .client-name-cell,
+    .client-email-cell,
+    .client-phone-cell,
+    .client-created-cell,
+    .client-updated-cell {
+        padding: 12px 16px;
+    }
+
+    .client-created-cell,
+    .client-updated-cell {
+        display: flex;
+    }
+
+    .client-card .client-actions-cell {
+        position: relative;
+        display: flex;
+        flex-direction: row;
+        width: 100%;
+        padding: 12px 16px;
+        border-top: 1px solid #e2e8f0;
+        justify-content: flex-end;
+    }
+}cell,
+ .client-contact-cell,
+ .client-location-cell,
+ .client-country-cell,
+ .client-email-cell,
+ .client-actions-cell {
+     padding: 16px;
+     display: flex;
+     flex-direction: column;
+     justify-content: center;
+ }
+
+.client-name-cell {
+    border-left: 3px solid #2563eb;
+}
+
+.client-name-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 4px;
+}
+
+.client-name {
+    font-weight: 600;
+    font-size: 15px;
+    color: #1e293b;
+}
+
+.client-description {
+    font-size: 13px;
+    color: #64748b;
+    margin-top: 4px;
+}
+
+.contact-person {
+    font-weight: 500;
+    color: #334155;
+}
+
+.city-name {
+    font-weight: 500;
+    color: #334155;
+}
+
+.country-name {
+    font-weight: 500;
+    color: #334155;
+}
+
+.client-address {
+    font-size: 13px;
+    color: #64748b;
+    margin-top: 4px;
+}
+
+.client-email {
+    font-size: 14px;
+    color: #334155;
+    margin-bottom: 4px;
+}
+
+.client-phone {
+    font-size: 13px;
+    color: #64748b;
+}
+
+.client-actions-cell {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+    align-items: center;
+}
+
+.empty-list-card {
+    padding: 24px !important;
+    text-align: center;
+}
+
+.empty-message {
+    color: #64748b;
+    font-size: 15px;
+    font-style: italic;
+}
+
+/* Responsive styles */
+@media (max-width: 1200px) {
+    .client-list-header,
+    .client-info {
+        grid-template-columns: minmax(180px, 2fr) minmax(130px, 1fr) minmax(120px, 1fr) minmax(120px, 1fr) minmax(160px, 1fr);
+    }
+
+    .client-actions-cell {
+        display: none;
+    }
+
+    /* Add actions to a new row */
+    .client-info {
+        position: relative;
+    }
+
+    .client-card .client-actions-cell {
+        display: flex;
+        position: absolute;
+        bottom: 0;
+        right: 0;
+        padding: 8px 16px;
+        background-color: #f8fafc;
+        border-top: 1px solid #e2e8f0;
+        border-left: 1px solid #e2e8f0;
+        border-top-left-radius: 8px;
+    }
+}
+
+@media (max-width: 992px) {
+    .client-list-header,
+    .client-info {
+        grid-template-columns: minmax(180px, 2fr) minmax(120px, 1fr) minmax(120px, 1fr) minmax(140px, 1fr);
+    }
+
+    .client-country-cell {
+        display: none;
+    }
+}
+
+@media (max-width: 768px) {
+    .client-list-header {
+        display: none;
+    }
+
+    .client-info {
+        grid-template-columns: 1fr;
+        gap: 8px;
+    }
+
+    .client-name-cell,
+    .client-contact-cell,
+    .client-location-cell,
+    .client-country-cell,
+    .client-email-cell {
+        padding: 12px 16px;
+    }
+
+    .client-country-cell {
+        display: flex;
+    }
+
+    .client-card .client-actions-cell {
+        position: relative;
+        display: flex;
+        flex-direction: row;
+        width: 100%;
+        padding: 12px 16px;
+        border-top: 1px solid #e2e8f0;
+        justify-content: flex-end;
+    }
+}

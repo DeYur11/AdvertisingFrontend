@@ -46,8 +46,6 @@ export default function ServiceTable({ services, onEdit, onDelete }) {
                     <th>Service Type</th>
                     <th>Est. Cost</th>
                     <th>Usage</th>
-                    <th>Created</th>
-                    <th>Updated</th>
                     <th className="actions-column">Actions</th>
                 </tr>
                 </thead>
@@ -73,8 +71,6 @@ export default function ServiceTable({ services, onEdit, onDelete }) {
                   {getUsageCount(service)}
                 </span>
                         </td>
-                        <td>{formatDate(service.createDatetime)}</td>
-                        <td>{formatDate(service.updateDatetime)}</td>
                         <td className="actions-column">
                             <div className="row-actions">
                                 <Button

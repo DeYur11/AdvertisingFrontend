@@ -19,6 +19,12 @@
     margin: 0;
 }
 
+.header-controls {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+}
+
 .dashboard-content {
     display: flex;
     flex-direction: column;
@@ -66,6 +72,35 @@
     border: 1px solid #fecaca;
 }
 
+/* Export Classes */
+.export-loader {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 2000;
+}
+
+.export-loader-content {
+    background: white;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    text-align: center;
+}
+
+.service-filter-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    margin-top: 12px;
+}
+
 /* Responsive Layout */
 @media screen and (min-width: 768px) {
     .stats-and-charts {
@@ -81,7 +116,8 @@
         gap: 16px;
     }
 
-    .dashboard-header button {
-        align-self: flex-end;
+    .header-controls {
+        width: 100%;
+        justify-content: space-between;
     }
 }

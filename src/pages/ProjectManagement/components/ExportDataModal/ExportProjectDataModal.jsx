@@ -184,14 +184,14 @@ export default function ExportProjectDataModal({
 
         if (filters.nameContains) filterInput.nameContains = filters.nameContains;
         if (filters.descriptionContains) filterInput.descriptionContains = filters.descriptionContains;
-        if (filters.status?.length) filterInput.statusIds = filters.status.map(id => Number(id));
-        if (filters.projectType?.length) filterInput.projectTypeIds = filters.projectType.map(id => Number(id));
-        if (filters.clientId?.length) filterInput.clientIds = filters.clientId.map(id => Number(id));
-        if (filters.managerId?.length) filterInput.managerIds = filters.managerId.map(id => Number(id));
+        if (filters.statusIds?.length) filterInput.statusIds = filters.statusIds.map(id => Number(id));
+        if (filters.projectTypeIds?.length) filterInput.projectTypeIds = filters.projectTypeIds.map(id => Number(id));
+        if (filters.clientIds?.length) filterInput.clientIds = filters.clientIds.map(id => Number(id));
+        if (filters.managerIds?.length) filterInput.managerIds = filters.managerIds.map(id => Number(id));
         if (filters.date?.from) filterInput.startDateFrom = filters.date.from;
         if (filters.date?.to) filterInput.startDateTo = filters.date.to;
-        if (filters.cost?.min !== undefined) filterInput.costMin = filters.cost.min;
-        if (filters.cost?.max !== undefined) filterInput.costMax = filters.cost.max;
+        if (filters.costMin) filterInput.costMin = filters.costMin;
+        if (filters.costMax) filterInput.costMax = filters.costMax;
 
         return filterInput;
     }

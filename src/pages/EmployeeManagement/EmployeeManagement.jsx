@@ -1,4 +1,4 @@
-// src/pages/EmployeeManagement/EmployeeManagement.jsx - Updated to include WorkerTasks
+// src/pages/EmployeeManagement/EmployeeManagement.jsx - Updated to include ClientManagement
 import { useState, useMemo } from "react";
 import { useQuery, useMutation, gql } from "@apollo/client";
 import Button from "../../components/common/Button/Button";
@@ -8,11 +8,11 @@ import EmployeeList from "./components/EmployeeList/EmployeeList";
 import AccountForm from "./components/AccountForm/AccountForm";
 import OfficeManagement from "./components/OfficeManagement/OfficeManagement";
 import FilterPanel from "./components/FilterPanel/FilterPanel";
-import EmployeeDashboard from "./components/EmployeeDashboard/EmployeeDashboard"; // Import the new component
+import EmployeeDashboard from "./components/EmployeeDashboard/EmployeeDashboard";
+import ClientManagement from "./components/ClientManagement/ClientManagement"; // Import the new component
 import "./EmployeeManagement.css";
-//TODO Зробити відображення позиції працівника коли призначаєш його
 
-// GraphQL queries and mutations remain the same...
+// GraphQL queries and mutations
 const GET_WORKERS = gql`
     query GetWorkers {
         workers {
@@ -133,7 +133,7 @@ export default function EmployeeManagement() {
     const [sortField, setSortField] = useState("surname");
     const [sortDirection, setSortDirection] = useState("ASC");
 
-    // Update tabs to include dashboard
+    // Update tabs to include clients management
     const [activeTab, setActiveTab] = useState('employees');
     const [showEmployeeForm, setShowEmployeeForm] = useState(false);
     const [selectedEmployee, setSelectedEmployee] = useState(null);
@@ -189,7 +189,6 @@ export default function EmployeeManagement() {
     const offices = officesData?.offices || [];
     const account = accountData?.workerAccountByWorkerId;
 
-    // The rest of the handlers remain the same...
     const handleAddEmployee = () => {
         setSelectedEmployee(null);
         setShowEmployeeForm(true);
@@ -298,25 +297,31 @@ export default function EmployeeManagement() {
     return (
         <div className="employee-management-container">
             <header className="page-header">
-                <h1>Employee Management</h1>
+                <h1>Управління кадрами</h1>
                 <div className="tab-buttons">
                     <button
                         className={`tab-btn ${activeTab === 'employees' ? 'active' : ''}`}
                         onClick={() => setActiveTab('employees')}
                     >
-                        Employees
+                        Працівники
+                    </button>
+                    <button
+                        className={`tab-btn ${activeTab === 'clients' ? 'active' : ''}`}
+                        onClick={() => setActiveTab('clients')}
+                    >
+                        Клієнти
                     </button>
                     <button
                         className={`tab-btn ${activeTab === 'dashboard' ? 'active' : ''}`}
                         onClick={() => setActiveTab('dashboard')}
                     >
-                        Dashboard
+                        Статистика
                     </button>
                     <button
                         className={`tab-btn ${activeTab === 'offices' ? 'active' : ''}`}
                         onClick={() => setActiveTab('offices')}
                     >
-                        Offices & Locations
+                        Офіси
                     </button>
                 </div>
             </header>
@@ -325,10 +330,10 @@ export default function EmployeeManagement() {
                 <>
                     <div className="actions-bar">
                         <Button variant="primary" size="small" onClick={handleAddEmployee} icon="➕">
-                            Add Employee
+                            Додати працівника
                         </Button>
                         <Button variant="outline" size="small" onClick={refetchWorkers}>
-                            Refresh
+                            Оновити
                         </Button>
                     </div>
 
@@ -349,6 +354,10 @@ export default function EmployeeManagement() {
                         onSortChange={handleSortChange}
                     />
                 </>
+            )}
+
+            {activeTab === 'clients' && (
+                <ClientManagement />
             )}
 
             {activeTab === 'dashboard' && (
@@ -374,10 +383,10 @@ export default function EmployeeManagement() {
                 isOpen={showDeleteConfirm}
                 onClose={() => setShowDeleteConfirm(false)}
                 onConfirm={handleDeleteEmployeeConfirm}
-                title="Delete Employee"
-                message={`Are you sure you want to delete ${selectedEmployee?.name} ${selectedEmployee?.surname}?`}
-                confirmText="Delete"
-                cancelText="Cancel"
+                title="Видалення працівника"
+                message={`Ви впевнені, що хочете видалити працівника ${selectedEmployee?.name} ${selectedEmployee?.surname}?`}
+                confirmText="Видалити"
+                cancelText="Скасувати"
                 variant="danger"
             />
 
@@ -399,10 +408,10 @@ export default function EmployeeManagement() {
                 isOpen={showDeleteAccountConfirm}
                 onClose={() => setShowDeleteAccountConfirm(false)}
                 onConfirm={handleDeleteAccountConfirm}
-                title="Delete Account"
-                message={`Are you sure you want to delete the account for ${selectedEmployee?.name} ${selectedEmployee?.surname}?`}
-                confirmText="Delete"
-                cancelText="Cancel"
+                title="Видалення облікового запису"
+                message={`Ви впевнені, що хочете видалити обліковий запис для працівника ${selectedEmployee?.name} ${selectedEmployee?.surname}?`}
+                confirmText="Видалити"
+                cancelText="Скасувати"
                 variant="danger"
             />
         </div>

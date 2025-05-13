@@ -100,6 +100,7 @@ export default function ProjectManagement() {
         if (!confirmDeletePayment) return;
         try {
             await deletePayment({ variables: { id: confirmDeletePayment.id } });
+            refetch()
             refetchPayments?.();
         } catch (e) {
             console.error("Error deleting payment:", e);
