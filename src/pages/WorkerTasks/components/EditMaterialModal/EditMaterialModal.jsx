@@ -18,8 +18,9 @@ const GET_MATERIAL_REFERENCE_DATA = gql`
 const GET_MATERIAL_BY_ID = gql`
     query GetMaterial($id: ID!) {
         material(id: $id) {
-            name description
-            type { id }
+            name
+            description
+            materialType { id }
             licenceType { id }
             usageRestriction { id }
             targetAudience { id }
@@ -40,12 +41,12 @@ const UPDATE_MATERIAL = gql`
 const CREATE_KEYWORD = gql`
     mutation($input: CreateKeywordInput!) {
         createKeyword(input: $input) {
-            id name
+            id
+            name
         }
     }
 `;
 
-// --- For SelectWithCreate ---
 const CREATE_MUTATIONS = {
     typeId: gql`mutation($input: CreateMaterialTypeInput!) { createMaterialType(input: $input) { id name } }`,
     licenceTypeId: gql`mutation($input: CreateLicenceTypeInput!) { createLicenceType(input: $input) { id name } }`,
@@ -55,13 +56,23 @@ const CREATE_MUTATIONS = {
 };
 
 export default function EditMaterialForm({ materialId, onUpdated }) {
-    const { data: materialData } = useQuery(GET_MATERIAL_BY_ID, {
+    const {
+        data: materialData,
+        loading: loadingMaterial,
+        error: errorMaterial
+    } = useQuery(GET_MATERIAL_BY_ID, {
         variables: { id: materialId },
         skip: !materialId,
         fetchPolicy: "network-only"
     });
 
-    const { data: refData, loading, error, refetch } = useQuery(GET_MATERIAL_REFERENCE_DATA);
+    const {
+        data: refData,
+        loading: loadingRef,
+        error: errorRef,
+        refetch
+    } = useQuery(GET_MATERIAL_REFERENCE_DATA);
+
     const [updateMaterial, { loading: saving }] = useMutation(UPDATE_MATERIAL);
     const [createKeyword] = useMutation(CREATE_KEYWORD);
 
@@ -73,7 +84,7 @@ export default function EditMaterialForm({ materialId, onUpdated }) {
             setForm({
                 name: m.name || "",
                 description: m.description || "",
-                typeId: m.type?.id || "",
+                typeId: m.materialType?.id || "",
                 licenceTypeId: m.licenceType?.id || "",
                 usageRestrictionId: m.usageRestriction?.id || "",
                 targetAudienceId: m.targetAudience?.id || "",
@@ -83,8 +94,19 @@ export default function EditMaterialForm({ materialId, onUpdated }) {
         }
     }, [materialData]);
 
-    if (!form || loading) return <p>Завантаження...</p>;
-    if (error) return <p>Помилка: {error.message}</p>;
+    if (loadingMaterial) return <p>Завантаження матеріалу...</p>;
+    if (errorMaterial) {
+        console.error("Помилка при завантаженні матеріалу:", errorMaterial);
+        return <p>❌ Помилка при завантаженні матеріалу: {errorMaterial.message}</p>;
+    }
+
+    if (!form) return null;
+
+    if (loadingRef) return <p>Завантаження довідників...</p>;
+    if (errorRef) {
+        console.error("Помилка при завантаженні довідників:", errorRef);
+        return <p>❌ Помилка при завантаженні довідників: {errorRef.message}</p>;
+    }
 
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -97,8 +119,12 @@ export default function EditMaterialForm({ materialId, onUpdated }) {
         const newIds = [...existing.map(k => k.value)];
 
         for (const kw of toCreate) {
-            const { data } = await createKeyword({ variables: { input: { name: kw.label } } });
-            if (data?.createKeyword?.id) newIds.push(data.createKeyword.id);
+            try {
+                const { data } = await createKeyword({ variables: { input: { name: kw.label } } });
+                if (data?.createKeyword?.id) newIds.push(data.createKeyword.id);
+            } catch (err) {
+                console.error("Помилка при створенні ключового слова:", err);
+            }
         }
 
         setForm(prev => ({ ...prev, keywordIds: newIds }));
@@ -122,11 +148,11 @@ export default function EditMaterialForm({ materialId, onUpdated }) {
                     }
                 }
             });
-
             alert("✅ Матеріал оновлено успішно!");
             onUpdated?.();
         } catch (err) {
-            console.error("❌ Оновлення не вдалося:", err.message);
+            console.error("❌ Оновлення не вдалося:", err);
+            alert("❌ Не вдалося оновити матеріал: " + err.message);
         }
     };
 
@@ -160,15 +186,50 @@ export default function EditMaterialForm({ materialId, onUpdated }) {
                     />
                 </div>
 
-                <SelectWithCreate label="Тип матеріалу" options={refData.materialTypes} value={form.typeId} onChange={(val) => setForm((prev) => ({ ...prev, typeId: val }))} createMutation={CREATE_MUTATIONS.typeId} refetchOptions={refetch} />
+                <SelectWithCreate
+                    label="Тип матеріалу"
+                    options={refData.materialTypes}
+                    value={form.typeId}
+                    onChange={(val) => setForm(prev => ({ ...prev, typeId: val }))}
+                    createMutation={CREATE_MUTATIONS.typeId}
+                    refetchOptions={refetch}
+                />
 
-                <SelectWithCreate label="Тип ліцензії" options={refData.licenceTypes} value={form.licenceTypeId} onChange={(val) => setForm((prev) => ({ ...prev, licenceTypeId: val }))} createMutation={CREATE_MUTATIONS.licenceTypeId} refetchOptions={refetch} />
+                <SelectWithCreate
+                    label="Тип ліцензії"
+                    options={refData.licenceTypes}
+                    value={form.licenceTypeId}
+                    onChange={(val) => setForm(prev => ({ ...prev, licenceTypeId: val }))}
+                    createMutation={CREATE_MUTATIONS.licenceTypeId}
+                    refetchOptions={refetch}
+                />
 
-                <SelectWithCreate label="Обмеження використання" options={refData.usageRestrictions} value={form.usageRestrictionId} onChange={(val) => setForm((prev) => ({ ...prev, usageRestrictionId: val }))} createMutation={CREATE_MUTATIONS.usageRestrictionId} refetchOptions={refetch} />
+                <SelectWithCreate
+                    label="Обмеження використання"
+                    options={refData.usageRestrictions}
+                    value={form.usageRestrictionId}
+                    onChange={(val) => setForm(prev => ({ ...prev, usageRestrictionId: val }))}
+                    createMutation={CREATE_MUTATIONS.usageRestrictionId}
+                    refetchOptions={refetch}
+                />
 
-                <SelectWithCreate label="Цільова аудиторія" options={refData.targetAudiences} value={form.targetAudienceId} onChange={(val) => setForm((prev) => ({ ...prev, targetAudienceId: val }))} createMutation={CREATE_MUTATIONS.targetAudienceId} refetchOptions={refetch} />
+                <SelectWithCreate
+                    label="Цільова аудиторія"
+                    options={refData.targetAudiences}
+                    value={form.targetAudienceId}
+                    onChange={(val) => setForm(prev => ({ ...prev, targetAudienceId: val }))}
+                    createMutation={CREATE_MUTATIONS.targetAudienceId}
+                    refetchOptions={refetch}
+                />
 
-                <SelectWithCreate label="Мова" options={refData.languages} value={form.languageId} onChange={(val) => setForm((prev) => ({ ...prev, languageId: val }))} createMutation={CREATE_MUTATIONS.languageId} refetchOptions={refetch} />
+                <SelectWithCreate
+                    label="Мова"
+                    options={refData.languages}
+                    value={form.languageId}
+                    onChange={(val) => setForm(prev => ({ ...prev, languageId: val }))}
+                    createMutation={CREATE_MUTATIONS.languageId}
+                    refetchOptions={refetch}
+                />
 
                 <div className="mb-2">
                     <label className="form-label">Ключові слова</label>

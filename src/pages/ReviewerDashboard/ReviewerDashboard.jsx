@@ -242,7 +242,7 @@ export default function ReviewerDashboard() {
                                         <div className="meta-group">
                                             <div className="meta-item">
                                                 <span className="meta-label">Тип:</span>
-                                                <span className="meta-value">{material.type?.name || "—"}</span>
+                                                <span className="meta-value">{material.materialType?.name || "—"}</span>
                                             </div>
                                             {material.language && (
                                                 <div className="meta-item">
@@ -299,9 +299,6 @@ export default function ReviewerDashboard() {
                                     )}
 
                                     <div className="material-footer">
-                                        <span className="created-date">
-                                            Створено: {formatDate(material.createDatetime)}
-                                        </span>
 
                                         {material.status?.name === "Accepted" ? (
                                             <Button variant="outline" size="small" disabled>

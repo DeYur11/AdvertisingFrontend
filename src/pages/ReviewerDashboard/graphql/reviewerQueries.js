@@ -9,7 +9,7 @@ export const GET_PAGINATED_MATERIALS_WITH_TOTAL = gql`
                 name
                 description
                 createDatetime
-                type {
+                materialType {
                     id
                     name
                 }

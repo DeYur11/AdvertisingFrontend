@@ -126,7 +126,7 @@ export default function ReviewCard({ review, isMine, onEditOwn, onDeleteOwn }) {
 
                         <div className="review-section">
                             <h4>Created</h4>
-                            <p>{formatDate(review.createDatetime)}</p>
+                            <p>{formatDate(review.reviewDate)}</p>
                         </div>
 
                         {review.updateDatetime && (

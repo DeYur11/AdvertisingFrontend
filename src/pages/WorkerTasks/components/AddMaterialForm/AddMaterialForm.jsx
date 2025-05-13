@@ -84,7 +84,7 @@ export default function AddMaterialForm({ taskId, onAdded }) {
     const [newMaterial, setNewMaterial] = useState({
         name: "",
         description: "",
-        typeId: "",
+        materialTypeId: "",
         usageRestrictionId: "",
         licenceTypeId: "",
         targetAudienceId: "",
@@ -112,7 +112,7 @@ export default function AddMaterialForm({ taskId, onAdded }) {
                 variables: {
                     input: {
                         ...newMaterial,
-                        typeId: parseInt(newMaterial.typeId),
+                        materialTypeId: parseInt(newMaterial.materialTypeId),
                         usageRestrictionId: newMaterial.usageRestrictionId ? parseInt(newMaterial.usageRestrictionId) : null,
                         licenceTypeId: newMaterial.licenceTypeId ? parseInt(newMaterial.licenceTypeId) : null,
                         targetAudienceId: newMaterial.targetAudienceId ? parseInt(newMaterial.targetAudienceId) : null,
@@ -126,7 +126,7 @@ export default function AddMaterialForm({ taskId, onAdded }) {
             setNewMaterial({
                 name: "",
                 description: "",
-                typeId: "",
+                materialTypeId: "",
                 usageRestrictionId: "",
                 licenceTypeId: "",
                 targetAudienceId: "",
@@ -184,7 +184,7 @@ export default function AddMaterialForm({ taskId, onAdded }) {
                     />
                 </div>
 
-                <SelectWithCreate label="Тип матеріалу" options={data.materialTypes} value={newMaterial.typeId} onChange={(val) => setNewMaterial((prev) => ({ ...prev, typeId: val }))} createMutation={CREATE_MATERIAL_TYPE} refetchOptions={refetch} />
+                <SelectWithCreate label="Тип матеріалу" options={data.materialTypes} value={newMaterial.materialTypeId} onChange={(val) => setNewMaterial((prev) => ({ ...prev, materialTypeId: val }))} createMutation={CREATE_MATERIAL_TYPE} refetchOptions={refetch} />
 
                 <SelectWithCreate label="Тип ліцензії" options={data.licenceTypes} value={newMaterial.licenceTypeId} onChange={(val) => setNewMaterial((prev) => ({ ...prev, licenceTypeId: val }))} createMutation={CREATE_LICENCE_TYPE} refetchOptions={refetch} />
 

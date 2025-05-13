@@ -48,7 +48,7 @@ export const GET_MATERIAL_BY_ID = gql`
             id
             name
             description
-            type { id }
+            materialType { id }
             licenceType { id }
             usageRestriction { id }
             targetAudience { id }
