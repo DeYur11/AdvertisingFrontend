@@ -15,8 +15,10 @@ import ReviewTabs from "./ReviewTabs";
 import MaterialDetailsTab from "./MaterialDetailsTab";
 import ReviewFormTab from "./ReviewFormTab";
 import AllReviewsTab from "./AllReviewsTab";
+import ProjectDetailView from "./ProjectDetailView";
 
 import "./MaterialReviewModal.css";
+import "./ClickableLinks.css";
 
 export default function MaterialReviewModal({
                                                 isOpen,
@@ -50,6 +52,9 @@ export default function MaterialReviewModal({
     const [errors, setErrors] = useState({});
     const [isEditing, setIsEditing] = useState(false);
     const [existingReview, setExistingReview] = useState(null);
+
+    // New state for the project detail view
+    const [selectedProject, setSelectedProject] = useState(null);
 
     // -------------- mutations --------------
     const [submitReview, { loading: submitting }] =
@@ -118,6 +123,15 @@ export default function MaterialReviewModal({
         setActiveTab("review");
     };
 
+    const handleProjectClick = (project) => {
+        if (project) {
+            setSelectedProject(project);
+        }
+    };
+
+    const handleCloseProjectDetail = () => {
+        setSelectedProject(null);
+    };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -159,51 +173,61 @@ export default function MaterialReviewModal({
 
     // ---------------------------------------
     return (
-        <Modal isOpen={isOpen} onClose={onClose} title="Material Review" size="large">
-            <div className="material-review-modal">
-                <ReviewTabs
-                    active={activeTab}
-                    hasReviews={!!material?.reviews?.length}
-                    onChange={setActiveTab}
-                    reviewsCount={material?.reviews?.length || 0}
+        <>
+            <Modal isOpen={isOpen} onClose={onClose} title="Material Review" size="large">
+                <div className="material-review-modal">
+                    <ReviewTabs
+                        active={activeTab}
+                        hasReviews={!!material?.reviews?.length}
+                        onChange={setActiveTab}
+                        reviewsCount={material?.reviews?.length || 0}
+                    />
+
+                    {activeTab === "material" && (
+                        <MaterialDetailsTab
+                            material={material}
+                            existingReview={!!existingReview}
+                            onOpenReview={() => setActiveTab("review")}
+                            onProjectClick={handleProjectClick}
+                        />
+                    )}
+
+                    {activeTab === "review" && (
+                        <ReviewFormTab
+                            material={material}
+                            formData={formData}
+                            errors={errors}
+                            setFormData={setFormData}
+                            submitting={submitting || updating}
+                            existingReview={existingReview}
+                            isEditing={isEditing}
+                            setIsEditing={setIsEditing}
+                            onClose={onClose}
+                            onSubmit={handleSubmit}
+                            materialSummaries={materialSummaries}
+                            setExistingReview={setExistingReview}
+                        />
+                    )}
+
+
+                    {activeTab === "all-reviews" && (
+                        <AllReviewsTab
+                            reviews={material.reviews}
+                            workerId={user.workerId}
+                            onEditOwn={handleEditReview}
+                            onDeleteOwn={handleDeleteReview}
+                        />
+                    )}
+                </div>
+            </Modal>
+
+            {/* Project Detail View Modal */}
+            {selectedProject && (
+                <ProjectDetailView
+                    project={selectedProject}
+                    onClose={handleCloseProjectDetail}
                 />
-
-                {activeTab === "material" && (
-                    <MaterialDetailsTab
-                        material={material}
-                        existingReview={!!existingReview}
-                        onOpenReview={() => setActiveTab("review")}
-                    />
-                )}
-
-                {activeTab === "review" && (
-                    <ReviewFormTab
-                        material={material}
-                        formData={formData}
-                        errors={errors}
-                        setFormData={setFormData}
-                        submitting={submitting || updating}
-                        existingReview={existingReview}
-                        isEditing={isEditing}
-                        setIsEditing={setIsEditing}
-                        onClose={onClose}
-                        onSubmit={handleSubmit}
-                        materialSummaries={materialSummaries}
-                        // ❌ ⛔️ тут бракує:
-                        setExistingReview={setExistingReview}
-                    />
-                )}
-
-
-                {activeTab === "all-reviews" && (
-                    <AllReviewsTab
-                        reviews={material.reviews}
-                        workerId={user.workerId}
-                        onEditOwn={handleEditReview}
-                        onDeleteOwn={handleDeleteReview}
-                    />
-                )}
-            </div>
-        </Modal>
+            )}
+        </>
     );
 }

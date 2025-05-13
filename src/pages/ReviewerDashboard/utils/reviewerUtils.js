@@ -1,12 +1,12 @@
 /**
- * Utility functions for reviewer dashboard
+ * Утилітні функції для панелі рецензента
  */
 
 /**
- * Check if a material has been reviewed by the given reviewer
- * @param {Object} material - The material object
- * @param {string} reviewerId - The ID of the reviewer
- * @returns {boolean} Whether the material has been reviewed by the reviewer
+ * Перевіряє, чи матеріал був рецензований вказаним рецензентом
+ * @param {Object} material - Об'єкт матеріалу
+ * @param {string} reviewerId - ID рецензента
+ * @returns {boolean} Чи матеріал рецензувався цим рецензентом
  */
 export const hasBeenReviewedBy = (material, reviewerId) => {
     if (!material?.reviews || !material.reviews.length || !reviewerId) {
@@ -19,10 +19,10 @@ export const hasBeenReviewedBy = (material, reviewerId) => {
 };
 
 /**
- * Get a review by a specific reviewer
- * @param {Object} material - The material object
- * @param {string} reviewerId - The ID of the reviewer
- * @returns {Object|null} The review object or null if not found
+ * Отримати рецензію конкретного рецензента
+ * @param {Object} material - Об'єкт матеріалу
+ * @param {string} reviewerId - ID рецензента
+ * @returns {Object|null} Об'єкт рецензії або null, якщо не знайдено
  */
 export const getReviewByReviewer = (material, reviewerId) => {
     if (!material?.reviews || !material.reviews.length || !reviewerId) {
@@ -35,9 +35,9 @@ export const getReviewByReviewer = (material, reviewerId) => {
 };
 
 /**
- * Get status badge variant based on material status
- * @param {Object} material - The material object
- * @returns {string} The badge variant
+ * Отримати варіант значка статусу на основі статусу матеріалу
+ * @param {Object} material - Об'єкт матеріалу
+ * @returns {string} Варіант значка
  */
 export const getStatusBadgeVariant = (material) => {
     if (!material.status) return "default";
@@ -50,19 +50,25 @@ export const getStatusBadgeVariant = (material) => {
 };
 
 /**
- * Format a date string for display
- * @param {string} dateString - The date string
- * @returns {string} The formatted date
+ * Форматує рядок дати для відображення
+ * @param {string} dateString - Рядок з датою
+ * @returns {string} Відформатована дата
  */
 export const formatDate = (dateString) => {
     if (!dateString) return "—";
-    return new Date(dateString).toLocaleDateString();
+
+    // Використовуємо локалізацію для України
+    return new Date(dateString).toLocaleDateString('uk-UA', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric'
+    });
 };
 
 /**
- * Get priority badge class based on priority value
- * @param {number} priority - The priority value
- * @returns {string} The badge class
+ * Отримати клас значка пріоритету на основі значення пріоритету
+ * @param {number} priority - Значення пріоритету
+ * @returns {string} Клас значка
  */
 export const getPriorityBadgeClass = (priority) => {
     if (priority >= 8) return "priority-high";

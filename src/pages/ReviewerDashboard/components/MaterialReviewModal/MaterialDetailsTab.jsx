@@ -1,6 +1,7 @@
 import Badge from "../../../../components/common/Badge/Badge";
 import Button from "../../../../components/common/Button/Button";
 import { formatDate } from "../../utils/reviewerUtils";
+import "./ClickableLinks.css";
 
 /**
  * Відображає детальну інформацію про матеріал
@@ -9,8 +10,16 @@ import { formatDate } from "../../utils/reviewerUtils";
 export default function MaterialDetailsTab({
                                                material,
                                                existingReview,
-                                               onOpenReview
+                                               onOpenReview,
+                                               onProjectClick
                                            }) {
+    // Функція для обробки кліку по проекту
+    const handleProjectClick = () => {
+        if (material.task?.serviceInProgress?.projectService?.project && onProjectClick) {
+            onProjectClick(material.task.serviceInProgress.projectService.project);
+        }
+    };
+
     return (
         <div className="material-details-tab">
             {/* Заголовок + статус */}
@@ -29,14 +38,14 @@ export default function MaterialDetailsTab({
                     }
                     size="small"
                 >
-                    {material.status?.name || "Unknown"}
+                    {material.status?.name || "Невідомо"}
                 </Badge>
             </div>
 
             {/* Опис */}
             {material.description && (
                 <div className="detail-section">
-                    <h4>Description</h4>
+                    <h4>Опис</h4>
                     <p>{material.description}</p>
                 </div>
             )}
@@ -46,58 +55,61 @@ export default function MaterialDetailsTab({
                 {/* Колонка 1 */}
                 <div className="detail-column">
                     <div className="detail-item">
-                        <span className="detail-label">Material Type:</span>
+                        <span className="detail-label">Тип матеріалу:</span>
                         <span className="detail-value">{material.type?.name || "—"}</span>
                     </div>
 
                     <div className="detail-item">
-                        <span className="detail-label">Language:</span>
+                        <span className="detail-label">Мова:</span>
                         <span className="detail-value">{material.language?.name || "—"}</span>
                     </div>
 
                     <div className="detail-item">
-                        <span className="detail-label">Created:</span>
+                        <span className="detail-label">Створено:</span>
                         <span className="detail-value">
-              {formatDate(material.createDatetime)}
-            </span>
+                            {formatDate(material.createDatetime)}
+                        </span>
                     </div>
                 </div>
 
                 {/* Колонка 2 */}
                 <div className="detail-column">
                     <div className="detail-item">
-                        <span className="detail-label">Project:</span>
-                        <span className="detail-value">
-              {material.task?.serviceInProgress?.projectService?.project?.name ||
-                  "—"}
-            </span>
+                        <span className="detail-label">Проект:</span>
+                        <span
+                            className={`detail-value ${material.task?.serviceInProgress?.projectService?.project ? "clickable-link" : ""}`}
+                            onClick={material.task?.serviceInProgress?.projectService?.project ? handleProjectClick : undefined}
+                            title={material.task?.serviceInProgress?.projectService?.project ? "Натисніть для перегляду деталей проекту" : ""}
+                        >
+                            {material.task?.serviceInProgress?.projectService?.project?.name || "—"}
+                        </span>
                     </div>
 
                     <div className="detail-item">
-                        <span className="detail-label">Related Task:</span>
+                        <span className="detail-label">Пов'язане завдання:</span>
                         <span className="detail-value">{material.task?.name || "—"}</span>
                     </div>
 
                     <div className="detail-item">
-                        <span className="detail-label">Task Priority:</span>
+                        <span className="detail-label">Пріоритет завдання:</span>
                         <span className="detail-value">
-              {material.task?.priority ? (
-                  <Badge
-                      className={
-                          parseInt(material.task.priority, 10) >= 8
-                              ? "priority-high"
-                              : parseInt(material.task.priority, 10) >= 4
-                                  ? "priority-medium"
-                                  : "priority-low"
-                      }
-                      size="small"
-                  >
-                      {material.task.priority}
-                  </Badge>
-              ) : (
-                  "—"
-              )}
-            </span>
+                            {material.task?.priority ? (
+                                <Badge
+                                    className={
+                                        parseInt(material.task.priority, 10) >= 8
+                                            ? "priority-high"
+                                            : parseInt(material.task.priority, 10) >= 4
+                                                ? "priority-medium"
+                                                : "priority-low"
+                                    }
+                                    size="small"
+                                >
+                                    {material.task.priority}
+                                </Badge>
+                            ) : (
+                                "—"
+                            )}
+                        </span>
                     </div>
                 </div>
             </div>
@@ -105,12 +117,12 @@ export default function MaterialDetailsTab({
             {/* Ключові слова */}
             {material.keywords?.length > 0 && (
                 <div className="detail-section">
-                    <h4>Keywords</h4>
+                    <h4>Ключові слова</h4>
                     <div className="keywords-container">
                         {material.keywords.map((k) => (
                             <span key={k.id} className="keyword-tag">
-                #{k.name}
-              </span>
+                                #{k.name}
+                            </span>
                         ))}
                     </div>
                 </div>
@@ -119,7 +131,7 @@ export default function MaterialDetailsTab({
             {/* Кнопка переходу до рецензії */}
             <div className="action-buttons">
                 <Button variant="primary" onClick={onOpenReview}>
-                    {existingReview ? "View My Review" : "Review This Material"}
+                    {existingReview ? "Переглянути мою рецензію" : "Рецензувати матеріал"}
                 </Button>
             </div>
         </div>

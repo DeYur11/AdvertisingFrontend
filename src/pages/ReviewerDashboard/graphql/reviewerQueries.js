@@ -30,6 +30,37 @@ export const GET_PAGINATED_MATERIALS_WITH_TOTAL = gql`
                             project {
                                 id
                                 name
+                                registrationDate
+                                startDate
+                                endDate
+                                cost
+                                estimateCost
+                                status {
+                                    id
+                                    name
+                                }
+                                projectType {
+                                    id
+                                    name
+                                }
+                                paymentDeadline
+                                client {
+                                    id
+                                    name
+                                }
+                                manager {
+                                    id
+                                    name
+                                    surname
+                                }
+                                description
+                                projectServices {
+                                    id
+                                    service {
+                                        id
+                                        serviceName
+                                    }
+                                }
                             }
                         }
                     }

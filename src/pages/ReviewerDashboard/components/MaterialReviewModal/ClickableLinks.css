@@ -1,0 +1,24 @@
+/* src/pages/ReviewerDashboard/components/MaterialReviewModal/ClickableLinks.css */
+.clickable-link {
+    cursor: pointer;
+    color: #2563eb;
+    text-decoration: underline;
+    transition: color 0.2s ease;
+}
+
+.clickable-link:hover {
+    color: #1d4ed8;
+}
+
+.project-services-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.project-service-item {
+    background-color: #f1f5f9;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+}

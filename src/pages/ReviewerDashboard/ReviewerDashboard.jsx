@@ -8,7 +8,7 @@ import Pagination from "../../components/common/Pagination/Pagination";
 
 import { formatDate, getStatusBadgeVariant } from "./utils/reviewerUtils";
 import "./ReviewerDashboard.css";
-import MaterialReviewModal from "./components/MaterialReviewModal";
+import MaterialReviewModal from "./components/MaterialReviewModal/index";
 import ReviewerFilterPanel from "./components/ReviewFilterPanel/ReviewerFilterPanel";
 import { GET_PAGINATED_MATERIALS_WITH_TOTAL } from "./graphql/reviewerQueries";
 import ExportMaterialsModal from "./components/ExportMaterialsModal/ExportMaterialsModal";
@@ -19,23 +19,23 @@ export default function ReviewerDashboard() {
     const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
     const [exportModalOpen, setExportModalOpen] = useState(false);
 
-    // Filter and pagination state
+    // Стан фільтрів та пагінації
     const [filters, setFilters] = useState({
         reviewStatus: 'all'
     });
     const [searchQuery, setSearchQuery] = useState("");
-    const [searchType, setSearchType] = useState("both"); // Track search type: name, description, or both
+    const [searchType, setSearchType] = useState("both"); // Тип пошуку: name, description, або both
     const [filterPanelExpanded, setFilterPanelExpanded] = useState(false);
     const [page, setPage] = useState(1);
     const [size, setSize] = useState(12);
     const [sortField, setSortField] = useState("createDatetime");
     const [sortDirection, setSortDirection] = useState("DESC");
 
-    // Convert UI filters to GraphQL filter input
+    // Конвертація UI фільтрів у GraphQL фільтр
     const buildFilterInput = () => {
         const filterInput = {};
 
-        // Add search query filter based on searchType
+        // Додаємо фільтр пошукового запиту на основі типу пошуку
         if (searchQuery) {
             if (searchType === "name" || searchType === "both") {
                 filterInput.nameContains = searchQuery;
@@ -45,46 +45,47 @@ export default function ReviewerDashboard() {
             }
         }
 
-        // Add usageRestriction filters - ensure integers
+        // Додаємо фільтри обмежень використання - забезпечуємо цілі числа
         if (filters.usageRestriction && filters.usageRestriction.length > 0) {
             filterInput.usageRestrictionIds = filters.usageRestriction.map(id => parseInt(id, 10));
         }
 
-        // Add licenceType filters - ensure integers
+        // Додаємо фільтри типу ліцензії - забезпечуємо цілі числа
         if (filters.licenceType && filters.licenceType.length > 0) {
             filterInput.licenceTypeIds = filters.licenceType.map(id => parseInt(id, 10));
         }
 
-        // Add targetAudience filters - ensure integers
+        // Додаємо фільтри цільової аудиторії - забезпечуємо цілі числа
         if (filters.targetAudience && filters.targetAudience.length > 0) {
             filterInput.targetAudienceIds = filters.targetAudience.map(id => parseInt(id, 10));
         }
 
-        // Add status filters - ensure integers
+        // Додаємо фільтри статусу - забезпечуємо цілі числа
         if (filters.status && filters.status.length > 0) {
             filterInput.statusIds = filters.status.map(id => parseInt(id, 10));
         }
 
-        // Add material type filters - ensure integers
+        // Додаємо фільтри типу матеріалу - забезпечуємо цілі числа
         if (filters.type && filters.type.length > 0) {
             filterInput.typeIds = filters.type.map(id => parseInt(id, 10));
         }
 
-        // Add language filters - ensure integers
+        // Додаємо фільтри мови - забезпечуємо цілі числа
         if (filters.language && filters.language.length > 0) {
             filterInput.languageIds = filters.language.map(id => parseInt(id, 10));
         }
 
-        // Add task filters - ensure integers
+        // Додаємо фільтри завдань - забезпечуємо цілі числа
         if (filters.task && filters.task.length > 0) {
             filterInput.taskIds = filters.task.map(id => parseInt(id, 10));
         }
 
-        // Add keyword filters - ensure integers
+        // Додаємо фільтри ключових слів - забезпечуємо цілі числа
         if (filters.keywords && filters.keywords.length > 0) {
             filterInput.keywordIds = filters.keywords.map(id => parseInt(id, 10));
         }
 
+        // Особлива обробка статусу "в очікуванні рецензії"
         if (filters.status && filters.status.length > 0) {
             filterInput.statusIds = filters.status.map(id => parseInt(id, 10));
             if (filters.reviewStatus === 'pending') {
@@ -97,7 +98,7 @@ export default function ReviewerDashboard() {
             filterInput.statusIds = [2]; // лише Pending Review
         }
 
-        // Date range filters
+        // Фільтри діапазону дат
         if (filters.dateRange) {
             if (filters.dateRange.from) {
                 filterInput.createDatetimeFrom = filters.dateRange.from;
@@ -110,11 +111,11 @@ export default function ReviewerDashboard() {
         return filterInput;
     };
 
-    // Query for materials with pagination
+    // Запит на матеріали з пагінацією
     const { loading, error, data, refetch } = useQuery(GET_PAGINATED_MATERIALS_WITH_TOTAL, {
         variables: {
             input: {
-                page: page - 1, // Convert to 0-based for backend
+                page: page - 1, // Конвертація в 0-індексацію для бекенду
                 size,
                 sortField,
                 sortDirection,
@@ -125,20 +126,20 @@ export default function ReviewerDashboard() {
         skip: !user.isReviewer
     });
 
-    // Handle refresh after review submission
+    // Обробка оновлення після відправки рецензії
     const handleReviewSubmitted = () => {
         setSelectedMaterial(null);
         refetch();
     };
 
-    // Check if material has been reviewed by current user
+    // Перевірка, чи матеріал був рецензований поточним користувачем
     const hasBeenReviewedByMe = (material) => {
         return material.reviews?.some(review =>
             review.reviewer?.id === user.workerId.toString()
         );
     };
 
-    // Handle sort change
+    // Обробка зміни сортування
     const handleSortChange = (field, direction) => {
         setSortField(field);
         setSortDirection(direction);
@@ -149,19 +150,19 @@ export default function ReviewerDashboard() {
     const total = pageInfo?.totalElements ?? 0;
     const pages = pageInfo?.totalPages ?? 1;
 
-    // If user is not a reviewer, show message
+    // Якщо користувач не є рецензентом, показуємо повідомлення
     if (!user.isReviewer) {
         return (
             <div className="reviewer-dashboard">
                 <div className="access-denied">
-                    <h2>Access Denied</h2>
-                    <p>You don't have reviewer permissions to access this page.</p>
+                    <h2>Доступ заборонено</h2>
+                    <p>У вас немає дозволів рецензента для доступу до цієї сторінки.</p>
                 </div>
             </div>
         );
     }
 
-    // Helper function to highlight search terms in text
+    // Допоміжна функція для підсвічування пошукових термінів у тексті
     const highlightSearchTerm = (text, searchTerm) => {
         if (!searchTerm || !text) return text;
 
@@ -173,8 +174,8 @@ export default function ReviewerDashboard() {
         <div className="reviewer-dashboard">
             <div className="dashboard-header">
                 <div className="header-title">
-                    <h1>Material Reviews</h1>
-                    <p className="subtitle">Review and provide feedback on materials</p>
+                    <h1>Рецензування матеріалів</h1>
+                    <p className="subtitle">Перегляд та надання відгуків на матеріали</p>
                 </div>
                 <div className="dashboard-actions">
                     <Button
@@ -183,7 +184,7 @@ export default function ReviewerDashboard() {
                         icon="📊"
                         onClick={() => setExportModalOpen(true)}
                     >
-                        Export Materials
+                        Експорт матеріалів
                     </Button>
                 </div>
             </div>
@@ -203,9 +204,9 @@ export default function ReviewerDashboard() {
             />
 
             {loading ? (
-                <div className="loading-message">Loading materials for review...</div>
+                <div className="loading-message">Завантаження матеріалів для рецензування...</div>
             ) : error ? (
-                <div className="error-message">Error: {error.message}</div>
+                <div className="error-message">Помилка: {error.message}</div>
             ) : (
                 <>
                     <div className="materials-grid">
@@ -215,6 +216,10 @@ export default function ReviewerDashboard() {
                                     key={material.id}
                                     className={`material-card ${hasBeenReviewedByMe(material) ? 'reviewed' : ''}`}
                                     hoverable
+                                    onClick={() => {
+                                        setSelectedMaterial(material);
+                                        setIsReviewModalOpen(true);
+                                    }}
                                 >
                                     <div className="material-header">
                                         <h3
@@ -229,19 +234,19 @@ export default function ReviewerDashboard() {
                                             variant={getStatusBadgeVariant(material)}
                                             size="small"
                                         >
-                                            {material.status?.name || "Unknown"}
+                                            {material.status?.name || "Невідомо"}
                                         </Badge>
                                     </div>
 
                                     <div className="material-meta">
                                         <div className="meta-group">
                                             <div className="meta-item">
-                                                <span className="meta-label">Type:</span>
+                                                <span className="meta-label">Тип:</span>
                                                 <span className="meta-value">{material.type?.name || "—"}</span>
                                             </div>
                                             {material.language && (
                                                 <div className="meta-item">
-                                                    <span className="meta-label">Language:</span>
+                                                    <span className="meta-label">Мова:</span>
                                                     <span className="meta-value">{material.language.name}</span>
                                                 </div>
                                             )}
@@ -249,13 +254,13 @@ export default function ReviewerDashboard() {
 
                                         <div className="meta-group">
                                             <div className="meta-item">
-                                                <span className="meta-label">Project:</span>
+                                                <span className="meta-label">Проект:</span>
                                                 <span className="meta-value">
                                                     {material.task?.serviceInProgress?.projectService?.project?.name || "—"}
                                                 </span>
                                             </div>
                                             <div className="meta-item">
-                                                <span className="meta-label">Task:</span>
+                                                <span className="meta-label">Завдання:</span>
                                                 <span className="meta-value">{material.task?.name || "—"}</span>
                                             </div>
                                         </div>
@@ -288,49 +293,49 @@ export default function ReviewerDashboard() {
                                             ))}
                                             {material.keywords.length > 5 && (
                                                 <span
-                                                    className="more-keywords">+{material.keywords.length - 5} more</span>
+                                                    className="more-keywords">+{material.keywords.length - 5} більше</span>
                                             )}
                                         </div>
                                     )}
 
                                     <div className="material-footer">
                                         <span className="created-date">
-                                            Created: {formatDate(material.createDatetime)}
+                                            Створено: {formatDate(material.createDatetime)}
                                         </span>
 
                                         {material.status?.name === "Accepted" ? (
                                             <Button variant="outline" size="small" disabled>
-                                                Cannot Review
+                                                Не можна рецензувати
                                             </Button>
                                         ) : (
                                             <Button
                                                 variant={hasBeenReviewedByMe(material) ? "outline" : "primary"}
                                                 size="small"
-                                                onClick={() => {
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
                                                     setSelectedMaterial(material);
                                                     setIsReviewModalOpen(true);
                                                 }}
                                             >
-                                                {hasBeenReviewedByMe(material) ? "View Review" : "Review Material"}
+                                                {hasBeenReviewedByMe(material) ? "Переглянути рецензію" : "Рецензувати матеріал"}
                                             </Button>
                                         )}
                                     </div>
-
                                 </Card>
                             ))
                         ) : (
                             <div className="no-materials">
-                                <h3>No materials found</h3>
+                                <h3>Матеріали не знайдено</h3>
                                 <p>
                                     {Object.keys(filters).length > 0 || searchQuery
-                                        ? "No materials match your current filters. Try adjusting your search criteria."
-                                        : "There are no materials available for review at this time."}
+                                        ? "Жодні матеріали не відповідають вашим поточним фільтрам. Спробуйте змінити критерії пошуку."
+                                        : "На даний момент немає матеріалів для рецензування."}
                                 </p>
                             </div>
                         )}
                     </div>
 
-                    {/* Pagination */}
+                    {/* Пагінація */}
                     {materials.length > 0 && (
                         <Pagination
                             currentPage={page}
@@ -348,7 +353,7 @@ export default function ReviewerDashboard() {
                 </>
             )}
 
-            {/* Material Review Modal */}
+            {/* Модальне вікно рецензування матеріалу */}
             {selectedMaterial && (
                 <MaterialReviewModal
                     isOpen={isReviewModalOpen}
@@ -358,7 +363,7 @@ export default function ReviewerDashboard() {
                 />
             )}
 
-            {/* Export Materials Modal */}
+            {/* Модальне вікно експорту матеріалів */}
             <ExportMaterialsModal
                 isOpen={exportModalOpen}
                 onClose={() => setExportModalOpen(false)}

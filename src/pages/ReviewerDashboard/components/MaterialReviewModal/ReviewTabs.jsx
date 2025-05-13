@@ -14,7 +14,7 @@ export default function ReviewTabs({
                 onClick={() => onChange("material")}
                 className="tab-button"
             >
-                Material Details
+                Деталі матеріалу
             </Button>
 
             <Button
@@ -23,7 +23,7 @@ export default function ReviewTabs({
                 onClick={() => onChange("review")}
                 className="tab-button"
             >
-                Review Form
+                Форма рецензії
             </Button>
 
             {hasReviews && (
@@ -33,7 +33,7 @@ export default function ReviewTabs({
                     onClick={() => onChange("all-reviews")}
                     className="tab-button"
                 >
-                    All Reviews ({reviewsCount})
+                    Усі рецензії ({reviewsCount})
                 </Button>
             )}
         </div>

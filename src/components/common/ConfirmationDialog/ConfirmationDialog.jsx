@@ -6,10 +6,10 @@ export default function ConfirmationDialog({
                                                isOpen,
                                                onClose,
                                                onConfirm,
-                                               title = "Confirm Action",
-                                               message = "Are you sure you want to proceed?",
-                                               confirmText = "Confirm",
-                                               cancelText = "Cancel",
+                                               title = "Підтвердження дії",
+                                               message = "Ви впевнені, що хочете продовжити?",
+                                               confirmText = "Підтвердити",
+                                               cancelText = "Скасувати",
                                                variant = "danger"
                                            }) {
     return (
