@@ -57,11 +57,11 @@ export default function CityForm({
 
         // Required fields
         if (!formData.name.trim()) {
-            newErrors.name = "City name is required";
+            newErrors.name = "Назва міста обов'язкова";
         }
 
         if (!formData.countryId) {
-            newErrors.countryId = "Country is required";
+            newErrors.countryId = "Місто обов'язкове";
         }
 
         setErrors(newErrors);
@@ -76,7 +76,7 @@ export default function CityForm({
         }
     };
 
-    const modalTitle = city ? "Edit City" : "Add New City";
+    const modalTitle = city ? "Редагування міста" : "Додавання нового міста";
 
     return (
         <Modal
@@ -87,27 +87,27 @@ export default function CityForm({
         >
             <form onSubmit={handleSubmit} className="city-form">
                 <div className="form-group">
-                    <label className="form-label">City Name *</label>
+                    <label className="form-label">Назва міста *</label>
                     <input
                         type="text"
                         name="name"
                         value={formData.name}
                         onChange={handleChange}
                         className={`form-control ${errors.name ? 'has-error' : ''}`}
-                        placeholder="Enter city name"
+                        placeholder="Введіть назву міста"
                     />
                     {errors.name && <div className="error-message">{errors.name}</div>}
                 </div>
 
                 <div className="form-group">
-                    <label className="form-label">Country *</label>
+                    <label className="form-label">Країна *</label>
                     <select
                         name="countryId"
                         value={formData.countryId}
                         onChange={handleChange}
                         className={`form-control ${errors.countryId ? 'has-error' : ''}`}
                     >
-                        <option value="">Select country</option>
+                        <option value="">Оберіть країну</option>
                         {countries.map(country => (
                             <option key={country.id} value={country.id}>
                                 {country.name}
@@ -117,7 +117,7 @@ export default function CityForm({
                     {errors.countryId && <div className="error-message">{errors.countryId}</div>}
                     {countries.length === 0 && (
                         <div className="help-text">
-                            No countries available. Please add a country first before creating a city.
+                            Немає доступних країн. Додайте країну, перш ніж створити місто.
                         </div>
                     )}
                 </div>
@@ -128,17 +128,18 @@ export default function CityForm({
                         type="button"
                         onClick={onClose}
                     >
-                        Cancel
+                        Скасувати
                     </Button>
                     <Button
                         variant="primary"
                         type="submit"
                         disabled={countries.length === 0}
                     >
-                        {city ? "Save Changes" : "Create City"}
+                        {city ? "Зберегти зміни" : "Створити місто"}
                     </Button>
                 </div>
             </form>
         </Modal>
     );
+
 }

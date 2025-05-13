@@ -1,6 +1,9 @@
 // src/pages/EmployeeManagement/components/ClientManagement/ClientManagement.jsx
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useQuery, useMutation, gql } from "@apollo/client";
+import { toast, ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+
 import Button from "../../../../components/common/Button/Button";
 import Card from "../../../../components/common/Card/Card";
 import ConfirmationDialog from "../../../../components/common/ConfirmationDialog/ConfirmationDialog";
@@ -9,7 +12,7 @@ import ClientFilterPanel from "./ClientFilterPanel";
 import ClientList from "./ClientList";
 import "./ClientManagement.css";
 
-// GraphQL queries
+// === GraphQL queries & mutations ============================================
 const GET_CLIENTS = gql`
     query GetClients {
         clients {
@@ -29,45 +32,53 @@ const DELETE_CLIENT = gql`
     }
 `;
 
+// === Компонент ==============================================================
+
 export default function ClientManagement() {
-    // State
-    const [searchQuery, setSearchQuery] = useState("");
-    const [sortField, setSortField] = useState("name");
-    const [sortDirection, setSortDirection] = useState("ASC");
+    // ── State ────────────────────────────────────────────────────────────────
+    const [searchQuery, setSearchQuery]       = useState("");
+    const [sortField, setSortField]           = useState("name");
+    const [sortDirection, setSortDirection]   = useState("ASC");
     const [showClientModal, setShowClientModal] = useState(false);
     const [selectedClient, setSelectedClient] = useState(null);
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-    const [filters, setFilters] = useState({});
+    const [filters, setFilters]               = useState({});
 
-    // Queries and mutations
-    const { data, loading, error, refetch } = useQuery(GET_CLIENTS);
+    // ── GraphQL ───────────────────────────────────────────────────────────────
+    const { data, loading, error, refetch }   = useQuery(GET_CLIENTS);
     const [deleteClient] = useMutation(DELETE_CLIENT);
 
-    // Filtered and sorted clients
+    // Показуємо toast при помилці запиту
+    useEffect(() => {
+        if (error) {
+            toast.error(`Помилка завантаження клієнтів: ${error.message}`);
+        }
+    }, [error]);
+
+    // ── Memo: фільтрація й сортування ─────────────────────────────────────────
     const clients = useMemo(() => {
         let list = data?.clients || [];
 
-        // Apply search filter
+        // Пошук
         if (searchQuery) {
+            const q = searchQuery.toLowerCase();
             list = list.filter(c =>
-                c.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                (c.email && c.email.toLowerCase().includes(searchQuery.toLowerCase()))
+                c.name.toLowerCase().includes(q) ||
+                (c.email && c.email.toLowerCase().includes(q))
             );
         }
 
-        // Sort the list
+        // (майбутні фільтри)
+        // ... filters ...
+
+        // Сортування
         return [...list].sort((a, b) => {
-            // Handle nested fields like city.name or city.country.name
-            const fieldParts = sortField.split('.');
-            let valA = a;
-            let valB = b;
-
-            for (const part of fieldParts) {
-                valA = valA?.[part];
-                valB = valB?.[part];
+            const parts = sortField.split(".");
+            let valA = a, valB = b;
+            for (const p of parts) {
+                valA = valA?.[p];
+                valB = valB?.[p];
             }
-
-            // Convert to strings for comparison
             valA = valA?.toString().toLowerCase() || "";
             valB = valB?.toString().toLowerCase() || "";
 
@@ -77,18 +88,18 @@ export default function ClientManagement() {
         });
     }, [data, searchQuery, sortField, sortDirection, filters]);
 
-    // Handlers
+    // ── Handlers ──────────────────────────────────────────────────────────────
     const handleAddClient = () => {
         setSelectedClient(null);
         setShowClientModal(true);
     };
 
-    const handleEditClient = (client) => {
+    const handleEditClient = client => {
         setSelectedClient(client);
         setShowClientModal(true);
     };
 
-    const handleDeleteClient = (client) => {
+    const handleDeleteClient = client => {
         setSelectedClient(client);
         setShowDeleteConfirm(true);
     };
@@ -96,19 +107,25 @@ export default function ClientManagement() {
     const handleDeleteConfirm = async () => {
         try {
             await deleteClient({ variables: { id: selectedClient.id } });
+            toast.success("Клієнта успішно видалено");
             setShowDeleteConfirm(false);
             refetch();
-        } catch (error) {
-            console.error("Error deleting client:", error);
+        } catch (e) {
+            const msg =
+                e?.graphQLErrors?.[0]?.message ||
+                e?.networkError?.message ||
+                e.message;
+            toast.error(`Не вдалося видалити клієнта: ${msg}`);
         }
     };
 
     const handleClientSaved = () => {
         setShowClientModal(false);
+        toast.success("Клієнта успішно збережено");
         refetch();
     };
 
-    const handleSortChange = (field) => {
+    const handleSortChange = field => {
         if (sortField === field) {
             setSortDirection(sortDirection === "ASC" ? "DESC" : "ASC");
         } else {
@@ -117,22 +134,17 @@ export default function ClientManagement() {
         }
     };
 
+    // ── Render ───────────────────────────────────────────────────────────────
     return (
         <div className="client-management-container">
+            {/* Toast контейнер (один раз у межах сторінки/додатка) */}
+            <ToastContainer position="top-right" autoClose={4000} />
+
             <div className="actions-bar">
-                <Button
-                    variant="primary"
-                    size="small"
-                    onClick={handleAddClient}
-                    icon="➕"
-                >
+                <Button variant="primary" size="small" onClick={handleAddClient} icon="➕">
                     Додати клієнта
                 </Button>
-                <Button
-                    variant="outline"
-                    size="small"
-                    onClick={refetch}
-                >
+                <Button variant="outline" size="small" onClick={() => { refetch(); toast.info("Дані оновлено"); }}>
                     Оновити
                 </Button>
             </div>
@@ -145,7 +157,6 @@ export default function ClientManagement() {
             />
 
             {loading && <div className="loading-indicator">Завантаження клієнтів...</div>}
-            {error && <div className="error-message">Помилка: {error.message}</div>}
 
             {!loading && !error && (
                 <ClientList

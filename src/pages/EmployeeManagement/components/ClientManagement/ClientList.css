@@ -1,11 +1,12 @@
 /* src/pages/EmployeeManagement/components/ClientManagement/ClientList.css */
 .client-list-container {
     margin-bottom: 24px;
+    overflow: visible;
 }
 
 .client-list-header {
     display: grid;
-    grid-template-columns: minmax(200px, 2fr) minmax(180px, 1.5fr) minmax(150px, 1fr) minmax(120px, 1fr) minmax(120px, 1fr) minmax(180px, 1fr);
+    grid-template-columns: minmax(200px, 2fr) minmax(180px, 1.5fr) minmax(150px, 1fr)minmax(180px, 1fr);
     background-color: #f8fafc;
     border-radius: 8px 8px 0 0;
     border: 1px solid #e2e8f0;
@@ -45,12 +46,17 @@
     display: flex;
     flex-direction: column;
     gap: 12px;
+    margin-top: 12px;
 }
 
 .client-card {
     padding: 0 !important;
-    overflow: hidden;
+    overflow: visible !important;
     transition: transform 0.2s, box-shadow 0.2s;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    margin-bottom: 10px;
+    background-color: white;
 }
 
 .client-card:hover {
@@ -60,7 +66,7 @@
 
 .client-info {
     display: grid;
-    grid-template-columns: minmax(200px, 2fr) minmax(180px, 1.5fr) minmax(150px, 1fr) minmax(120px, 1fr) minmax(120px, 1fr) minmax(180px, 1fr);
+    grid-template-columns: minmax(200px, 2fr) minmax(180px, 1.5fr) minmax(150px, 1fr) minmax(180px, 1fr);
     width: 100%;
 }
 
@@ -119,6 +125,10 @@
 .empty-list-card {
     padding: 24px !important;
     text-align: center;
+    margin-top: 12px;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    background-color: white;
 }
 
 .empty-message {

@@ -53,7 +53,7 @@ export default function CountryForm({
 
         // Required fields
         if (!formData.name.trim()) {
-            newErrors.name = "Country name is required";
+            newErrors.name = "Потрібно вказати ім'я країни";
         }
 
         setErrors(newErrors);
@@ -68,8 +68,7 @@ export default function CountryForm({
         }
     };
 
-    const modalTitle = country ? "Edit Country" : "Add New Country";
-
+    const modalTitle = country ? "Редагування країни" : "Додавання нової країни";
     return (
         <Modal
             isOpen={isOpen}
@@ -79,14 +78,14 @@ export default function CountryForm({
         >
             <form onSubmit={handleSubmit} className="country-form">
                 <div className="form-group">
-                    <label className="form-label">Country Name *</label>
+                    <label className="form-label">Назва країни *</label>
                     <input
                         type="text"
                         name="name"
                         value={formData.name}
                         onChange={handleChange}
                         className={`form-control ${errors.name ? 'has-error' : ''}`}
-                        placeholder="Enter country name"
+                        placeholder="Введіть назву країни"
                     />
                     {errors.name && <div className="error-message">{errors.name}</div>}
                 </div>
@@ -97,16 +96,17 @@ export default function CountryForm({
                         type="button"
                         onClick={onClose}
                     >
-                        Cancel
+                        Скасувати
                     </Button>
                     <Button
                         variant="primary"
                         type="submit"
                     >
-                        {country ? "Save Changes" : "Create Country"}
+                        {country ? "Зберегти зміни" : "Створити країну"}
                     </Button>
                 </div>
             </form>
         </Modal>
     );
+
 }

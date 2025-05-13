@@ -253,35 +253,35 @@ export default function EmployeeDashboard() {
                         size="small"
                         onClick={() => setActiveTab('overview')}
                     >
-                        Overview
+                        Загальний огляд
                     </Button>
                     <Button
                         variant={activeTab === 'offices' ? 'primary' : 'outline'}
                         size="small"
                         onClick={() => setActiveTab('offices')}
                     >
-                        By Office
+                        За офісами
                     </Button>
                     <Button
                         variant={activeTab === 'cities' ? 'primary' : 'outline'}
                         size="small"
                         onClick={() => setActiveTab('cities')}
                     >
-                        By City
+                        За містами
                     </Button>
                     <Button
                         variant={activeTab === 'countries' ? 'primary' : 'outline'}
                         size="small"
                         onClick={() => setActiveTab('countries')}
                     >
-                        By Country
+                        За країнами
                     </Button>
                     <Button
                         variant={activeTab === 'positions' ? 'primary' : 'outline'}
                         size="small"
                         onClick={() => setActiveTab('positions')}
                     >
-                        By Position
+                        За посадами
                     </Button>
                 </div>
             </div>
@@ -294,33 +294,33 @@ export default function EmployeeDashboard() {
                             <div className="stats-grid">
                                 <div className="stat-item">
                                     <span className="stat-value">{getTotalEmployeeCount()}</span>
-                                    <span className="stat-label">Total Employees</span>
+                                    <span className="stat-label">Всього працівників</span>
                                 </div>
                                 <div className="stat-item">
                                     <span className="stat-value">{officesData?.offices?.length || 0}</span>
-                                    <span className="stat-label">Offices</span>
+                                    <span className="stat-label">Офіси</span>
                                 </div>
                                 <div className="stat-item">
                                     <span className="stat-value">{citiesData?.cities?.length || 0}</span>
-                                    <span className="stat-label">Cities</span>
+                                    <span className="stat-label">Міста</span>
                                 </div>
                                 <div className="stat-item">
                                     <span className="stat-value">{countriesData?.countries?.length || 0}</span>
-                                    <span className="stat-label">Countries</span>
+                                    <span className="stat-label">Країни</span>
                                 </div>
                                 <div className="stat-item">
                                     <span className="stat-value">{positionsData?.positions?.length || 0}</span>
-                                    <span className="stat-label">Positions</span>
+                                    <span className="stat-label">Посади</span>
                                 </div>
                                 <div className="stat-item">
                                     <span className="stat-value">{reviewerData[0].value}</span>
-                                    <span className="stat-label">Reviewers</span>
+                                    <span className="stat-label">Рецензенти</span>
                                 </div>
                             </div>
                         </Card>
 
                         <Card className="chart-card">
-                            <h3>Employees by Position</h3>
+                            <h3>Працівники за посадами</h3>
                             <ResponsiveContainer width="100%" height={300}>
                                 <PieChart>
                                     <Pie
@@ -335,17 +335,17 @@ export default function EmployeeDashboard() {
                                         }
                                     >
                                         {positionData.map((entry, index) => (
-                                            <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                                            <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]}/>
                                         ))}
                                     </Pie>
-                                    <Tooltip content={<CustomTooltip />} />
-                                    <Legend />
+                                    <Tooltip content={<CustomTooltip/>}/>
+                                    <Legend/>
                                 </PieChart>
                             </ResponsiveContainer>
                         </Card>
 
                         <Card className="chart-card">
-                            <h3>Employees by Country</h3>
+                            <h3>Працівники за країнами</h3>
                             <ResponsiveContainer width="100%" height={300}>
                                 <PieChart>
                                     <Pie
@@ -360,17 +360,17 @@ export default function EmployeeDashboard() {
                                         }
                                     >
                                         {countryData.map((entry, index) => (
-                                            <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                                            <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]}/>
                                         ))}
                                     </Pie>
-                                    <Tooltip content={<CustomTooltip />} />
-                                    <Legend />
+                                    <Tooltip content={<CustomTooltip/>}/>
+                                    <Legend/>
                                 </PieChart>
                             </ResponsiveContainer>
                         </Card>
 
                         <Card className="chart-card">
-                            <h3>Reviewer Distribution</h3>
+                            <h3>Розподіл рецензентів</h3>
                             <ResponsiveContainer width="100%" height={300}>
                                 <PieChart>
                                     <Pie
@@ -385,11 +385,11 @@ export default function EmployeeDashboard() {
                                         }
                                     >
                                         {reviewerData.map((entry, index) => (
-                                            <Cell key={`cell-${index}`} fill={index === 0 ? '#3b82f6' : '#64748b'} />
+                                            <Cell key={`cell-${index}`} fill={index === 0 ? '#3b82f6' : '#64748b'}/>
                                         ))}
                                     </Pie>
-                                    <Tooltip content={<CustomTooltip />} />
-                                    <Legend />
+                                    <Tooltip content={<CustomTooltip/>}/>
+                                    <Legend/>
                                 </PieChart>
                             </ResponsiveContainer>
                         </Card>
@@ -398,13 +398,13 @@ export default function EmployeeDashboard() {
 
                 {activeTab === 'offices' && (
                     <Card className="chart-card">
-                        <h3>Employee Distribution by Office</h3>
+                        <h3>Розподіл працівників за офісами</h3>
                         <ResponsiveContainer width="100%" height={400}>
                             <BarChart
                                 data={officeData}
-                                margin={{ top: 20, right: 30, left: 20, bottom: 120 }}
+                                margin={{top: 20, right: 30, left: 20, bottom: 120}}
                             >
-                                <CartesianGrid strokeDasharray="3 3" />
+                                <CartesianGrid strokeDasharray="3 3"/>
                                 <XAxis
                                     dataKey="name"
                                     angle={-45}
@@ -412,11 +412,11 @@ export default function EmployeeDashboard() {
                                     interval={0}
                                     height={100}
                                 />
-                                <YAxis />
-                                <Tooltip content={<CustomTooltip />} />
+                                <YAxis/>
+                                <Tooltip content={<CustomTooltip/>}/>
                                 <Bar dataKey="value" name="Employees" fill="#3b82f6">
                                     {officeData.map((entry, index) => (
-                                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]}/>
                                     ))}
                                 </Bar>
                             </BarChart>
@@ -426,13 +426,13 @@ export default function EmployeeDashboard() {
 
                 {activeTab === 'cities' && (
                     <Card className="chart-card">
-                        <h3>Employee Distribution by City</h3>
+                        <h3>Розподіл працівників за містами</h3>
                         <ResponsiveContainer width="100%" height={400}>
                             <BarChart
                                 data={cityData}
-                                margin={{ top: 20, right: 30, left: 20, bottom: 100 }}
+                                margin={{top: 20, right: 30, left: 20, bottom: 100}}
                             >
-                                <CartesianGrid strokeDasharray="3 3" />
+                                <CartesianGrid strokeDasharray="3 3"/>
                                 <XAxis
                                     dataKey="name"
                                     angle={-45}
@@ -440,11 +440,11 @@ export default function EmployeeDashboard() {
                                     interval={0}
                                     height={100}
                                 />
-                                <YAxis />
-                                <Tooltip content={<CustomTooltip />} />
+                                <YAxis/>
+                                <Tooltip content={<CustomTooltip/>}/>
                                 <Bar dataKey="value" name="Employees" fill="#10b981">
                                     {cityData.map((entry, index) => (
-                                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]}/>
                                     ))}
                                 </Bar>
                             </BarChart>
@@ -454,13 +454,13 @@ export default function EmployeeDashboard() {
 
                 {activeTab === 'countries' && (
                     <Card className="chart-card">
-                        <h3>Employee Distribution by Country</h3>
+                        <h3>Розподіл працівників за країнами</h3>
                         <ResponsiveContainer width="100%" height={400}>
                             <BarChart
                                 data={countryData}
-                                margin={{ top: 20, right: 30, left: 20, bottom: 50 }}
+                                margin={{top: 20, right: 30, left: 20, bottom: 50}}
                             >
-                                <CartesianGrid strokeDasharray="3 3" />
+                                <CartesianGrid strokeDasharray="3 3"/>
                                 <XAxis
                                     dataKey="name"
                                     angle={-45}
@@ -468,11 +468,11 @@ export default function EmployeeDashboard() {
                                     interval={0}
                                     height={50}
                                 />
-                                <YAxis />
-                                <Tooltip content={<CustomTooltip />} />
+                                <YAxis/>
+                                <Tooltip content={<CustomTooltip/>}/>
                                 <Bar dataKey="value" name="Employees" fill="#f59e0b">
                                     {countryData.map((entry, index) => (
-                                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]}/>
                                     ))}
                                 </Bar>
                             </BarChart>
@@ -482,13 +482,13 @@ export default function EmployeeDashboard() {
 
                 {activeTab === 'positions' && (
                     <Card className="chart-card">
-                        <h3>Employee Distribution by Position</h3>
+                        <h3>Розподіл працівників за посадами</h3>
                         <ResponsiveContainer width="100%" height={400}>
                             <BarChart
                                 data={positionData}
-                                margin={{ top: 20, right: 30, left: 20, bottom: 80 }}
+                                margin={{top: 20, right: 30, left: 20, bottom: 80}}
                             >
-                                <CartesianGrid strokeDasharray="3 3" />
+                                <CartesianGrid strokeDasharray="3 3"/>
                                 <XAxis
                                     dataKey="name"
                                     angle={-45}
@@ -496,11 +496,11 @@ export default function EmployeeDashboard() {
                                     interval={0}
                                     height={80}
                                 />
-                                <YAxis />
-                                <Tooltip content={<CustomTooltip />} />
+                                <YAxis/>
+                                <Tooltip content={<CustomTooltip/>}/>
                                 <Bar dataKey="value" name="Employees" fill="#8b5cf6">
                                     {positionData.map((entry, index) => (
-                                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]}/>
                                     ))}
                                 </Bar>
                             </BarChart>

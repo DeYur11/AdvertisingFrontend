@@ -1,4 +1,3 @@
-// src/pages/EmployeeManagement/components/OfficeForm/OfficeForm.jsx
 import { useState, useEffect } from "react";
 import Modal from "../../../../components/common/Modal/Modal";
 import Button from "../../../../components/common/Button/Button";
@@ -19,7 +18,6 @@ export default function OfficeForm({
 
     const [errors, setErrors] = useState({});
 
-    // Initialize form data when office prop changes
     useEffect(() => {
         if (office) {
             setFormData({
@@ -28,14 +26,12 @@ export default function OfficeForm({
                 cityId: office.city?.id || ""
             });
         } else {
-            // Reset form for new office
             setFormData({
                 id: "",
                 street: "",
                 cityId: ""
             });
         }
-        // Clear errors when form resets
         setErrors({});
     }, [office]);
 
@@ -46,7 +42,6 @@ export default function OfficeForm({
             [name]: value
         }));
 
-        // Clear error for this field
         if (errors[name]) {
             setErrors(prev => ({ ...prev, [name]: "" }));
         }
@@ -55,13 +50,12 @@ export default function OfficeForm({
     const validateForm = () => {
         const newErrors = {};
 
-        // Required fields
         if (!formData.street.trim()) {
-            newErrors.street = "Street address is required";
+            newErrors.street = "Вулиця є обов’язковою";
         }
 
         if (!formData.cityId) {
-            newErrors.cityId = "City is required";
+            newErrors.cityId = "Місто є обов’язковим";
         }
 
         setErrors(newErrors);
@@ -76,7 +70,7 @@ export default function OfficeForm({
         }
     };
 
-    const modalTitle = office ? "Edit Office" : "Add New Office";
+    const modalTitle = office ? "Редагування офісу" : "Додавання нового офісу";
 
     return (
         <Modal
@@ -87,27 +81,27 @@ export default function OfficeForm({
         >
             <form onSubmit={handleSubmit} className="office-form">
                 <div className="form-group">
-                    <label className="form-label">Street Address *</label>
+                    <label className="form-label">Вулиця *</label>
                     <input
                         type="text"
                         name="street"
                         value={formData.street}
                         onChange={handleChange}
                         className={`form-control ${errors.street ? 'has-error' : ''}`}
-                        placeholder="Enter street address"
+                        placeholder="Введіть адресу вулиці"
                     />
                     {errors.street && <div className="error-message">{errors.street}</div>}
                 </div>
 
                 <div className="form-group">
-                    <label className="form-label">City *</label>
+                    <label className="form-label">Місто *</label>
                     <select
                         name="cityId"
                         value={formData.cityId}
                         onChange={handleChange}
                         className={`form-control ${errors.cityId ? 'has-error' : ''}`}
                     >
-                        <option value="">Select city</option>
+                        <option value="">Оберіть місто</option>
                         {cities.map(city => (
                             <option key={city.id} value={city.id}>
                                 {city.name}, {city.country?.name}
@@ -117,7 +111,7 @@ export default function OfficeForm({
                     {errors.cityId && <div className="error-message">{errors.cityId}</div>}
                     {cities.length === 0 && (
                         <div className="help-text">
-                            No cities available. Please add a city first before creating an office.
+                            Міста відсутні. Спочатку додайте місто, щоб створити офіс.
                         </div>
                     )}
                 </div>
@@ -128,14 +122,14 @@ export default function OfficeForm({
                         type="button"
                         onClick={onClose}
                     >
-                        Cancel
+                        Скасувати
                     </Button>
                     <Button
                         variant="primary"
                         type="submit"
                         disabled={cities.length === 0}
                     >
-                        {office ? "Save Changes" : "Create Office"}
+                        {office ? "Зберегти зміни" : "Створити офіс"}
                     </Button>
                 </div>
             </form>

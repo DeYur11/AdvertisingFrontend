@@ -73,7 +73,7 @@ export default function ClientList({
                             <div className="client-info">
                                 <div className="client-name-cell">
                                     <div className="client-name-wrapper">
-                                        <span className="client-name">{client.name}</span>
+                                        <span className="client-name">{client.name || "Без назви"}</span>
                                     </div>
                                 </div>
                                 <div className="client-email-cell">

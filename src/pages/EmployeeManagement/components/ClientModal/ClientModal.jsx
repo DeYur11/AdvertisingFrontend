@@ -52,7 +52,7 @@ export default function ClientModal({
                 email: client.email || "",
                 phoneNumber: client.phoneNumber || ""
             });
-        } else if (client.prefillName) {
+        } else if (client?.prefillName) {
             // If there's a prefilled name (from another component)
             setForm(prev => ({
                 ...prev,

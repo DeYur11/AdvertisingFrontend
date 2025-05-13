@@ -114,30 +114,30 @@ export default function EmployeeForm({
         >
             <form onSubmit={handleSubmit} className="employee-form">
                 <div className="form-section">
-                    <h3 className="form-section-title">Personal Information</h3>
+                    <h3 className="form-section-title">Особиста інформація</h3>
                     <div className="form-grid">
                         <div className="form-group">
-                            <label className="form-label">First Name *</label>
+                            <label className="form-label">Ім’я *</label>
                             <input
                                 type="text"
                                 name="name"
                                 value={formData.name}
                                 onChange={handleChange}
                                 className={`form-control ${errors.name ? 'has-error' : ''}`}
-                                placeholder="Enter first name"
+                                placeholder="Введіть ім’я"
                             />
                             {errors.name && <div className="error-message">{errors.name}</div>}
                         </div>
 
                         <div className="form-group">
-                            <label className="form-label">Last Name *</label>
+                            <label className="form-label">Прізвище *</label>
                             <input
                                 type="text"
                                 name="surname"
                                 value={formData.surname}
                                 onChange={handleChange}
                                 className={`form-control ${errors.surname ? 'has-error' : ''}`}
-                                placeholder="Enter last name"
+                                placeholder="Введіть прізвище"
                             />
                             {errors.surname && <div className="error-message">{errors.surname}</div>}
                         </div>
@@ -145,30 +145,30 @@ export default function EmployeeForm({
                 </div>
 
                 <div className="form-section">
-                    <h3 className="form-section-title">Contact Information</h3>
+                    <h3 className="form-section-title">Контактна інформація</h3>
                     <div className="form-grid">
                         <div className="form-group">
-                            <label className="form-label">Email Address *</label>
+                            <label className="form-label">Електронна пошта *</label>
                             <input
                                 type="email"
                                 name="email"
                                 value={formData.email}
                                 onChange={handleChange}
                                 className={`form-control ${errors.email ? 'has-error' : ''}`}
-                                placeholder="Enter email address"
+                                placeholder="Введіть адресу ел. пошти"
                             />
                             {errors.email && <div className="error-message">{errors.email}</div>}
                         </div>
 
                         <div className="form-group">
-                            <label className="form-label">Phone Number</label>
+                            <label className="form-label">Номер телефону</label>
                             <input
                                 type="tel"
                                 name="phoneNumber"
                                 value={formData.phoneNumber}
                                 onChange={handleChange}
                                 className={`form-control ${errors.phoneNumber ? 'has-error' : ''}`}
-                                placeholder="Enter phone number"
+                                placeholder="Введіть номер телефону"
                             />
                             {errors.phoneNumber && <div className="error-message">{errors.phoneNumber}</div>}
                         </div>
@@ -176,17 +176,17 @@ export default function EmployeeForm({
                 </div>
 
                 <div className="form-section">
-                    <h3 className="form-section-title">Job Information</h3>
+                    <h3 className="form-section-title">Інформація про роботу</h3>
                     <div className="form-grid">
                         <div className="form-group">
-                            <label className="form-label">Position *</label>
+                            <label className="form-label">Посада *</label>
                             <select
                                 name="positionId"
                                 value={formData.positionId}
                                 onChange={handleChange}
                                 className={`form-control ${errors.positionId ? 'has-error' : ''}`}
                             >
-                                <option value="">Select position</option>
+                                <option value="">Оберіть посаду</option>
                                 {positions.map(position => (
                                     <option key={position.id} value={position.id}>
                                         {position.name}
@@ -197,14 +197,14 @@ export default function EmployeeForm({
                         </div>
 
                         <div className="form-group">
-                            <label className="form-label">Office Location *</label>
+                            <label className="form-label">Офіс *</label>
                             <select
                                 name="officeId"
                                 value={formData.officeId}
                                 onChange={handleChange}
                                 className={`form-control ${errors.officeId ? 'has-error' : ''}`}
                             >
-                                <option value="">Select office</option>
+                                <option value="">Оберіть офіс</option>
                                 {offices.map(office => (
                                     <option key={office.id} value={office.id}>
                                         {office.city?.name} - {office.street} ({office.city?.country?.name})
@@ -223,9 +223,9 @@ export default function EmployeeForm({
                                 checked={formData.isReviewer}
                                 onChange={handleChange}
                             />
-                            <span>Assign Reviewer Role</span>
+                            <span>Призначити рецензентом</span>
                         </label>
-                        <div className="checkbox-help">Reviewers can approve and review materials in the system.</div>
+                        <div className="checkbox-help">Рецензенти можуть перевіряти та схвалювати матеріали в системі.</div>
                     </div>
                 </div>
 
@@ -235,16 +235,17 @@ export default function EmployeeForm({
                         type="button"
                         onClick={onClose}
                     >
-                        Cancel
+                        Скасувати
                     </Button>
                     <Button
                         variant="primary"
                         type="submit"
                     >
-                        {employee ? "Save Changes" : "Create Employee"}
+                        {employee ? "Зберегти зміни" : "Створити працівника"}
                     </Button>
                 </div>
             </form>
         </Modal>
     );
+
 }

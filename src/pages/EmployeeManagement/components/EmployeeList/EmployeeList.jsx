@@ -35,7 +35,7 @@ export default function EmployeeList({
                     className={`header-cell employee-name ${sortField === 'surname' ? 'sorted' : ''}`}
                     onClick={() => onSortChange('surname')}
                 >
-                    Employee Name
+                    Ім’я працівника
                     {sortField === 'surname' && (
                         <span className="sort-indicator">{sortDirection === 'ASC' ? '↑' : '↓'}</span>
                     )}
@@ -44,7 +44,7 @@ export default function EmployeeList({
                     className={`header-cell employee-position ${sortField === 'position.name' ? 'sorted' : ''}`}
                     onClick={() => onSortChange('position.name')}
                 >
-                    Position
+                    Посада
                     {sortField === 'position.name' && (
                         <span className="sort-indicator">{sortDirection === 'ASC' ? '↑' : '↓'}</span>
                     )}
@@ -53,7 +53,7 @@ export default function EmployeeList({
                     className={`header-cell employee-office ${sortField === 'office.city.name' ? 'sorted' : ''}`}
                     onClick={() => onSortChange('office.city.name')}
                 >
-                    Office
+                    Офіс
                     {sortField === 'office.city.name' && (
                         <span className="sort-indicator">{sortDirection === 'ASC' ? '↑' : '↓'}</span>
                     )}
@@ -62,19 +62,19 @@ export default function EmployeeList({
                     className={`header-cell employee-contact ${sortField === 'email' ? 'sorted' : ''}`}
                     onClick={() => onSortChange('email')}
                 >
-                    Contact
+                    Контакти
                     {sortField === 'email' && (
                         <span className="sort-indicator">{sortDirection === 'ASC' ? '↑' : '↓'}</span>
                     )}
                 </div>
                 <div className="header-cell employee-actions">
-                    Actions
+                    Дії
                 </div>
             </div>
 
             {employees.length === 0 ? (
                 <Card className="empty-list-card">
-                    <div className="empty-message">No employees found. Use the "Add Employee" button to create a new employee.</div>
+                    <div className="empty-message">Працівників не знайдено. Натисніть кнопку "Додати працівника", щоб створити нового.</div>
                 </Card>
             ) : (
                 <div className="employee-list">
@@ -85,7 +85,7 @@ export default function EmployeeList({
                                     <div className="employee-name-wrapper">
                                         <span className="employee-name">{employee.surname}, {employee.name}</span>
                                         {employee.isReviewer && (
-                                            <Badge variant="primary" size="small" className="reviewer-badge">Reviewer</Badge>
+                                            <Badge variant="primary" size="small" className="reviewer-badge">Рецензент</Badge>
                                         )}
                                     </div>
                                 </div>
@@ -115,21 +115,21 @@ export default function EmployeeList({
                                         size="small"
                                         onClick={(e) => handleManageAccountClick(e, employee)}
                                     >
-                                        Account
+                                        Акаунт
                                     </Button>
                                     <Button
                                         variant="outline"
                                         size="small"
                                         onClick={(e) => handleEditClick(e, employee)}
                                     >
-                                        Edit
+                                        Редагувати
                                     </Button>
                                     <Button
                                         variant="danger"
                                         size="small"
                                         onClick={(e) => handleDeleteClick(e, employee)}
                                     >
-                                        Delete
+                                        Видалити
                                     </Button>
                                 </div>
                             </div>
@@ -139,4 +139,5 @@ export default function EmployeeList({
             )}
         </div>
     );
+
 }

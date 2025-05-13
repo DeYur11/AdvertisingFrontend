@@ -99,7 +99,7 @@ export default function FilterPanel({
                     <form onSubmit={handleSearchSubmit}>
                         <input
                             type="text"
-                            placeholder="Search employees by name or surname..."
+                            placeholder="Пошук працівників за ім’ям або прізвищем..."
                             value={searchQuery}
                             onChange={handleSearchChange}
                             className="search-input"
@@ -130,7 +130,7 @@ export default function FilterPanel({
                         className={`filter-toggle ${activeFilterCount > 0 ? 'has-filters' : ''}`}
                         onClick={() => setExpanded(!expanded)}
                     >
-                        Filters
+                        Фільтри
                         {activeFilterCount > 0 && (
                             <Badge variant="primary" size="small" className="filter-count">
                                 {activeFilterCount}
@@ -144,7 +144,7 @@ export default function FilterPanel({
                             size="small"
                             onClick={resetFilters}
                         >
-                            Clear All
+                            Скинути все
                         </Button>
                     )}
                 </div>
@@ -153,7 +153,7 @@ export default function FilterPanel({
             {expanded && (
                 <div className="filter-panel-content">
                     <div className="filter-section">
-                        <h3 className="filter-section-title">Position</h3>
+                        <h3 className="filter-section-title">Посада</h3>
                         <div className="filter-options">
                             {positions.map(position => (
                                 <label key={position.id} className="filter-option">
@@ -166,13 +166,13 @@ export default function FilterPanel({
                                 </label>
                             ))}
                             {positions.length === 0 && (
-                                <div className="no-options">No positions available</div>
+                                <div className="no-options">Немає доступних посад</div>
                             )}
                         </div>
                     </div>
 
                     <div className="filter-section">
-                        <h3 className="filter-section-title">Office Location</h3>
+                        <h3 className="filter-section-title">Локація офісу</h3>
                         <div className="filter-options">
                             {offices.map(office => (
                                 <label key={office.id} className="filter-option">
@@ -185,25 +185,25 @@ export default function FilterPanel({
                                 </label>
                             ))}
                             {offices.length === 0 && (
-                                <div className="no-options">No offices available</div>
+                                <div className="no-options">Немає доступних офісів</div>
                             )}
                         </div>
                     </div>
 
                     <div className="filter-section">
-                        <h3 className="filter-section-title">Role</h3>
+                        <h3 className="filter-section-title">Роль</h3>
                         <div className="filter-options role-filter">
                             <button
                                 className={`role-btn ${isReviewer === true ? 'active' : ''}`}
                                 onClick={() => toggleReviewerFilter(true)}
                             >
-                                Reviewers
+                                Рецензенти
                             </button>
                             <button
                                 className={`role-btn ${isReviewer === false ? 'active' : ''}`}
                                 onClick={() => toggleReviewerFilter(false)}
                             >
-                                Regular Employees
+                                Звичайні працівники
                             </button>
                         </div>
                     </div>
@@ -214,7 +214,7 @@ export default function FilterPanel({
                             size="small"
                             onClick={() => setExpanded(false)}
                         >
-                            Cancel
+                            Скасувати
                         </Button>
                         <Button
                             variant="primary"
@@ -224,11 +224,12 @@ export default function FilterPanel({
                                 setExpanded(false);
                             }}
                         >
-                            Apply Filters
+                            Застосувати фільтри
                         </Button>
                     </div>
                 </div>
             )}
         </div>
     );
+
 }
