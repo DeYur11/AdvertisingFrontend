@@ -6,7 +6,7 @@ import Badge from "../../../../components/common/Badge/Badge";
 import Card from "../../../../components/common/Card/Card";
 // Import queries
 import { GET_FILTER_REFERENCE_DATA } from "../../graphql/reviewerQueries";
-import {toast} from "react-toastify";
+import { toast } from "react-toastify";
 
 export default function ReviewerFilterPanel({
                                                 searchQuery,
@@ -35,71 +35,44 @@ export default function ReviewerFilterPanel({
             else if (typeof filters[key] === 'object' && filters[key] !== null) count++;
             else if (filters[key]) count++;
         });
-
         setActiveFilterCount(count);
     }, [filters]);
 
     // Handle applying filter changes
     const applyFilter = (filterType, value) => {
         const newFilters = { ...filters };
-
-        // Handle array-type filters (checkboxes, multiselect)
         if (Array.isArray(value)) {
-            if (value.length === 0) {
-                delete newFilters[filterType];
-            } else {
-                newFilters[filterType] = value;
-            }
+            if (value.length === 0) delete newFilters[filterType];
+            else newFilters[filterType] = value;
+        } else if (filterType === 'dateRange') {
+            if (!value.from && !value.to) delete newFilters[filterType];
+            else newFilters[filterType] = value;
+        } else {
+            if (!value) delete newFilters[filterType];
+            else newFilters[filterType] = value;
         }
-        // Handle date ranges
-        else if (filterType === 'dateRange') {
-            if (!value.from && !value.to) {
-                delete newFilters[filterType];
-            } else {
-                newFilters[filterType] = value;
-            }
-        }
-        // Handle regular single-value filters
-        else {
-            if (!value) {
-                delete newFilters[filterType];
-            } else {
-                newFilters[filterType] = value;
-            }
-        }
-
         setFilters(newFilters);
     };
 
-    // Handle changes to multi-select options
+    // Handle toggling multiselect chips
     const pendingReviewStatusId = 2;
-
     const handleOptionToggle = (filterType, optionValue) => {
         const optionValueInt = parseInt(optionValue, 10);
-
-        // Заборонити вибір Pending Review вручну при активному фільтрі
         if (
             filterType === "status" &&
             filters.reviewStatus === "pending" &&
             optionValueInt === pendingReviewStatusId
         ) {
-
             return;
         }
-
         const currentValues = filters[filterType] || [];
-        let newValues;
-
-        if (currentValues.includes(optionValueInt)) {
-            newValues = currentValues.filter(v => v !== optionValueInt);
-        } else {
-            newValues = [...currentValues, optionValueInt];
-        }
-
+        const newValues = currentValues.includes(optionValueInt)
+            ? currentValues.filter(v => v !== optionValueInt)
+            : [...currentValues, optionValueInt];
         applyFilter(filterType, newValues);
     };
 
-    // Handle changes to date ranges
+    // Handle date range
     const handleDateChange = (type, value) => {
         const currentDateRange = filters.dateRange || {};
         applyFilter('dateRange', {
@@ -115,64 +88,50 @@ export default function ReviewerFilterPanel({
         setSearchType("both");
     };
 
-    // Helper to apply quick date filters
+    // Quick date shortcuts
     const applyQuickDateFilter = (days) => {
         const today = new Date();
-        const targetDate = new Date();
-
+        const target = new Date();
         if (days === 'today') {
-            applyFilter('dateRange', {
-                from: today.toISOString().split('T')[0],
-                to: today.toISOString().split('T')[0]
-            });
+            const formatted = today.toISOString().split('T')[0];
+            applyFilter('dateRange', { from: formatted, to: formatted });
         } else if (days === 'week') {
             const weekAgo = new Date();
-            weekAgo.setDate(weekAgo.getDate() - 7);
+            weekAgo.setDate(today.getDate() - 7);
             applyFilter('dateRange', {
                 from: weekAgo.toISOString().split('T')[0],
                 to: today.toISOString().split('T')[0]
             });
         } else {
-            // For future dates, we set date range
-            targetDate.setDate(today.getDate() + days);
+            target.setDate(today.getDate() + days);
             applyFilter('dateRange', {
                 from: today.toISOString().split('T')[0],
-                to: targetDate.toISOString().split('T')[0]
+                to: target.toISOString().split('T')[0]
             });
         }
     };
 
-    // Handle sort change
+    // Sort toggling
     const handleSortChange = (field) => {
-        // If clicking the same field, toggle direction
         if (field === currentSortField) {
             onSortChange(field, currentSortDirection === "ASC" ? "DESC" : "ASC");
         } else {
-            // New field, default to DESC for createDatetime, ASC for others
-            const defaultDirection = field === "createDatetime" ? "DESC" : "ASC";
-            onSortChange(field, defaultDirection);
+            const defaultDir = field === "createDatetime" ? "DESC" : "ASC";
+            onSortChange(field, defaultDir);
         }
     };
 
-    // Handle search type change
-    const handleSearchTypeChange = (type) => {
-        setSearchType(type);
-    };
+    // Search type
+    const handleSearchTypeChange = (type) => setSearchType(type);
 
-    // Render sort indicator based on current sort state
     const renderSortIndicator = (field) => {
         if (field !== currentSortField) return null;
-
-        return (
-            <span className="sort-indicator">
-                {currentSortDirection === "ASC" ? "↑" : "↓"}
-            </span>
-        );
+        return <span className="sort-indicator">{currentSortDirection === "ASC" ? "↑" : "↓"}</span>;
     };
 
     return (
         <div className="reviewer-filter-panel-container">
-            {/* Search and Basic Filters Bar */}
+            {/* Search & Basic Filters */}
             <div className="filter-bar">
                 <div className="filter-actions">
                     <div className="review-status-tabs">
@@ -193,7 +152,6 @@ export default function ReviewerFilterPanel({
                             Pending Review
                         </Button>
                     </div>
-
                     <Button
                         variant={expanded ? "primary" : "outline"}
                         size="small"
@@ -212,20 +170,12 @@ export default function ReviewerFilterPanel({
                         placeholder={`Search materials by ${searchType === "name" ? "name" : searchType === "description" ? "description" : "name or description"}...`}
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
-                        aria-label="Search materials"
                     />
                     {searchQuery && (
-                        <button
-                            className="clear-search"
-                            onClick={() => setSearchQuery("")}
-                            aria-label="Clear search"
-                        >
-                            ✕
-                        </button>
+                        <button className="clear-search" onClick={() => setSearchQuery("")} aria-label="Clear search">✕</button>
                     )}
                 </div>
 
-                {/* Search Type Selector */}
                 <div className="search-type-selector">
                     <Button
                         variant={searchType === "both" ? "primary" : "outline"}
@@ -253,7 +203,6 @@ export default function ReviewerFilterPanel({
                     </Button>
                 </div>
 
-                {/* Sort Controls */}
                 <div className="sort-controls">
                     <span className="sort-label">Sort by:</span>
                     <div className="sort-options">
@@ -263,12 +212,6 @@ export default function ReviewerFilterPanel({
                         >
                             Name {renderSortIndicator("name")}
                         </button>
-                        {/*<button*/}
-                        {/*    className={`sort-option ${currentSortField === "createDatetime" ? "active" : ""}`}*/}
-                        {/*    onClick={() => handleSortChange("createDatetime")}*/}
-                        {/*>*/}
-                        {/*    Creation Date {renderSortIndicator("createDatetime")}*/}
-                        {/*</button>*/}
                         <button
                             className={`sort-option ${currentSortField === "status" ? "active" : ""}`}
                             onClick={() => handleSortChange("status")}
@@ -284,23 +227,35 @@ export default function ReviewerFilterPanel({
                 <div className="active-filters-display">
                     <div className="active-filters-label">Active Filters:</div>
                     <div className="active-filters-list">
+                        {/* Status */}
                         {filters.status?.length > 0 && (
                             <div className="active-filter">
                                 <span className="filter-name">Status:</span>
-                                <span className="filter-value">
-                                    {filters.status.length} selected
-                                </span>
-                                <button
-                                    className="remove-filter"
-                                    onClick={() => applyFilter('status', [])}
-                                    aria-label="Remove status filter"
-                                >
-                                    ✕
-                                </button>
+                                <span className="filter-value">{filters.status.length} selected</span>
+                                <button className="remove-filter" onClick={() => applyFilter('status', [])}>✕</button>
                             </div>
                         )}
 
+                        {/* Material Type */}
+                        {filters.materialType?.length > 0 && (
+                            <div className="active-filter">
+                                <span className="filter-name">Material Type:</span>
+                                <span className="filter-value">{filters.materialType.length} selected</span>
+                                <button className="remove-filter" onClick={() => applyFilter('materialType', [])}>✕</button>
+                            </div>
+                        )}
 
+                        {/* Language */}
+                        {filters.language?.length > 0 && (
+                            <div className="active-filter">
+                                <span className="filter-name">Language:</span>
+                                <span className="filter-value">{filters.language.length} selected</span>
+                                <button className="remove-filter" onClick={() => applyFilter('language', [])}>✕</button>
+                            </div>
+                        )}
+
+                        {/* Other filters... */}
+                        {/* Usage Restriction */}
                         {filters.usageRestriction?.length > 0 && (
                             <div className="active-filter">
                                 <span className="filter-name">Usage Restriction:</span>
@@ -309,6 +264,7 @@ export default function ReviewerFilterPanel({
                             </div>
                         )}
 
+                        {/* Licence Type */}
                         {filters.licenceType?.length > 0 && (
                             <div className="active-filter">
                                 <span className="filter-name">Licence Type:</span>
@@ -317,6 +273,7 @@ export default function ReviewerFilterPanel({
                             </div>
                         )}
 
+                        {/* Target Audience */}
                         {filters.targetAudience?.length > 0 && (
                             <div className="active-filter">
                                 <span className="filter-name">Target Audience:</span>
@@ -325,136 +282,58 @@ export default function ReviewerFilterPanel({
                             </div>
                         )}
 
-
-                        {filters.type?.length > 0 && (
-                            <div className="active-filter">
-                                <span className="filter-name">Material Type:</span>
-                                <span className="filter-value">
-                                    {filters.type.length} selected
-                                </span>
-                                <button
-                                    className="remove-filter"
-                                    onClick={() => applyFilter('type', [])}
-                                    aria-label="Remove material type filter"
-                                >
-                                    ✕
-                                </button>
-                            </div>
-                        )}
-
-                        {filters.language?.length > 0 && (
-                            <div className="active-filter">
-                                <span className="filter-name">Language:</span>
-                                <span className="filter-value">
-                                    {filters.language.length} selected
-                                </span>
-                                <button
-                                    className="remove-filter"
-                                    onClick={() => applyFilter('language', [])}
-                                    aria-label="Remove language filter"
-                                >
-                                    ✕
-                                </button>
-                            </div>
-                        )}
-
-                        {filters.task?.length > 0 && (
-                            <div className="active-filter">
-                                <span className="filter-name">Task:</span>
-                                <span className="filter-value">
-                                    {filters.task.length} selected
-                                </span>
-                                <button
-                                    className="remove-filter"
-                                    onClick={() => applyFilter('task', [])}
-                                    aria-label="Remove task filter"
-                                >
-                                    ✕
-                                </button>
-                            </div>
-                        )}
-
+                        {/* Keywords */}
                         {filters.keywords?.length > 0 && (
                             <div className="active-filter">
                                 <span className="filter-name">Keywords:</span>
-                                <span className="filter-value">
-                                    {filters.keywords.length} selected
-                                </span>
-                                <button
-                                    className="remove-filter"
-                                    onClick={() => applyFilter('keywords', [])}
-                                    aria-label="Remove keywords filter"
-                                >
-                                    ✕
-                                </button>
+                                <span className="filter-value">{filters.keywords.length} selected</span>
+                                <button className="remove-filter" onClick={() => applyFilter('keywords', [])}>✕</button>
                             </div>
                         )}
 
+                        {/* Date Range */}
                         {filters.dateRange && (
                             <div className="active-filter">
                                 <span className="filter-name">Date Range:</span>
                                 <span className="filter-value">
-                                    {filters.dateRange.from &&
-                                        `From: ${new Date(filters.dateRange.from).toLocaleDateString()}`}
+                                    {filters.dateRange.from && `From: ${new Date(filters.dateRange.from).toLocaleDateString()}`}
                                     {filters.dateRange.from && filters.dateRange.to && ' - '}
-                                    {filters.dateRange.to &&
-                                        `To: ${new Date(filters.dateRange.to).toLocaleDateString()}`}
+                                    {filters.dateRange.to && `To: ${new Date(filters.dateRange.to).toLocaleDateString()}`}
                                 </span>
-                                <button
-                                    className="remove-filter"
-                                    onClick={() => applyFilter('dateRange', {})}
-                                    aria-label="Remove date filter"
-                                >
-                                    ✕
-                                </button>
+                                <button className="remove-filter" onClick={() => applyFilter('dateRange', {})}>✕</button>
                             </div>
                         )}
 
+                        {/* Review Status */}
                         {filters.reviewStatus && filters.reviewStatus !== 'all' && (
                             <div className="active-filter">
                                 <span className="filter-name">Review Status:</span>
                                 <span className="filter-value">
                                     {filters.reviewStatus === 'pending' ? 'Pending Review' : 'Reviewed by Me'}
                                 </span>
-                                <button
-                                    className="remove-filter"
-                                    onClick={() => applyFilter('reviewStatus', 'all')}
-                                    aria-label="Remove review status filter"
-                                >
-                                    ✕
-                                </button>
+                                <button className="remove-filter" onClick={() => applyFilter('reviewStatus', 'all')}>✕</button>
                             </div>
                         )}
 
+                        {/* Search Type */}
                         {searchType !== "both" && (
                             <div className="active-filter">
                                 <span className="filter-name">Search In:</span>
                                 <span className="filter-value">
                                     {searchType === "name" ? "Name Only" : "Description Only"}
                                 </span>
-                                <button
-                                    className="remove-filter"
-                                    onClick={() => setSearchType("both")}
-                                    aria-label="Remove search type filter"
-                                >
-                                    ✕
-                                </button>
+                                <button className="remove-filter" onClick={() => setSearchType("both")}>✕</button>
                             </div>
                         )}
                     </div>
 
-                    <Button
-                        variant="outline"
-                        size="small"
-                        className="clear-filters-btn"
-                        onClick={handleResetFilters}
-                    >
+                    <Button variant="outline" size="small" className="clear-filters-btn" onClick={handleResetFilters}>
                         Clear All
                     </Button>
                 </div>
             )}
 
-            {/* Advanced Filters Collapsible Panel */}
+            {/* Advanced Filters Panel */}
             {expanded && (
                 <Card className="advanced-filters-panel">
                     <div className="filters-content">
@@ -462,22 +341,19 @@ export default function ReviewerFilterPanel({
                             <div className="loading-filters">Loading filter options...</div>
                         ) : (
                             <>
-                                {/* Material Status Filters */}
+                                {/* Status */}
                                 <div className="filter-section">
                                     <h3 className="filter-section-title">Material Status</h3>
                                     <div className="filter-chips">
                                         {refData?.materialStatuses.map(status => {
                                             const isDisabled = filters.reviewStatus === "pending" && status.id === pendingReviewStatusId;
                                             const isSelected = (filters.status || []).includes(status.id);
-
                                             return (
                                                 <div
                                                     key={status.id}
                                                     className={`filter-chip ${isSelected ? 'selected' : ''} ${isDisabled ? 'disabled' : ''}`}
-                                                    onClick={() => {
-                                                        if (!isDisabled) handleOptionToggle('status', status.id);
-                                                    }}
-                                                    title={isDisabled ? 'This status is included automatically with "Pending Review"' : ''}
+                                                    onClick={() => !isDisabled && handleOptionToggle('status', status.id)}
+                                                    title={isDisabled ? 'Included automatically with "Pending Review"' : ''}
                                                 >
                                                     {status.name}
                                                 </div>
@@ -486,109 +362,111 @@ export default function ReviewerFilterPanel({
                                     </div>
                                 </div>
 
-                                {/* Material Type Filters */}
+                                {/* Material Type */}
                                 <div className="filter-section">
                                     <h3 className="filter-section-title">Material Type</h3>
                                     <div className="filter-chips">
-                                        {refData?.materialTypes.map(type => (
+                                        {refData?.materialTypes.map(mt => (
                                             <div
-                                                key={type.id}
-                                                className={`filter-chip ${(filters.type || []).includes(type.id) ? 'selected' : ''}`}
-                                                onClick={() => handleOptionToggle('type', type.id)}
+                                                key={mt.id}
+                                                className={`filter-chip ${(filters.materialType || []).includes(mt.id) ? 'selected' : ''}`}
+                                                onClick={() => handleOptionToggle('materialType', mt.id)}
                                             >
-                                                {type.name}
+                                                {mt.name}
                                             </div>
                                         ))}
                                     </div>
                                 </div>
 
-                                {/* Language Filters */}
+                                {/* Language */}
                                 <div className="filter-section">
                                     <h3 className="filter-section-title">Language</h3>
                                     <div className="filter-chips">
-                                        {refData?.languages.map(language => (
+                                        {refData?.languages.map(lang => (
                                             <div
-                                                key={language.id}
-                                                className={`filter-chip ${(filters.language || []).includes(language.id) ? 'selected' : ''}`}
-                                                onClick={() => handleOptionToggle('language', language.id)}
+                                                key={lang.id}
+                                                className={`filter-chip ${(filters.language || []).includes(lang.id) ? 'selected' : ''}`}
+                                                onClick={() => handleOptionToggle('language', lang.id)}
                                             >
-                                                {language.name}
+                                                {lang.name}
                                             </div>
                                         ))}
                                     </div>
                                 </div>
+
+                                {/* Usage Restriction */}
                                 {refData?.usageRestrictions && (
                                     <div className="filter-section">
                                         <h3 className="filter-section-title">Usage Restriction</h3>
                                         <div className="filter-chips">
-                                            {refData.usageRestrictions.map(restriction => (
+                                            {refData.usageRestrictions.map(res => (
                                                 <div
-                                                    key={restriction.id}
-                                                    className={`filter-chip ${(filters.usageRestriction || []).includes(restriction.id) ? 'selected' : ''}`}
-                                                    onClick={() => handleOptionToggle('usageRestriction', restriction.id)}
+                                                    key={res.id}
+                                                    className={`filter-chip ${(filters.usageRestriction || []).includes(res.id) ? 'selected' : ''}`}
+                                                    onClick={() => handleOptionToggle('usageRestriction', res.id)}
                                                 >
-                                                    {restriction.name}
+                                                    {res.name}
                                                 </div>
                                             ))}
                                         </div>
                                     </div>
                                 )}
 
-                                {/* Licence Type Filters */}
+                                {/* Licence Type */}
                                 {refData?.licenceTypes && (
                                     <div className="filter-section">
                                         <h3 className="filter-section-title">Licence Type</h3>
                                         <div className="filter-chips">
-                                            {refData.licenceTypes.map(licence => (
+                                            {refData.licenceTypes.map(lc => (
                                                 <div
-                                                    key={licence.id}
-                                                    className={`filter-chip ${(filters.licenceType || []).includes(licence.id) ? 'selected' : ''}`}
-                                                    onClick={() => handleOptionToggle('licenceType', licence.id)}
+                                                    key={lc.id}
+                                                    className={`filter-chip ${(filters.licenceType || []).includes(lc.id) ? 'selected' : ''}`}
+                                                    onClick={() => handleOptionToggle('licenceType', lc.id)}
                                                 >
-                                                    {licence.name}
+                                                    {lc.name}
                                                 </div>
                                             ))}
                                         </div>
                                     </div>
                                 )}
 
-                                {/* Target Audience Filters */}
+                                {/* Target Audience */}
                                 {refData?.targetAudiences && (
                                     <div className="filter-section">
                                         <h3 className="filter-section-title">Target Audience</h3>
                                         <div className="filter-chips">
-                                            {refData.targetAudiences.map(audience => (
+                                            {refData.targetAudiences.map(aud => (
                                                 <div
-                                                    key={audience.id}
-                                                    className={`filter-chip ${(filters.targetAudience || []).includes(audience.id) ? 'selected' : ''}`}
-                                                    onClick={() => handleOptionToggle('targetAudience', audience.id)}
+                                                    key={aud.id}
+                                                    className={`filter-chip ${(filters.targetAudience || []).includes(aud.id) ? 'selected' : ''}`}
+                                                    onClick={() => handleOptionToggle('targetAudience', aud.id)}
                                                 >
-                                                    {audience.name}
+                                                    {aud.name}
                                                 </div>
                                             ))}
                                         </div>
                                     </div>
                                 )}
-                                {/* Keywords Filters - if available in refData */}
+
+                                {/* Keywords */}
                                 {refData?.keywords && (
                                     <div className="filter-section">
                                         <h3 className="filter-section-title">Keywords</h3>
                                         <div className="filter-chips keywords-filter">
-                                            {refData.keywords.map(keyword => (
+                                            {refData.keywords.map(kw => (
                                                 <div
-                                                    key={keyword.id}
-                                                    className={`filter-chip ${(filters.keywords || []).includes(keyword.id) ? 'selected' : ''}`}
-                                                    onClick={() => handleOptionToggle('keywords', keyword.id)}
+                                                    key={kw.id}
+                                                    className={`filter-chip ${(filters.keywords || []).includes(kw.id) ? 'selected' : ''}`}
+                                                    onClick={() => handleOptionToggle('keywords', kw.id)}
                                                 >
-                                                    #{keyword.name}
+                                                    #{kw.name}
                                                 </div>
                                             ))}
                                         </div>
                                     </div>
                                 )}
 
-
-                                {/* Date Filters */}
+                                {/* Date Range */}
                                 <div className="filter-section">
                                     <h3 className="filter-section-title">Creation Date</h3>
                                     <div className="date-filter-grid">
@@ -598,7 +476,7 @@ export default function ReviewerFilterPanel({
                                                 <input
                                                     type="date"
                                                     value={filters.dateRange?.from || ""}
-                                                    onChange={(e) => handleDateChange("from", e.target.value)}
+                                                    onChange={e => handleDateChange("from", e.target.value)}
                                                 />
                                             </div>
                                             <div className="date-range-input">
@@ -606,31 +484,18 @@ export default function ReviewerFilterPanel({
                                                 <input
                                                     type="date"
                                                     value={filters.dateRange?.to || ""}
-                                                    onChange={(e) => handleDateChange("to", e.target.value)}
+                                                    onChange={e => handleDateChange("to", e.target.value)}
                                                 />
                                             </div>
                                         </div>
-
                                         <div className="quick-date-filters">
-                                            <Button
-                                                size="small"
-                                                variant="outline"
-                                                onClick={() => applyQuickDateFilter('today')}
-                                            >
+                                            <Button size="small" variant="outline" onClick={() => applyQuickDateFilter('today')}>
                                                 Today
                                             </Button>
-                                            <Button
-                                                size="small"
-                                                variant="outline"
-                                                onClick={() => applyQuickDateFilter('week')}
-                                            >
+                                            <Button size="small" variant="outline" onClick={() => applyQuickDateFilter('week')}>
                                                 Last 7 Days
                                             </Button>
-                                            <Button
-                                                size="small"
-                                                variant="outline"
-                                                onClick={() => applyQuickDateFilter(30)}
-                                            >
+                                            <Button size="small" variant="outline" onClick={() => applyQuickDateFilter(30)}>
                                                 Next 30 Days
                                             </Button>
                                         </div>
