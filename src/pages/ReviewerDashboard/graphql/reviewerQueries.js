@@ -24,9 +24,39 @@ export const GET_PAGINATED_MATERIALS_WITH_TOTAL = gql`
                 task {
                     id
                     name
+                    description
                     priority
+                    value
+                    createDatetime
+                    updateDatetime
+                    startDate
+                    deadline
+                    endDate
+                    taskStatus {
+                        id
+                        name
+                    }
+                    assignedWorker {
+                        id
+                        name
+                        surname
+                    }
+                    materials {
+                        id
+                        name
+                        status {
+                            id
+                            name
+                        }
+                    }
                     serviceInProgress {
+                        id
                         projectService {
+                            id
+                            service {
+                                id
+                                serviceName
+                            }
                             project {
                                 id
                                 name
@@ -185,5 +215,127 @@ export const UPDATE_MATERIAL_REVIEW = gql`
 export const DELETE_MATERIAL_REVIEW = gql`
     mutation DeleteMaterialReview($id: ID!) {
         deleteMaterialReview(id: $id)
+    }
+`;
+
+// New query for getting task details if needed separately
+export const GET_TASK_DETAILS = gql`
+    query GetTaskDetails($id: ID!) {
+        task(id: $id) {
+            id
+            name
+            description
+            priority
+            value
+            createDatetime
+            updateDatetime
+            startDate
+            deadline
+            endDate
+            taskStatus {
+                id
+                name
+            }
+            assignedWorker {
+                id
+                name
+                surname
+            }
+            materials {
+                id
+                name
+                status {
+                    id
+                    name
+                }
+            }
+            serviceInProgress {
+                id
+                projectService {
+                    id
+                    service {
+                        id
+                        serviceName
+                    }
+                    project {
+                        id
+                        name
+                        client {
+                            id
+                            name
+                        }
+                    }
+                }
+            }
+        }
+    }
+`;
+
+// New query for paginated tasks
+export const GET_PAGINATED_TASKS = gql`
+    query GetPaginatedTasks($input: PaginatedTasksInput!) {
+        paginatedTasks(input: $input) {
+            content {
+                id
+                name
+                description
+                priority
+                value
+                createDatetime
+                updateDatetime
+                startDate
+                deadline
+                endDate
+                taskStatus {
+                    id
+                    name
+                }
+                assignedWorker {
+                    id
+                    name
+                    surname
+                }
+                serviceInProgress {
+                    id
+                    projectService {
+                        id
+                        service {
+                            id
+                            serviceName
+                        }
+                        project {
+                            id
+                            name
+                            client {
+                                id
+                                name
+                            }
+                        }
+                    }
+                }
+            }
+            pageInfo {
+                totalElements
+                totalPages
+                size
+                number
+                first
+                last
+                numberOfElements
+            }
+        }
+    }
+`;
+
+// New mutation for task status transition if needed
+export const TRANSITION_TASK_STATUS = gql`
+    mutation TransitionTaskStatus($input: TransitionTaskStatusInput!) {
+        transitionTaskStatus(input: $input) {
+            id
+            taskStatus {
+                id
+                name
+            }
+        }
     }
 `;

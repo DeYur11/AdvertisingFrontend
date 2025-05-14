@@ -7,7 +7,8 @@ import {
     GET_MATERIAL_SUMMARIES,
     SUBMIT_MATERIAL_REVIEW,
     UPDATE_MATERIAL_REVIEW,
-    DELETE_MATERIAL_REVIEW
+    DELETE_MATERIAL_REVIEW,
+    GET_TASK_DETAILS  // Додано новий запит для отримання деталей завдання при необхідності
 } from "../../graphql/reviewerQueries";
 
 
@@ -16,6 +17,7 @@ import MaterialDetailsTab from "./MaterialDetailsTab";
 import ReviewFormTab from "./ReviewFormTab";
 import AllReviewsTab from "./AllReviewsTab";
 import ProjectDetailView from "./ProjectDetailView";
+import TaskDetailView from "./TaskDetailView";
 
 import "./MaterialReviewModal.css";
 import "./ClickableLinks.css";
@@ -53,8 +55,15 @@ export default function MaterialReviewModal({
     const [isEditing, setIsEditing] = useState(false);
     const [existingReview, setExistingReview] = useState(null);
 
-    // New state for the project detail view
+    // State for the project and task detail views
     const [selectedProject, setSelectedProject] = useState(null);
+    const [selectedTask, setSelectedTask] = useState(null);
+
+    // Опціонально можна отримати більш детальну інформацію про завдання, якщо потрібно
+    // const { data: taskData } = useQuery(GET_TASK_DETAILS, {
+    //     variables: { id: selectedTask?.id },
+    //     skip: !selectedTask?.id,
+    // });
 
     // -------------- mutations --------------
     const [submitReview, { loading: submitting }] =
@@ -129,8 +138,18 @@ export default function MaterialReviewModal({
         }
     };
 
+    const handleTaskClick = (task) => {
+        if (task) {
+            setSelectedTask(task);
+        }
+    };
+
     const handleCloseProjectDetail = () => {
         setSelectedProject(null);
+    };
+
+    const handleCloseTaskDetail = () => {
+        setSelectedTask(null);
     };
 
     const handleSubmit = async (e) => {
@@ -189,6 +208,7 @@ export default function MaterialReviewModal({
                             existingReview={!!existingReview}
                             onOpenReview={() => setActiveTab("review")}
                             onProjectClick={handleProjectClick}
+                            onTaskClick={handleTaskClick}
                         />
                     )}
 
@@ -226,6 +246,14 @@ export default function MaterialReviewModal({
                 <ProjectDetailView
                     project={selectedProject}
                     onClose={handleCloseProjectDetail}
+                />
+            )}
+
+            {/* Task Detail View Modal */}
+            {selectedTask && (
+                <TaskDetailView
+                    task={selectedTask}
+                    onClose={handleCloseTaskDetail}
                 />
             )}
         </>

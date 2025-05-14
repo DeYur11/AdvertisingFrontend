@@ -121,6 +121,20 @@ export default function ProjectGroupView({
     const hasIncompleteServices = p =>
         p.projectServices.some(ps => ps.servicesInProgress.length < ps.amount);
 
+    // Функція для визначення класу project-header на основі статусу проекту
+    const getProjectHeaderClass = (project) => {
+        // Перевіряємо статус проекту
+        const statusName = project.status?.name?.toLowerCase() || '';
+
+        if (statusName.includes('not started')) {
+            return 'not-started';
+        } else if (hasIncompleteServices(project)) {
+            return 'incomplete';
+        } else {
+            return 'complete';
+        }
+    };
+
     // Обробка зміни сторінки
     const handlePageChange = (pageNumber) =>
         setPagination(prev => ({ ...prev, page: pageNumber - 1 }));
@@ -210,18 +224,25 @@ export default function ProjectGroupView({
                         return matchesName && mismatched;
                     });
 
+                    // Використовуємо нову функцію для визначення класу
+                    const headerClass = getProjectHeaderClass(project);
+
                     return (
                         <div key={project.id} className="project-group">
                             <div
-                                className={`project-header ${hasIncompleteServices(project) ? "incomplete" : "complete"}`}
+                                className={`project-header ${headerClass}`}
                                 onClick={() => toggleProject(project.id)}
                             >
                                 <div className="project-header-info">
                                     <h3 className="project-name">{project.name}</h3>
                                     <div className="project-meta">
                                         <Badge
-                                            variant={project.status?.name?.toLowerCase() === "completed" ? "success" : "primary"}
-                                            size="small"
+                                            variant={
+                                                project.status?.name?.toLowerCase().includes('completed') ? "success" :
+                                                    project.status?.name?.toLowerCase().includes('not started') ? "default" :
+                                                        "primary"
+                                            }
+                                            size="large"
                                         >
                                             {project.status?.name || "Невідомо"}
                                         </Badge>

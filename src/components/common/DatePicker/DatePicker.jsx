@@ -15,10 +15,34 @@ export default function DatePicker({
     const [currentMonth, setCurrentMonth] = useState(selected ? new Date(selected) : new Date());
     const datePickerRef = useRef(null);
 
+    // Функція для порівняння дат без врахування часу
+    const compareDatesWithoutTime = (date1, date2, operator) => {
+        const d1 = new Date(date1);
+        d1.setHours(0, 0, 0, 0);
+        const d2 = new Date(date2);
+        d2.setHours(0, 0, 0, 0);
+
+        if (operator === '<') return d1 < d2;
+        if (operator === '<=') return d1 <= d2;
+        if (operator === '>') return d1 > d2;
+        if (operator === '>=') return d1 >= d2;
+        if (operator === '===') return d1.getTime() === d2.getTime();
+
+        return false;
+    };
+
+    // Функція для створення дати без врахування часу
+    const createDateWithoutTime = (date) => {
+        if (!date) return null;
+        const newDate = new Date(date);
+        newDate.setHours(12, 0, 0, 0); // Встановлюємо на полудень щоб уникнути проблем з часовими поясами
+        return newDate;
+    };
+
     // Format date as YYYY-MM-DD for input value
     const formatDateForInput = (date) => {
         if (!date) return "";
-        const d = new Date(date);
+        const d = createDateWithoutTime(date);
         const month = String(d.getMonth() + 1).padStart(2, "0");
         const day = String(d.getDate()).padStart(2, "0");
         return `${d.getFullYear()}-${month}-${day}`;
@@ -27,7 +51,7 @@ export default function DatePicker({
     // Format date for display
     const formatDateForDisplay = (date) => {
         if (!date) return "";
-        const d = new Date(date);
+        const d = createDateWithoutTime(date);
         const options = { year: "numeric", month: "short", day: "numeric" };
         return d.toLocaleDateString(undefined, options);
     };
@@ -73,11 +97,13 @@ export default function DatePicker({
 
         // Add days of the current month
         for (let i = 1; i <= daysInMonth; i++) {
-            const date = new Date(year, month, i);
-            const isSelected = selected && new Date(selected).toDateString() === date.toDateString();
+            const date = new Date(year, month, i, 12, 0, 0, 0); // Додаємо час 12:00:00
+            const isSelected = selected && compareDatesWithoutTime(selected, date, '===');
+
+            // Змінена умова для minDate - використовуємо '<' замість '<=' щоб включити мінімальну дату
             const isDisabled =
-                (minDate && date < new Date(minDate)) ||
-                (maxDate && date > new Date(maxDate));
+                (minDate && compareDatesWithoutTime(date, minDate, '<')) ||
+                (maxDate && compareDatesWithoutTime(date, maxDate, '>'));
 
             days.push({
                 day: i,
@@ -113,7 +139,10 @@ export default function DatePicker({
     const handleDateSelect = (day) => {
         if (day.isDisabled || !day.isCurrentMonth) return;
 
-        onChange(day.date);
+        // Створюємо нову дату встановлюючи час на полудень
+        const selectedDate = createDateWithoutTime(day.date);
+
+        onChange(selectedDate);
         setIsOpen(false);
     };
 
@@ -121,7 +150,7 @@ export default function DatePicker({
     const handleInputChange = (e) => {
         const value = e.target.value;
         if (value) {
-            const date = new Date(value);
+            const date = createDateWithoutTime(new Date(value));
             onChange(date);
             setCurrentMonth(date);
         } else {
@@ -221,7 +250,7 @@ export default function DatePicker({
                             className="today-date"
                             onClick={(e) => {
                                 e.stopPropagation();
-                                const today = new Date();
+                                const today = createDateWithoutTime(new Date());
                                 onChange(today);
                                 setCurrentMonth(today);
                                 setIsOpen(false);

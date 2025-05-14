@@ -1,7 +1,7 @@
 // src/pages/EmployeeManagement/EmployeeManagement.jsx
 import { useState, useMemo, useEffect } from "react";
 import { useQuery, useMutation, gql } from "@apollo/client";
-import { toast, ToastContainer } from "react-toastify";
+import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
 import Button from "../../components/common/Button/Button";
@@ -329,7 +329,7 @@ export default function EmployeeManagement() {
     /* ─── UI ─── */
     return (
         <div className="employee-management-container">
-            <ToastContainer position="top-right" autoClose={1000} />
+
 
             <header className="page-header">
                 <h1>Управління кадрами</h1>
@@ -372,7 +372,9 @@ export default function EmployeeManagement() {
                             size="small"
                             onClick={() => {
                                 refetchWorkers();
-                                toast.info("Дані оновлено");
+                                toast.info("Дані оновлено", {
+                                    autoClose: 1000
+                                });
                             }}
                         >
                             Оновити

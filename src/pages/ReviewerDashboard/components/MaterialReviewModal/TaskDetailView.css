@@ -1,0 +1,105 @@
+/* src/pages/ReviewerDashboard/components/MaterialReviewModal/ClickableLinks.css */
+.clickable-link {
+    cursor: pointer;
+    color: #2563eb;
+    text-decoration: underline;
+    transition: color 0.2s ease;
+}
+
+.clickable-link:hover {
+    color: #1d4ed8;
+}
+
+.project-services-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.project-service-item {
+    background-color: #f1f5f9;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+}
+
+/* Стилі для списку пов'язаних матеріалів */
+.related-materials-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 8px;
+}
+
+.related-material-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background-color: #f1f5f9;
+    padding: 8px 12px;
+    border-radius: 6px;
+    border-left: 3px solid #2563eb;
+    transition: all 0.2s ease;
+}
+
+.related-material-item:hover {
+    background-color: #e0e7ff;
+    transform: translateY(-2px);
+}
+
+.material-name {
+    font-size: 14px;
+    font-weight: 500;
+    color: #334155;
+}
+
+/* Додаткові стилі для деталей завдання */
+.task-meta-info {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+    margin-top: 15px;
+    margin-bottom: 20px;
+}
+
+.task-meta-item {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 150px;
+}
+
+.task-meta-label {
+    font-size: 12px;
+    color: #64748b;
+    font-weight: 500;
+}
+
+.task-meta-value {
+    font-size: 14px;
+    font-weight: 600;
+    color: #334155;
+}
+
+.task-description {
+    margin-top: 15px;
+    padding: 15px;
+    background-color: #f8fafc;
+    border-radius: 6px;
+    border-left: 3px solid #2563eb;
+    font-size: 14px;
+    line-height: 1.5;
+    color: #475569;
+}
+
+.task-value {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #ecfdf5;
+    color: #059669;
+    padding: 3px 10px;
+    border-radius: 12px;
+    font-weight: 600;
+    font-size: 14px;
+}

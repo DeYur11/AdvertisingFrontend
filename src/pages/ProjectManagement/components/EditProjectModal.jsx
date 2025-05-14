@@ -5,11 +5,12 @@ import Button from "../../../components/common/Button/Button";
 import Modal from "../../../components/common/Modal/Modal";
 import ClientModal from "./ClientModal/ClientModal";
 import SelectWithModalCreate from "../../../components/common/SelectWithModalCreate";
+import DatePicker from "../../../components/common/DatePicker/DatePicker";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import "./EditProjectModal.css";
 
-/* ─── gql ───────────────────────────────────────────────────────────── */
+/* ─── GraphQL-запити ───────────────────────────────────────────────────────────── */
 const GET_PROJECT_REFERENCE_DATA = gql`
     query GetProjectReferenceData {
         clients { id name }
@@ -30,6 +31,7 @@ const GET_PROJECT_DETAILS = gql`
             description
             cost
             estimateCost
+            registrationDate
             paymentDeadline
             client { id }
             projectType { id }
@@ -78,25 +80,40 @@ const DELETE_PS = gql`
     }
 `;
 
-/* ─── компонент ─────────────────────────────────────────────────────── */
+/* ─── Компонент ───────────────────────────────────────────────────────────────── */
 export default function EditProjectModal({ isOpen, projectId, onClose, onUpdated }) {
     const [invalidServiceIndexes, setInvalidServiceIndexes] = useState([]);
     const [project, setProject] = useState({
-        name: "", description: "", clientId: "",
-        projectTypeId: "", projectStatusId: "",
-        cost: "", estimateCost: "", paymentDeadline: "",
-        managerId: "", services: []
+        name: "",
+        description: "",
+        clientId: "",
+        projectTypeId: "",
+        projectStatusId: "",
+        managerId: "",
+        estimateCost: "",
+        cost: "",
+        registrationDate: "",
+        paymentDeadline: "",
+        services: []
     });
     const [showCreateClient, setShowCreateClient] = useState(false);
     const [prefillClientName, setPrefillClientName] = useState("");
     const [isSaving, setSaving] = useState(false);
     const client = useApolloClient();
-    const { data: ref, loading: refLoading, refetch } = useQuery(GET_PROJECT_REFERENCE_DATA);
-    const { data: det, loading: detLoading } = useQuery(GET_PROJECT_DETAILS, {
-        variables: { id: projectId },
-        skip: !projectId,
-        fetchPolicy: "network-only"
-    });
+
+    const { data: ref, loading: refLoading, refetch } = useQuery(
+        GET_PROJECT_REFERENCE_DATA,
+        { onError: err => toast.error(`Помилка довідників: ${err.message}`) }
+    );
+    const { data: det, loading: detLoading } = useQuery(
+        GET_PROJECT_DETAILS,
+        {
+            variables: { id: projectId },
+            skip: !projectId,
+            fetchPolicy: "network-only",
+            onError: err => toast.error(`Помилка деталей: ${err.message}`)
+        }
+    );
 
     const [updateProject] = useMutation(UPDATE_PROJECT);
     const [createPS] = useMutation(CREATE_PS);
@@ -107,15 +124,16 @@ export default function EditProjectModal({ isOpen, projectId, onClose, onUpdated
         if (det?.project) {
             const p = det.project;
             setProject({
-                name: p.name ?? "",
-                description: p.description ?? "",
-                clientId: p.client?.id ?? "",
-                projectTypeId: p.projectType?.id ?? "",
-                projectStatusId: p.status?.id ?? "",
-                cost: p.cost != null ? p.cost.toString() : "",
-                estimateCost: p.estimateCost != null ? p.estimateCost.toString() : "",
-                paymentDeadline: p.paymentDeadline ?? "",
-                managerId: p.manager?.id ?? "",
+                name: p.name,
+                description: p.description || "",
+                clientId: p.client.id,
+                projectTypeId: p.projectType.id,
+                projectStatusId: p.status.id,
+                managerId: p.manager?.id || "",
+                estimateCost: p.estimateCost?.toString() || "",
+                cost: p.cost?.toString() || "",
+                registrationDate: p.registrationDate,
+                paymentDeadline: p.paymentDeadline || "",
                 services: p.projectServices.map(ps => ({
                     id: ps.id,
                     serviceId: ps.service.id,
@@ -126,7 +144,7 @@ export default function EditProjectModal({ isOpen, projectId, onClose, onUpdated
         }
     }, [det]);
 
-    const handleChange = (e) => {
+    const handleChange = e => {
         const { name, value } = e.target;
         setProject(prev => ({ ...prev, [name]: value }));
     };
@@ -137,54 +155,55 @@ export default function EditProjectModal({ isOpen, projectId, onClose, onUpdated
             services: [...prev.services, { serviceId: "", amount: 1, initialAmount: 1 }]
         }));
 
-    const updateServiceRow = (i, f, v) =>
+    const updateServiceRow = (i, field, val) =>
         setProject(prev => {
             const services = [...prev.services];
-            if (f === "amount") {
-                const parsed = parseInt(v);
-                const min = services[i].initialAmount ?? 1;
+            if (field === "amount") {
+                const parsed = parseInt(val, 10);
+                const min = services[i].initialAmount;
                 if (parsed < min) {
-                    toast.error(`❌ Cannot reduce amount below initial value (${min})`);
+                    toast.error(`❌ Неможливо зменшити нижче початкового (${min})`);
                     return prev;
                 }
-                services[i][f] = parsed;
-            } else {
-                services[i][f] = v;
+                services[i][field] = parsed;
             }
-
-            // Очищення помилки для цього рядка
-            setInvalidServiceIndexes(prevInvalids =>
-                prevInvalids.filter(index => index !== i)
-            );
-
+            setInvalidServiceIndexes(invalids => invalids.filter(idx => idx !== i));
             return { ...prev, services };
         });
 
-
-    const removeServiceRow = i =>
-        setProject(prev => {
-            const services = [...prev.services];
-            if (services[i].id) deletePS({ variables: { id: +services[i].id } });
-            services.splice(i, 1);
-            return { ...prev, services };
-        });
-
-    const handleSave = async (e) => {
-        e.preventDefault();
-
-
-        const invalidIndexes = project.services
-            .map((s, i) => (!s.serviceId ? i : -1))
-            .filter(i => i !== -1);
-
-        if (invalidIndexes.length > 0) {
-            setInvalidServiceIndexes(invalidIndexes);
-            toast.error("❌ Please select a service type for all service rows.");
-            return;
+    const removeServiceRow = async i => {
+        const services = [...project.services];
+        const srv = services[i];
+        if (srv.id) {
+            try {
+                await deletePS({ variables: { id: +srv.id } });
+            } catch (err) {
+                console.error(err);
+                toast.error(`❌ Сервіс не видалено: ${err.message}`);
+            }
         }
+        services.splice(i, 1);
+        setProject(prev => ({ ...prev, services }));
+    };
 
+    const validateForm = () => {
+        const invalids = project.services
+            .map((s, idx) => (!s.serviceId ? idx : -1))
+            .filter(idx => idx !== -1);
+        if (invalids.length) {
+            setInvalidServiceIndexes(invalids);
+            toast.error("❌ Виберіть тип для всіх сервісів.");
+            return false;
+        }
+        return true;
+    };
+
+    const handleSave = async e => {
+        e.preventDefault();
+        if (!validateForm()) return;
         setInvalidServiceIndexes([]);
         setSaving(true);
+
         try {
             await updateProject({
                 variables: {
@@ -195,16 +214,22 @@ export default function EditProjectModal({ isOpen, projectId, onClose, onUpdated
                         clientId: +project.clientId,
                         projectTypeId: +project.projectTypeId,
                         statusId: +project.projectStatusId,
-                        cost: project.cost !== "" ? +project.cost : null,
-                        estimateCost: project.estimateCost !== "" ? +project.estimateCost : null,
-                        paymentDeadline: project.paymentDeadline || null,
-                        managerId: project.managerId ? +project.managerId : null
+                        managerId: project.managerId ? +project.managerId : null,
+                        estimateCost: project.estimateCost ? +project.estimateCost : null,
+                        cost: project.cost ? +project.cost : null,
+                        paymentDeadline: project.paymentDeadline || null
                     }
                 }
             });
+        } catch (err) {
+            console.error(err);
+            toast.error(`❌ Проєкт не оновлено: ${err.message}`);
+            setSaving(false);
+            return;
+        }
 
-            for (const s of project.services) {
-                if (!s.serviceId) continue;
+        for (const s of project.services) {
+            try {
                 if (s.id) {
                     await updatePS({ variables: { id: +s.id, input: { amount: +s.amount } } });
                 } else {
@@ -218,117 +243,198 @@ export default function EditProjectModal({ isOpen, projectId, onClose, onUpdated
                         }
                     });
                 }
+            } catch (err) {
+                console.error(err);
+                const name = ref.services.find(x => x.id === s.serviceId)?.serviceName;
+                toast.error(`❌ Сервіс "${name}" не збережено: ${err.message}`);
             }
-
-            await client.refetchQueries({
-                include: ["GetProjectServices", "GetProjectDetails"]
-            });
-
-            onUpdated?.();
-            onClose();
-        } catch (err) {
-            toast.error(`❌ ${err.message}`);
         }
+
+        try {
+            await client.refetchQueries({ include: ["GetProjectServices","GetProjectDetails"] });
+        } catch {}
+
+        toast.success("✅ Проєкт успішно оновлено");
+        onUpdated?.();
+        onClose();
         setSaving(false);
     };
 
     if (!isOpen) return null;
     if (refLoading || detLoading) return (
-        <Modal isOpen title="Edit Project" onClose={onClose}>
-            <p>Loading…</p>
+        <Modal isOpen title="Редагування проєкту" onClose={onClose}>
+            <p>Завантаження…</p>
         </Modal>
     );
 
     return (
-        <Modal isOpen onClose={onClose} title="✏️ Edit Project" size="large">
+        <Modal isOpen onClose={onClose} title="✏️ Редагувати проєкт" size="large">
             <form onSubmit={handleSave} className="edit-project-form">
                 <div className="mb-2">
-                    <label className="form-label">Name*</label>
-                    <input className="form-control" name="name" value={project.name} onChange={handleChange} required />
+                    <label className="form-label">Назва*</label>
+                    <input
+                        className="form-control"
+                        name="name"
+                        value={project.name}
+                        onChange={handleChange}
+                        required
+                    />
                 </div>
 
                 <div className="mb-2">
-                    <label className="form-label">Description</label>
-                    <textarea className="form-control" name="description" rows="2" value={project.description} onChange={handleChange} />
+                    <label className="form-label">Опис</label>
+                    <textarea
+                        className="form-control"
+                        name="description"
+                        rows="2"
+                        value={project.description}
+                        onChange={handleChange}
+                    />
                 </div>
 
-                <SelectWithModalCreate label="Client*" options={ref.clients} value={project.clientId}
-                                       onChange={id => setProject(p => ({ ...p, clientId: id }))}
-                                       onCreateStart={val => { setPrefillClientName(val); setShowCreateClient(true); }} />
+                <SelectWithModalCreate
+                    label="Клієнт*"
+                    options={ref.clients}
+                    value={project.clientId}
+                    onChange={id => setProject(p => ({ ...p, clientId: id }))}
+                    onCreateStart={val => {
+                        setPrefillClientName(val);
+                        setShowCreateClient(true);
+                    }}
+                />
 
-                <SelectWithCreate label="Project Type*" options={ref.projectTypes} value={project.projectTypeId}
-                                  onChange={v => setProject(p => ({ ...p, projectTypeId: v }))}
-                                  createMutation={CREATE_PROJECT_TYPE} refetchOptions={refetch} />
+                <SelectWithCreate
+                    label="Тип проєкту*"
+                    options={ref.projectTypes}
+                    value={project.projectTypeId}
+                    onChange={v => setProject(p => ({ ...p, projectTypeId: v }))}
+                    createMutation={CREATE_PROJECT_TYPE}
+                    refetchOptions={refetch}
+                />
 
                 <div className="mb-2">
-                    <label className="form-label">Status*</label>
-                    <select className="form-select" name="projectStatusId" value={project.projectStatusId} onChange={handleChange} required>
-                        <option value="">Select Status</option>
-                        {ref.projectStatuses.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+                    <label className="form-label">Статус*</label>
+                    <select
+                        className="form-select"
+                        name="projectStatusId"
+                        value={project.projectStatusId}
+                        onChange={handleChange}
+                        required
+                    >
+                        <option value="">Виберіть статус</option>
+                        {ref.projectStatuses.map(s => (
+                            <option key={s.id} value={s.id}>{s.name}</option>
+                        ))}
                     </select>
                 </div>
 
                 <div className="mb-2">
-                    <label className="form-label">Manager</label>
-                    <select className="form-select" name="managerId" value={project.managerId} onChange={handleChange}>
-                        <option value="">— none —</option>
-                        {ref.workersByPosition.map(w => <option key={w.id} value={w.id}>{w.name} {w.surname}</option>)}
+                    <label className="form-label">Менеджер</label>
+                    <select
+                        className="form-select"
+                        name="managerId"
+                        value={project.managerId}
+                        onChange={handleChange}
+                    >
+                        <option value="">— немає —</option>
+                        {ref.workersByPosition.map(w => (
+                            <option key={w.id} value={w.id}>{w.name} {w.surname}</option>
+                        ))}
                     </select>
                 </div>
 
-                <div className="row g-2 mb-2">
+                <div className="row g-2 mb-3">
                     <div className="col">
-                        <label className="form-label">Payment Deadline</label>
-                        <input type="date" className="form-control" name="paymentDeadline" value={project.paymentDeadline} onChange={handleChange} />
+                        <label className="form-label">Строк оплати</label>
+                        <DatePicker
+                            selected={project.paymentDeadline ? new Date(project.paymentDeadline) : null}
+                            onChange={date =>
+                                setProject(p => ({ ...p, paymentDeadline: date?.toISOString().split("T")[0] || "" }))
+                            }
+                            placeholderText="Виберіть строк оплати"
+                            minDate={project.registrationDate ? new Date(project.registrationDate) : null}
+                        />
                     </div>
                     <div className="col">
-                        <label className="form-label">Estimate, $</label>
-                        <input type="number" step="0.01" className="form-control" name="estimateCost" min="0" value={project.estimateCost} onChange={handleChange} />
+                        <label className="form-label">Оцінка витрат, $</label>
+                        <input
+                            type="number"
+                            step="0.01"
+                            className="form-control"
+                            name="estimateCost"
+                            min="0"
+                            value={project.estimateCost}
+                            onChange={handleChange}
+                        />
                     </div>
                     <div className="col">
-                        <label className="form-label">Cost, $</label>
-                        <input type="number" step="0.01" className="form-control" name="cost" min="0" value={project.cost} onChange={handleChange} />
+                        <label className="form-label">Фактичні витрати, $</label>
+                        <input
+                            type="number"
+                            step="0.01"
+                            className="form-control"
+                            name="cost"
+                            min="0"
+                            value={project.cost}
+                            onChange={handleChange}
+                        />
                     </div>
                 </div>
 
-                <h5 className="mt-3">Project Services</h5>
+                <h5 className="mt-3">Сервіси проєкту</h5>
                 {project.services.map((s, idx) => (
                     <div key={idx} className="d-flex align-items-end gap-2 mb-2">
                         <select
                             className={`form-select ${invalidServiceIndexes.includes(idx) ? "is-invalid" : ""}`}
-                            style={{flex: 1}}
+                            style={{ flex: 1 }}
                             value={s.serviceId}
-                            onChange={e => updateServiceRow(idx, "serviceId", e.target.value)}
+                            disabled={!!s.id}  // блокуємо зміну типу для вже замовлених
                         >
-                            <option value="">— select service —</option>
-                            {ref.services.map(sv => <option key={sv.id}
-                                                            value={sv.id}>{sv.serviceName} (${sv.estimateCost})</option>)}
+                            <option value="">
+                                {s.id
+                                    ? ref.services.find(x => x.id === s.serviceId)?.serviceName
+                                    : "— виберіть сервіс —"}
+                            </option>
                         </select>
-                        <input type="number" min="1" className="form-control" style={{width: 90}} value={s.amount}
-                               onChange={e => updateServiceRow(idx, "amount", e.target.value)}/>
-                        <Button variant="danger" size="sm" onClick={() => removeServiceRow(idx)}>🗑️</Button>
+                        <input
+                            type="number"
+                            min={s.initialAmount}
+                            className="form-control"
+                            style={{ width: 90 }}
+                            value={s.amount}
+                            onChange={e => updateServiceRow(idx, "amount", e.target.value)}
+                        />
+                        <Button variant="danger" size="sm" onClick={() => removeServiceRow(idx)}>
+                            🗑️
+                        </Button>
                     </div>
                 ))}
-                <Button variant="outline" size="sm" onClick={addServiceRow}>➕ Add Service</Button>
+                <Button variant="outline" size="sm" onClick={addServiceRow}>
+                    ➕ Додати сервіс
+                </Button>
 
                 <div className="mt-4 d-flex gap-2 justify-content-end">
-                    <Button variant="outline" onClick={onClose}>Cancel</Button>
+                    <Button variant="outline" onClick={onClose}>Скасувати</Button>
                     <Button variant="primary" type="submit" disabled={isSaving}>
-                        {isSaving ? "Saving…" : "💾 Update Project"}
+                        {isSaving ? "Збереження…" : "💾 Оновити проєкт"}
                     </Button>
                 </div>
             </form>
 
-            <Modal isOpen={showCreateClient} onClose={() => setShowCreateClient(false)} title="➕ New Client">
-                <ClientModal client={{ prefillName: prefillClientName }} editMode={false}
-                             onSave={c => {
-                                 if (c?.id) {
-                                     setProject(p => ({ ...p, clientId: c.id }));
-                                     refetch();
-                                 }
-                                 setShowCreateClient(false);
-                             }}
-                             onCancel={() => setShowCreateClient(false)} />
+            <Modal isOpen={showCreateClient} onClose={() => setShowCreateClient(false)} title="➕ Новий клієнт">
+                <ClientModal
+                    client={{ prefillName: prefillClientName }}
+                    editMode={false}
+                    onSave={c => {
+                        if (c?.id) {
+                            setProject(p => ({ ...p, clientId: c.id }));
+                            refetch();
+                            toast.success("✅ Клієнта створено");
+                        }
+                        setShowCreateClient(false);
+                    }}
+                    onCancel={() => setShowCreateClient(false)}
+                />
             </Modal>
         </Modal>
     );

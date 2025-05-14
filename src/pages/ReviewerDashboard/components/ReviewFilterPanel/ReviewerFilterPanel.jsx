@@ -488,17 +488,6 @@ export default function ReviewerFilterPanel({
                                                 />
                                             </div>
                                         </div>
-                                        <div className="quick-date-filters">
-                                            <Button size="small" variant="outline" onClick={() => applyQuickDateFilter('today')}>
-                                                Today
-                                            </Button>
-                                            <Button size="small" variant="outline" onClick={() => applyQuickDateFilter('week')}>
-                                                Last 7 Days
-                                            </Button>
-                                            <Button size="small" variant="outline" onClick={() => applyQuickDateFilter(30)}>
-                                                Next 30 Days
-                                            </Button>
-                                        </div>
                                     </div>
                                 </div>
                             </>

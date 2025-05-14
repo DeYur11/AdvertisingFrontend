@@ -11,12 +11,20 @@ export default function MaterialDetailsTab({
                                                material,
                                                existingReview,
                                                onOpenReview,
-                                               onProjectClick
+                                               onProjectClick,
+                                               onTaskClick
                                            }) {
     // Функція для обробки кліку по проекту
     const handleProjectClick = () => {
         if (material.task?.serviceInProgress?.projectService?.project && onProjectClick) {
             onProjectClick(material.task.serviceInProgress.projectService.project);
+        }
+    };
+
+    // Функція для обробки кліку по завданню
+    const handleTaskClick = () => {
+        if (material.task && onTaskClick) {
+            onTaskClick(material.task);
         }
     };
 
@@ -87,7 +95,13 @@ export default function MaterialDetailsTab({
 
                     <div className="detail-item">
                         <span className="detail-label">Пов'язане завдання:</span>
-                        <span className="detail-value">{material.task?.name || "—"}</span>
+                        <span
+                            className={`detail-value ${material.task ? "clickable-link" : ""}`}
+                            onClick={material.task ? handleTaskClick : undefined}
+                            title={material.task ? "Натисніть для перегляду деталей завдання" : ""}
+                        >
+                            {material.task?.name || "—"}
+                        </span>
                     </div>
 
                     <div className="detail-item">

@@ -3,7 +3,7 @@ import { useMutation, gql } from "@apollo/client";
 import Modal from "../../../../components/common/Modal/Modal";
 import Button from "../../../../components/common/Button/Button";
 import DatePicker from "../../../../components/common/DatePicker/DatePicker";
-import { toast, ToastContainer } from "react-toastify";
+import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import "./PaymentModal.css";
 
@@ -212,7 +212,6 @@ export default function PaymentModal({
                     </div>
                 </form>
             </Modal>
-            <ToastContainer position="top-right" autoClose={5000} />
         </>
     );
 }

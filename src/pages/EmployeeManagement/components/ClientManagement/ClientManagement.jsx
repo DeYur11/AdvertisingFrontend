@@ -1,7 +1,7 @@
 // src/pages/EmployeeManagement/components/ClientManagement/ClientManagement.jsx
 import { useState, useMemo, useEffect } from "react";
 import { useQuery, useMutation, gql } from "@apollo/client";
-import { toast, ToastContainer } from "react-toastify";
+import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
 import Button from "../../../../components/common/Button/Button";
@@ -137,9 +137,6 @@ export default function ClientManagement() {
     // ── Render ───────────────────────────────────────────────────────────────
     return (
         <div className="client-management-container">
-            {/* Toast контейнер (один раз у межах сторінки/додатка) */}
-            <ToastContainer position="top-right" autoClose={4000} />
-
             <div className="actions-bar">
                 <Button variant="primary" size="small" onClick={handleAddClient} icon="➕">
                     Додати клієнта

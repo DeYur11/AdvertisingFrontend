@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useQuery, useMutation, gql } from "@apollo/client";
-import { toast, ToastContainer } from "react-toastify";
+import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import "./ProjectModal.css";
 
@@ -267,7 +267,6 @@ export default function ProjectModal({ project, editMode, onSave, onCancel }) {
                     </div>
                 </form>
             )}
-            <ToastContainer position="top-right" autoClose={5000}/>
         </div>
     );
 }

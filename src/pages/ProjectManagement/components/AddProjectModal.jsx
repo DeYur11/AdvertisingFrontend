@@ -13,6 +13,7 @@ import {
     CREATE_PROJECT_SERVICE,
     CREATE_PROJECT_TYPE
 } from "../graphql/projectCreate.gql";
+import DatePicker from "../../../components/common/DatePicker/DatePicker";
 
 export default function AddProjectModal({ isOpen, onClose, onCreated }) {
     const [project, setProject] = useState({
@@ -233,15 +234,15 @@ export default function AddProjectModal({ isOpen, onClose, onCreated }) {
                     </div>
 
                     <div className="d-flex align-items-end gap-2 mb-2">
-                        <div style={{ flex: 1 }}>
+                        <div style={{flex: 1}}>
                             <SelectWithModalCreate
                                 label="Клієнт*"
                                 options={data.clients}
                                 value={project.clientId}
                                 onChange={(id) => {
-                                    setProject((p) => ({ ...p, clientId: id }));
+                                    setProject((p) => ({...p, clientId: id}));
                                     setFormErrors((prev) => {
-                                        const newErrors = { ...prev };
+                                        const newErrors = {...prev};
                                         delete newErrors.clientId;
                                         return newErrors;
                                     });
@@ -261,9 +262,9 @@ export default function AddProjectModal({ isOpen, onClose, onCreated }) {
                         options={data.projectTypes}
                         value={project.projectTypeId}
                         onChange={(val) => {
-                            setProject((p) => ({ ...p, projectTypeId: val }));
+                            setProject((p) => ({...p, projectTypeId: val}));
                             setFormErrors((prev) => {
-                                const newErrors = { ...prev };
+                                const newErrors = {...prev};
                                 delete newErrors.projectTypeId;
                                 return newErrors;
                             });
@@ -279,7 +280,7 @@ export default function AddProjectModal({ isOpen, onClose, onCreated }) {
                         <select
                             className="form-select"
                             value={project.managerId}
-                            onChange={(e) => setProject((p) => ({ ...p, managerId: e.target.value }))}
+                            onChange={(e) => setProject((p) => ({...p, managerId: e.target.value}))}
                         >
                             <option value="">— не вибрано —</option>
                             {data.workers.map((w) => (
@@ -291,25 +292,34 @@ export default function AddProjectModal({ isOpen, onClose, onCreated }) {
                     <div className="row g-2 mb-3">
                         <div className="col">
                             <label className="form-label">Термін оплати</label>
-                            <input
-                                type="date"
-                                className="form-control"
-                                name="paymentDeadline"
-                                value={project.paymentDeadline}
-                                onChange={handleChange}
+                            <DatePicker
+                                selected={project.paymentDeadline ? new Date(project.paymentDeadline) : null}
+                                onChange={(date) => {
+                                    // DatePicker повертає об'єкт Date або null
+                                    setProject(prev => ({
+                                        ...prev,
+                                        paymentDeadline: date ? date.toISOString().split('T')[0] : ""
+                                    }));
+
+                                    if (formErrors.paymentDeadline) {
+                                        setFormErrors(prev => ({...prev, paymentDeadline: ""}));
+                                    }
+                                }}
+                                placeholderText="Виберіть дату"
+                                minDate={new Date()}
                             />
                         </div>
                         <div className="col">
                             <label className="form-label">Бюджет проекту, ₴</label>
                             <input
                                 type="number"
-                                className={`form-control ${formErrors.budget ? "is-invalid" : ""}`}
+                                className={`form-input ${formErrors.budget ? "has-error" : ""}`}
                                 name="estimateCost"
                                 min="0"
                                 value={project.estimateCost}
                                 onChange={handleChange}
                             />
-                            {formErrors.budget && <div className="invalid-feedback">{formErrors.budget}</div>}
+                            {formErrors.budget && <div className="error-message">{formErrors.budget}</div>}
                         </div>
                     </div>
 
@@ -323,8 +333,10 @@ export default function AddProjectModal({ isOpen, onClose, onCreated }) {
                                 {parseFloat(project.estimateCost) > 0 && (
                                     <span>
                                         {exceedsBudget
-                                            ? <span className="text-danger">Перевищення бюджету: <strong>{Math.abs(remainingBudget).toLocaleString()} ₴</strong></span>
-                                            : <span>Залишок бюджету: <strong>{remainingBudget.toLocaleString()} ₴</strong></span>
+                                            ? <span
+                                                className="text-danger">Перевищення бюджету: <strong>{Math.abs(remainingBudget).toLocaleString()} ₴</strong></span>
+                                            :
+                                            <span>Залишок бюджету: <strong>{remainingBudget.toLocaleString()} ₴</strong></span>
                                         }
                                     </span>
                                 )}
@@ -338,7 +350,7 @@ export default function AddProjectModal({ isOpen, onClose, onCreated }) {
                                 className="form-select"
                                 value={srv.serviceId}
                                 onChange={(e) => updateServiceRow(idx, "serviceId", e.target.value)}
-                                style={{ flex: 1 }}
+                                style={{flex: 1}}
                             >
                                 <option value="">— виберіть послугу —</option>
                                 {data.services.map((s) => (
@@ -351,7 +363,7 @@ export default function AddProjectModal({ isOpen, onClose, onCreated }) {
                                 type="number"
                                 min="1"
                                 className={`form-control ${formErrors[`service_${idx}`] ? "is-invalid" : ""}`}
-                                style={{ width: 90 }}
+                                style={{width: 90}}
                                 value={srv.amount}
                                 onChange={(e) => updateServiceRow(idx, "amount", e.target.value)}
                             />
@@ -359,14 +371,14 @@ export default function AddProjectModal({ isOpen, onClose, onCreated }) {
                                 🗑️
                             </Button>
                             {formErrors[`service_${idx}`] && (
-                                <div className="invalid-feedback" style={{ display: "block" }}>
+                                <div className="invalid-feedback" style={{display: "block"}}>
                                     {formErrors[`service_${idx}`]}
                                 </div>
                             )}
 
                             {/* Відображення вартості конкретної послуги */}
                             {srv.serviceId && srv.amount && data.services && (
-                                <div style={{ minWidth: '100px' }}>
+                                <div style={{minWidth: '100px'}}>
                                     {(data.services.find(s => s.id === srv.serviceId)?.estimateCost * srv.amount).toLocaleString()} ₴
                                 </div>
                             )}
@@ -394,13 +406,13 @@ export default function AddProjectModal({ isOpen, onClose, onCreated }) {
                 title="➕ Новий клієнт"
             >
                 <ClientModal
-                    client={{ prefillName: prefillClientName }}
+                    client={{prefillName: prefillClientName}}
                     editMode={false}
                     onSave={(created) => {
                         if (created?.id) {
-                            setProject((p) => ({ ...p, clientId: created.id }));
+                            setProject((p) => ({...p, clientId: created.id}));
                             setFormErrors((prev) => {
-                                const newErrors = { ...prev };
+                                const newErrors = {...prev};
                                 delete newErrors.clientId;
                                 return newErrors;
                             });
