@@ -15,7 +15,6 @@ const GET_PROJECT_REFERENCE_DATA = gql`
     query GetProjectReferenceData {
         clients { id name }
         projectTypes { id name }
-        projectStatuses { id name }
         services { id serviceName estimateCost }
         workersByPosition(position: "Project Manager") {
             id name surname
@@ -32,7 +31,6 @@ const GET_PROJECT_DETAILS = gql`
             cost
             estimateCost
             registrationDate
-            startDate
             endDate
             paymentDeadline
             client { id }
@@ -91,17 +89,12 @@ export default function EditProjectModal({ isOpen, projectId, onClose, onUpdated
         description: "",
         clientId: "",
         projectTypeId: "",
-        projectStatusId: "",
         managerId: "",
         estimateCost: "",
         cost: "",
-        registrationDate: "",
-        startDate: "",
-        endDate: "",
         paymentDeadline: "",
         services: []
     });
-    const [initialStatusId, setInitialStatusId] = useState("");
     const [showCreateClient, setShowCreateClient] = useState(false);
     const [prefillClientName, setPrefillClientName] = useState("");
     const [isSaving, setSaving] = useState(false);
@@ -127,21 +120,31 @@ export default function EditProjectModal({ isOpen, projectId, onClose, onUpdated
     const [updatePS] = useMutation(UPDATE_PS);
     const [deletePS] = useMutation(DELETE_PS);
 
-    // Check if the project is expired (ended more than 30 days ago)
+    // Перевірка, чи проект закінчився більше 30 днів тому та його статус "Завершено"
     useEffect(() => {
-        if (det?.project?.endDate) {
-            const endDate = new Date(det.project.endDate);
-            const thirtyDaysAgo = new Date();
-            thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+        if (det?.project) {
+            const { endDate, status } = det.project;
+            // Перевіряємо, чи проект має статус "Завершено" або подібний
+            const isCompleted = status?.name?.toLowerCase().includes('completed') ||
+                status?.name?.toLowerCase().includes('done') ||
+                status?.name?.toLowerCase().includes('завершено');
 
-            if (endDate < thirtyDaysAgo) {
-                setIsProjectExpired(true);
-                toast.warning("Цей проект був завершений більше 30 днів тому. Редагування обмежено.");
+            if (isCompleted && endDate) {
+                const projectEndDate = new Date(endDate);
+                const thirtyDaysAgo = new Date();
+                thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+                if (projectEndDate < thirtyDaysAgo) {
+                    setIsProjectExpired(true);
+                    toast.warning("Цей проект був завершений більше 30 днів тому. Редагування заблоковано.");
+                } else {
+                    setIsProjectExpired(false);
+                }
             } else {
                 setIsProjectExpired(false);
             }
         }
-    }, [det?.project?.endDate]);
+    }, [det?.project]);
 
     useEffect(() => {
         if (det?.project) {
@@ -151,13 +154,9 @@ export default function EditProjectModal({ isOpen, projectId, onClose, onUpdated
                 description: p.description || "",
                 clientId: p.client.id,
                 projectTypeId: p.projectType.id,
-                projectStatusId: p.status.id,
                 managerId: p.manager?.id || "",
                 estimateCost: p.estimateCost?.toString() || "",
                 cost: p.cost?.toString() || "",
-                registrationDate: p.registrationDate,
-                startDate: p.startDate || "",
-                endDate: p.endDate || "",
                 paymentDeadline: p.paymentDeadline || "",
                 services: p.projectServices.map(ps => ({
                     id: ps.id,
@@ -166,9 +165,6 @@ export default function EditProjectModal({ isOpen, projectId, onClose, onUpdated
                     initialAmount: ps.amount
                 }))
             });
-
-            // Save initial status ID for comparison
-            setInitialStatusId(p.status.id);
         }
     }, [det]);
 
@@ -177,7 +173,7 @@ export default function EditProjectModal({ isOpen, projectId, onClose, onUpdated
 
         setProject(prev => ({ ...prev, [name]: value }));
 
-        // Clear error for the field
+        // Очищаємо помилку для поля
         if (errors[name]) {
             setErrors(prev => ({ ...prev, [name]: null }));
         }
@@ -204,42 +200,37 @@ export default function EditProjectModal({ isOpen, projectId, onClose, onUpdated
                 services[i][field] = val;
             }
 
-            // Clear error for this service
+            // Очищаємо помилку для цього сервісу
             setInvalidServiceIndexes(invalids => invalids.filter(idx => idx !== i));
             return { ...prev, services };
         });
 
-    const removeServiceRow = async i => {
-        const services = [...project.services];
-        const srv = services[i];
-        if (srv.id) {
-            try {
-                await deletePS({ variables: { id: +srv.id } });
-            } catch (err) {
-                console.error(err);
-                toast.error(`❌ Сервіс не видалено: ${err.message}`);
+    const removeServiceRow = i => {
+        setProject(prev => {
+            const services = [...prev.services];
+            const srv = services[i];
+
+            if (srv.id) {
+                // Якщо сервіс вже існує в базі, ми позначаємо його для видалення
+                services[i] = { ...srv, _delete: true };
+            } else {
+                // Якщо це новий сервіс, просто видаляємо його з масиву
+                services.splice(i, 1);
             }
-        }
-        services.splice(i, 1);
-        setProject(prev => ({ ...prev, services }));
+
+            return { ...prev, services };
+        });
     };
 
     const validateForm = () => {
         const newErrors = {};
 
-        // Required fields validation based on the UpdateProjectInput interface
+        // Перевірка обов'язкових полів відповідно до UpdateProjectInput
         if (!project.name.trim()) newErrors.name = "Назва проекту обов'язкова";
         if (!project.clientId) newErrors.clientId = "Клієнт обов'язковий";
         if (!project.projectTypeId) newErrors.projectTypeId = "Тип проекту обов'язковий";
 
-        // Date validations
-        if (project.startDate && project.endDate) {
-            if (new Date(project.startDate) > new Date(project.endDate)) {
-                newErrors.endDate = "Дата закінчення не може бути раніше дати початку";
-            }
-        }
-
-        // Cost validations
+        // Перевірка формату даних
         if (project.estimateCost && isNaN(parseFloat(project.estimateCost))) {
             newErrors.estimateCost = "Бюджет проекту має бути числом";
         }
@@ -247,7 +238,7 @@ export default function EditProjectModal({ isOpen, projectId, onClose, onUpdated
             newErrors.cost = "Вартість проекту має бути числом";
         }
 
-        // Validate services
+        // Перевірка сервісів
         const invalids = project.services
             .map((s, idx) => (!s.serviceId ? idx : -1))
             .filter(idx => idx !== -1);
@@ -260,7 +251,7 @@ export default function EditProjectModal({ isOpen, projectId, onClose, onUpdated
         setErrors(newErrors);
 
         if (Object.keys(newErrors).length > 0) {
-            // Display error messages
+            // Виводимо повідомлення про помилки
             Object.values(newErrors).forEach(message => {
                 toast.error(message);
             });
@@ -273,9 +264,9 @@ export default function EditProjectModal({ isOpen, projectId, onClose, onUpdated
     const handleSave = async e => {
         e.preventDefault();
 
-        // Check if project is expired
+        // Перевіряємо, чи проект завершений більше 30 днів тому
         if (isProjectExpired) {
-            toast.error("Неможливо редагувати проект, який завершений більше 30 днів тому");
+            toast.error("Редагування заблоковано: проект був завершений більше 30 днів тому");
             return;
         }
 
@@ -284,8 +275,28 @@ export default function EditProjectModal({ isOpen, projectId, onClose, onUpdated
         setInvalidServiceIndexes([]);
         setSaving(true);
 
+        // Спочатку обробляємо видалення сервісів
+        const servicesToDelete = project.services.filter(s => s._delete === true);
+        if (servicesToDelete.length > 0) {
+            try {
+                // Послідовно видалити всі позначені сервіси
+                for (const service of servicesToDelete) {
+                    if (service.id) { // Переконаємось, що сервіс існує в БД
+                        await deletePS({ variables: { id: +service.id } });
+                        toast.info(`Сервіс "${ref.services.find(x => x.id === service.serviceId)?.serviceName || 'невідомий'}" видалено`);
+                    }
+                }
+            } catch (err) {
+                console.error("Помилка при видаленні сервісів:", err);
+                toast.error(`❌ Помилка при видаленні сервісів: ${err.message}`);
+                setSaving(false);
+                return;
+            }
+        }
+
+        // Потім оновлюємо сам проект
         try {
-            // Create the input object based on UpdateProjectInput interface
+            // Створюємо об'єкт для оновлення відповідно до інтерфейсу UpdateProjectInput
             const updateInput = {
                 name: project.name,
                 clientId: project.clientId,
@@ -296,13 +307,9 @@ export default function EditProjectModal({ isOpen, projectId, onClose, onUpdated
                 paymentDeadline: project.paymentDeadline || null
             };
 
-            // Only include optional fields if they have values
+            // Додаємо опціональне поле managerId, якщо воно має значення
             if (project.managerId) {
                 updateInput.managerId = project.managerId;
-            }
-
-            if (project.projectStatusId) {
-                updateInput.statusId = project.projectStatusId;
             }
 
             await updateProject({
@@ -311,19 +318,28 @@ export default function EditProjectModal({ isOpen, projectId, onClose, onUpdated
                     input: updateInput
                 }
             });
+
+            toast.success("✅ Інформацію про проект оновлено");
         } catch (err) {
-            console.error(err);
+            console.error("Помилка при оновленні проекту:", err);
             toast.error(`❌ Проєкт не оновлено: ${err.message}`);
             setSaving(false);
             return;
         }
 
-        // Update or create project services
-        for (const s of project.services) {
+        // Після цього обробляємо нові та змінені сервіси
+        const servicesToSave = project.services.filter(s => !s._delete);
+        for (const s of servicesToSave) {
             try {
                 if (s.id) {
-                    await updatePS({ variables: { id: +s.id, input: { amount: +s.amount } } });
+                    // Оновлюємо існуючий сервіс
+                    if (s.amount !== s.initialAmount) { // Перевіряємо, чи змінилась кількість
+                        await updatePS({ variables: { id: +s.id, input: { amount: +s.amount } } });
+                        const serviceName = ref.services.find(x => x.id === s.serviceId)?.serviceName;
+                        toast.success(`✅ Оновлено кількість сервісу "${serviceName || 'невідомий'}" з ${s.initialAmount} на ${s.amount}`);
+                    }
                 } else {
+                    // Створюємо новий сервіс
                     await createPS({
                         variables: {
                             input: {
@@ -333,19 +349,22 @@ export default function EditProjectModal({ isOpen, projectId, onClose, onUpdated
                             }
                         }
                     });
+                    const serviceName = ref.services.find(x => x.id === s.serviceId)?.serviceName;
+                    toast.success(`✅ Додано новий сервіс "${serviceName || 'невідомий'}" у кількості ${s.amount}`);
                 }
             } catch (err) {
-                console.error(err);
+                console.error("Помилка при збереженні сервісу:", err);
                 const name = ref.services.find(x => x.id === s.serviceId)?.serviceName;
-                toast.error(`❌ Сервіс "${name}" не збережено: ${err.message}`);
+                toast.error(`❌ Сервіс "${name || 'невідомий'}" не збережено: ${err.message}`);
             }
         }
 
         try {
             await client.refetchQueries({ include: ["GetProjectServices","GetProjectDetails"] });
-        } catch {}
+        } catch (err) {
+            console.error("Помилка при оновленні даних:", err);
+        }
 
-        toast.success("✅ Проект успішно оновлено");
         onUpdated?.();
         onClose();
         setSaving(false);
@@ -361,7 +380,7 @@ export default function EditProjectModal({ isOpen, projectId, onClose, onUpdated
     return (
         <Modal isOpen onClose={onClose} title="✏️ Редагувати проєкт" size="large">
             <form onSubmit={handleSave} className="edit-project-form">
-                {/* Required fields according to the UpdateProjectInput interface */}
+                {/* Обов'язкові поля відповідно до UpdateProjectInput */}
                 <div className="mb-2">
                     <label className="form-label">Назва*</label>
                     <input
@@ -422,23 +441,6 @@ export default function EditProjectModal({ isOpen, projectId, onClose, onUpdated
                 {errors.projectTypeId && <div className="error-message">{errors.projectTypeId}</div>}
 
                 <div className="mb-2">
-                    <label className="form-label">Статус</label>
-                    <select
-                        className={`form-select ${errors.projectStatusId ? "has-error" : ""}`}
-                        name="projectStatusId"
-                        value={project.projectStatusId}
-                        onChange={handleChange}
-                        disabled={isProjectExpired}
-                    >
-                        <option value="">Виберіть статус</option>
-                        {ref.projectStatuses.map(s => (
-                            <option key={s.id} value={s.id}>{s.name}</option>
-                        ))}
-                    </select>
-                    {errors.projectStatusId && <div className="error-message">{errors.projectStatusId}</div>}
-                </div>
-
-                <div className="mb-2">
                     <label className="form-label">Менеджер</label>
                     <select
                         className={`form-select ${errors.managerId ? "has-error" : ""}`}
@@ -455,54 +457,19 @@ export default function EditProjectModal({ isOpen, projectId, onClose, onUpdated
                     {errors.managerId && <div className="error-message">{errors.managerId}</div>}
                 </div>
 
-                <div className="row g-2 mb-3">
-                    <div className="col">
-                        <label className="form-label">Дата початку</label>
-                        <DatePicker
-                            selected={project.startDate ? new Date(project.startDate) : null}
-                            onChange={date => {
-                                setProject(prev => ({
-                                    ...prev,
-                                    startDate: date ? date.toISOString().split("T")[0] : ""
-                                }));
-                            }}
-                            placeholderText="Виберіть дату початку"
-                            disabled={isProjectExpired}
-                        />
-                    </div>
-                    <div className="col">
-                        <label className="form-label">Дата завершення</label>
-                        <DatePicker
-                            selected={project.endDate ? new Date(project.endDate) : null}
-                            onChange={date => {
-                                setProject(prev => ({
-                                    ...prev,
-                                    endDate: date ? date.toISOString().split("T")[0] : ""
-                                }));
-                                if (errors.endDate) {
-                                    setErrors(prev => ({ ...prev, endDate: null }));
-                                }
-                            }}
-                            placeholderText="Виберіть дату завершення"
-                            minDate={project.startDate ? new Date(project.startDate) : null}
-                            disabled={isProjectExpired}
-                        />
-                        {errors.endDate && <div className="error-message">{errors.endDate}</div>}
-                    </div>
-                    <div className="col">
-                        <label className="form-label">Строк оплати</label>
-                        <DatePicker
-                            selected={project.paymentDeadline ? new Date(project.paymentDeadline) : null}
-                            onChange={date => {
-                                setProject(prev => ({
-                                    ...prev,
-                                    paymentDeadline: date ? date.toISOString().split("T")[0] : ""
-                                }));
-                            }}
-                            placeholderText="Виберіть строк оплати"
-                            disabled={isProjectExpired}
-                        />
-                    </div>
+                <div className="mb-3">
+                    <label className="form-label">Термін оплати</label>
+                    <DatePicker
+                        selected={project.paymentDeadline ? new Date(project.paymentDeadline) : null}
+                        onChange={date => {
+                            setProject(prev => ({
+                                ...prev,
+                                paymentDeadline: date ? date.toISOString().split("T")[0] : ""
+                            }));
+                        }}
+                        placeholderText="Виберіть термін оплати"
+                        disabled={isProjectExpired}
+                    />
                 </div>
 
                 <div className="row g-2 mb-3">
@@ -536,16 +503,17 @@ export default function EditProjectModal({ isOpen, projectId, onClose, onUpdated
                     </div>
                 </div>
 
+                {/* Відображаємо сервіси проекту */}
                 <h5 className="mt-3">Сервіси проєкту</h5>
                 {errors.services && <div className="error-message mb-2">{errors.services}</div>}
-                {project.services.map((s, idx) => (
+                {project.services.filter(s => !s._delete).map((s, idx) => (
                     <div key={idx} className="d-flex align-items-end gap-2 mb-2">
                         <select
                             className={`form-select ${invalidServiceIndexes.includes(idx) ? "has-error" : ""}`}
                             style={{ flex: 1 }}
                             value={s.serviceId}
                             onChange={(e) => updateServiceRow(idx, "serviceId", e.target.value)}
-                            disabled={!!s.id || isProjectExpired}  // Disabled if already ordered or project expired
+                            disabled={!!s.id || isProjectExpired}  // Вимкнено, якщо вже замовлено або проект завершено
                         >
                             <option value="">
                                 {s.id
@@ -604,8 +572,8 @@ export default function EditProjectModal({ isOpen, projectId, onClose, onUpdated
                 </div>
 
                 {isProjectExpired && (
-                    <div className="alert alert-warning mt-3">
-                        <strong>Увага!</strong> Цей проект був завершений більше 30 днів тому і не може бути відредагований.
+                    <div className="alert alert-danger mt-3">
+                        <strong>Редагування заблоковано!</strong> Цей проект був завершений більше 30 днів тому і не може бути відредагований.
                     </div>
                 )}
             </form>
