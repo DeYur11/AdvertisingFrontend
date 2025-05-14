@@ -8,6 +8,8 @@ export default function SelectWithCreate({
                                              onChange,
                                              createMutation,
                                              refetchOptions,
+                                             disabled = false,
+                                             className = "",
                                          }) {
     if (!createMutation) {
         console.warn(`⚠️ [SelectWithCreate] Не передано createMutation для поля "${label}"`);
@@ -62,7 +64,7 @@ export default function SelectWithCreate({
     }));
 
     return (
-        <div className="mb-2">
+        <div className={`mb-2 ${className}`}>
             <label className="form-label">{label}</label>
             <CreatableSelect
                 isClearable
@@ -70,6 +72,7 @@ export default function SelectWithCreate({
                 onCreateOption={handleCreate}
                 options={formattedOptions}
                 value={selectedOption ? { value: selectedOption.id, label: selectedOption.name } : null}
+                isDisabled={disabled}
             />
         </div>
     );

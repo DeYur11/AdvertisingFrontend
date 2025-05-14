@@ -7,6 +7,8 @@ export default function SelectWithModalCreate({
                                                   value,
                                                   onChange,
                                                   onCreateStart,
+                                                  disabled = false,
+                                                  className = "",
                                               }) {
     const handleChange = (selectedOption) => {
         onChange(selectedOption?.value || "");
@@ -23,7 +25,7 @@ export default function SelectWithModalCreate({
     }));
 
     return (
-        <div className="mb-2">
+        <div className={`mb-2 ${className}`}>
             <label className="form-label">{label}</label>
             <CreatableSelect
                 isClearable
@@ -33,6 +35,7 @@ export default function SelectWithModalCreate({
                 value={
                     selectedOption ? { value: selectedOption.id, label: selectedOption.name } : null
                 }
+                isDisabled={disabled}
             />
         </div>
     );

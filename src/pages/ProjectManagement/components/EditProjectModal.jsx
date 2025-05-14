@@ -32,10 +32,12 @@ const GET_PROJECT_DETAILS = gql`
             cost
             estimateCost
             registrationDate
+            startDate
+            endDate
             paymentDeadline
             client { id }
             projectType { id }
-            status { id }
+            status { id name }
             manager { id }
             projectServices {
                 id
@@ -82,6 +84,7 @@ const DELETE_PS = gql`
 
 /* ─── Компонент ───────────────────────────────────────────────────────────────── */
 export default function EditProjectModal({ isOpen, projectId, onClose, onUpdated }) {
+    const [errors, setErrors] = useState({});
     const [invalidServiceIndexes, setInvalidServiceIndexes] = useState([]);
     const [project, setProject] = useState({
         name: "",
@@ -93,12 +96,16 @@ export default function EditProjectModal({ isOpen, projectId, onClose, onUpdated
         estimateCost: "",
         cost: "",
         registrationDate: "",
+        startDate: "",
+        endDate: "",
         paymentDeadline: "",
         services: []
     });
+    const [initialStatusId, setInitialStatusId] = useState("");
     const [showCreateClient, setShowCreateClient] = useState(false);
     const [prefillClientName, setPrefillClientName] = useState("");
     const [isSaving, setSaving] = useState(false);
+    const [isProjectExpired, setIsProjectExpired] = useState(false);
     const client = useApolloClient();
 
     const { data: ref, loading: refLoading, refetch } = useQuery(
@@ -120,6 +127,22 @@ export default function EditProjectModal({ isOpen, projectId, onClose, onUpdated
     const [updatePS] = useMutation(UPDATE_PS);
     const [deletePS] = useMutation(DELETE_PS);
 
+    // Check if the project is expired (ended more than 30 days ago)
+    useEffect(() => {
+        if (det?.project?.endDate) {
+            const endDate = new Date(det.project.endDate);
+            const thirtyDaysAgo = new Date();
+            thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+            if (endDate < thirtyDaysAgo) {
+                setIsProjectExpired(true);
+                toast.warning("Цей проект був завершений більше 30 днів тому. Редагування обмежено.");
+            } else {
+                setIsProjectExpired(false);
+            }
+        }
+    }, [det?.project?.endDate]);
+
     useEffect(() => {
         if (det?.project) {
             const p = det.project;
@@ -133,6 +156,8 @@ export default function EditProjectModal({ isOpen, projectId, onClose, onUpdated
                 estimateCost: p.estimateCost?.toString() || "",
                 cost: p.cost?.toString() || "",
                 registrationDate: p.registrationDate,
+                startDate: p.startDate || "",
+                endDate: p.endDate || "",
                 paymentDeadline: p.paymentDeadline || "",
                 services: p.projectServices.map(ps => ({
                     id: ps.id,
@@ -141,12 +166,21 @@ export default function EditProjectModal({ isOpen, projectId, onClose, onUpdated
                     initialAmount: ps.amount
                 }))
             });
+
+            // Save initial status ID for comparison
+            setInitialStatusId(p.status.id);
         }
     }, [det]);
 
     const handleChange = e => {
         const { name, value } = e.target;
+
         setProject(prev => ({ ...prev, [name]: value }));
+
+        // Clear error for the field
+        if (errors[name]) {
+            setErrors(prev => ({ ...prev, [name]: null }));
+        }
     };
 
     const addServiceRow = () =>
@@ -162,11 +196,15 @@ export default function EditProjectModal({ isOpen, projectId, onClose, onUpdated
                 const parsed = parseInt(val, 10);
                 const min = services[i].initialAmount;
                 if (parsed < min) {
-                    toast.error(`❌ Неможливо зменшити нижче початкового (${min})`);
+                    toast.error(`❌ Неможливо зменшити кількість нижче початкової (${min}). Ці сервіси вже замовлені.`);
                     return prev;
                 }
                 services[i][field] = parsed;
+            } else if (field === "serviceId") {
+                services[i][field] = val;
             }
+
+            // Clear error for this service
             setInvalidServiceIndexes(invalids => invalids.filter(idx => idx !== i));
             return { ...prev, services };
         });
@@ -187,38 +225,90 @@ export default function EditProjectModal({ isOpen, projectId, onClose, onUpdated
     };
 
     const validateForm = () => {
+        const newErrors = {};
+
+        // Required fields validation based on the UpdateProjectInput interface
+        if (!project.name.trim()) newErrors.name = "Назва проекту обов'язкова";
+        if (!project.clientId) newErrors.clientId = "Клієнт обов'язковий";
+        if (!project.projectTypeId) newErrors.projectTypeId = "Тип проекту обов'язковий";
+
+        // Date validations
+        if (project.startDate && project.endDate) {
+            if (new Date(project.startDate) > new Date(project.endDate)) {
+                newErrors.endDate = "Дата закінчення не може бути раніше дати початку";
+            }
+        }
+
+        // Cost validations
+        if (project.estimateCost && isNaN(parseFloat(project.estimateCost))) {
+            newErrors.estimateCost = "Бюджет проекту має бути числом";
+        }
+        if (project.cost && isNaN(parseFloat(project.cost))) {
+            newErrors.cost = "Вартість проекту має бути числом";
+        }
+
+        // Validate services
         const invalids = project.services
             .map((s, idx) => (!s.serviceId ? idx : -1))
             .filter(idx => idx !== -1);
+
         if (invalids.length) {
             setInvalidServiceIndexes(invalids);
-            toast.error("❌ Виберіть тип для всіх сервісів.");
+            newErrors.services = "Виберіть тип для всіх сервісів";
+        }
+
+        setErrors(newErrors);
+
+        if (Object.keys(newErrors).length > 0) {
+            // Display error messages
+            Object.values(newErrors).forEach(message => {
+                toast.error(message);
+            });
             return false;
         }
+
         return true;
     };
 
     const handleSave = async e => {
         e.preventDefault();
+
+        // Check if project is expired
+        if (isProjectExpired) {
+            toast.error("Неможливо редагувати проект, який завершений більше 30 днів тому");
+            return;
+        }
+
         if (!validateForm()) return;
+
         setInvalidServiceIndexes([]);
         setSaving(true);
 
         try {
+            // Create the input object based on UpdateProjectInput interface
+            const updateInput = {
+                name: project.name,
+                clientId: project.clientId,
+                projectTypeId: project.projectTypeId,
+                description: project.description || null,
+                cost: project.cost ? parseFloat(project.cost) : null,
+                estimateCost: project.estimateCost ? parseFloat(project.estimateCost) : null,
+                paymentDeadline: project.paymentDeadline || null
+            };
+
+            // Only include optional fields if they have values
+            if (project.managerId) {
+                updateInput.managerId = project.managerId;
+            }
+
+            if (project.projectStatusId) {
+                updateInput.statusId = project.projectStatusId;
+            }
+
             await updateProject({
                 variables: {
                     id: projectId,
-                    input: {
-                        name: project.name,
-                        description: project.description || null,
-                        clientId: +project.clientId,
-                        projectTypeId: +project.projectTypeId,
-                        statusId: +project.projectStatusId,
-                        managerId: project.managerId ? +project.managerId : null,
-                        estimateCost: project.estimateCost ? +project.estimateCost : null,
-                        cost: project.cost ? +project.cost : null,
-                        paymentDeadline: project.paymentDeadline || null
-                    }
+                    input: updateInput
                 }
             });
         } catch (err) {
@@ -228,6 +318,7 @@ export default function EditProjectModal({ isOpen, projectId, onClose, onUpdated
             return;
         }
 
+        // Update or create project services
         for (const s of project.services) {
             try {
                 if (s.id) {
@@ -254,7 +345,7 @@ export default function EditProjectModal({ isOpen, projectId, onClose, onUpdated
             await client.refetchQueries({ include: ["GetProjectServices","GetProjectDetails"] });
         } catch {}
 
-        toast.success("✅ Проєкт успішно оновлено");
+        toast.success("✅ Проект успішно оновлено");
         onUpdated?.();
         onClose();
         setSaving(false);
@@ -270,15 +361,18 @@ export default function EditProjectModal({ isOpen, projectId, onClose, onUpdated
     return (
         <Modal isOpen onClose={onClose} title="✏️ Редагувати проєкт" size="large">
             <form onSubmit={handleSave} className="edit-project-form">
+                {/* Required fields according to the UpdateProjectInput interface */}
                 <div className="mb-2">
                     <label className="form-label">Назва*</label>
                     <input
-                        className="form-control"
+                        className={`form-control ${errors.name ? "has-error" : ""}`}
                         name="name"
                         value={project.name}
                         onChange={handleChange}
+                        disabled={isProjectExpired}
                         required
                     />
+                    {errors.name && <div className="error-message">{errors.name}</div>}
                 </div>
 
                 <div className="mb-2">
@@ -289,6 +383,7 @@ export default function EditProjectModal({ isOpen, projectId, onClose, onUpdated
                         rows="2"
                         value={project.description}
                         onChange={handleChange}
+                        disabled={isProjectExpired}
                     />
                 </div>
 
@@ -296,129 +391,223 @@ export default function EditProjectModal({ isOpen, projectId, onClose, onUpdated
                     label="Клієнт*"
                     options={ref.clients}
                     value={project.clientId}
-                    onChange={id => setProject(p => ({ ...p, clientId: id }))}
+                    onChange={id => {
+                        setProject(p => ({ ...p, clientId: id }));
+                        if (errors.clientId) {
+                            setErrors(prev => ({ ...prev, clientId: null }));
+                        }
+                    }}
                     onCreateStart={val => {
                         setPrefillClientName(val);
                         setShowCreateClient(true);
                     }}
+                    disabled={isProjectExpired}
                 />
+                {errors.clientId && <div className="error-message">{errors.clientId}</div>}
 
                 <SelectWithCreate
                     label="Тип проєкту*"
                     options={ref.projectTypes}
                     value={project.projectTypeId}
-                    onChange={v => setProject(p => ({ ...p, projectTypeId: v }))}
+                    onChange={v => {
+                        setProject(p => ({ ...p, projectTypeId: v }));
+                        if (errors.projectTypeId) {
+                            setErrors(prev => ({ ...prev, projectTypeId: null }));
+                        }
+                    }}
                     createMutation={CREATE_PROJECT_TYPE}
                     refetchOptions={refetch}
+                    disabled={isProjectExpired}
                 />
+                {errors.projectTypeId && <div className="error-message">{errors.projectTypeId}</div>}
 
                 <div className="mb-2">
-                    <label className="form-label">Статус*</label>
+                    <label className="form-label">Статус</label>
                     <select
-                        className="form-select"
+                        className={`form-select ${errors.projectStatusId ? "has-error" : ""}`}
                         name="projectStatusId"
                         value={project.projectStatusId}
                         onChange={handleChange}
-                        required
+                        disabled={isProjectExpired}
                     >
                         <option value="">Виберіть статус</option>
                         {ref.projectStatuses.map(s => (
                             <option key={s.id} value={s.id}>{s.name}</option>
                         ))}
                     </select>
+                    {errors.projectStatusId && <div className="error-message">{errors.projectStatusId}</div>}
                 </div>
 
                 <div className="mb-2">
                     <label className="form-label">Менеджер</label>
                     <select
-                        className="form-select"
+                        className={`form-select ${errors.managerId ? "has-error" : ""}`}
                         name="managerId"
                         value={project.managerId}
                         onChange={handleChange}
+                        disabled={isProjectExpired}
                     >
-                        <option value="">— немає —</option>
+                        <option value="">Виберіть менеджера</option>
                         {ref.workersByPosition.map(w => (
                             <option key={w.id} value={w.id}>{w.name} {w.surname}</option>
                         ))}
                     </select>
+                    {errors.managerId && <div className="error-message">{errors.managerId}</div>}
                 </div>
 
                 <div className="row g-2 mb-3">
                     <div className="col">
+                        <label className="form-label">Дата початку</label>
+                        <DatePicker
+                            selected={project.startDate ? new Date(project.startDate) : null}
+                            onChange={date => {
+                                setProject(prev => ({
+                                    ...prev,
+                                    startDate: date ? date.toISOString().split("T")[0] : ""
+                                }));
+                            }}
+                            placeholderText="Виберіть дату початку"
+                            disabled={isProjectExpired}
+                        />
+                    </div>
+                    <div className="col">
+                        <label className="form-label">Дата завершення</label>
+                        <DatePicker
+                            selected={project.endDate ? new Date(project.endDate) : null}
+                            onChange={date => {
+                                setProject(prev => ({
+                                    ...prev,
+                                    endDate: date ? date.toISOString().split("T")[0] : ""
+                                }));
+                                if (errors.endDate) {
+                                    setErrors(prev => ({ ...prev, endDate: null }));
+                                }
+                            }}
+                            placeholderText="Виберіть дату завершення"
+                            minDate={project.startDate ? new Date(project.startDate) : null}
+                            disabled={isProjectExpired}
+                        />
+                        {errors.endDate && <div className="error-message">{errors.endDate}</div>}
+                    </div>
+                    <div className="col">
                         <label className="form-label">Строк оплати</label>
                         <DatePicker
                             selected={project.paymentDeadline ? new Date(project.paymentDeadline) : null}
-                            onChange={date =>
-                                setProject(p => ({ ...p, paymentDeadline: date?.toISOString().split("T")[0] || "" }))
-                            }
+                            onChange={date => {
+                                setProject(prev => ({
+                                    ...prev,
+                                    paymentDeadline: date ? date.toISOString().split("T")[0] : ""
+                                }));
+                            }}
                             placeholderText="Виберіть строк оплати"
-                            minDate={project.registrationDate ? new Date(project.registrationDate) : null}
-                        />
-                    </div>
-                    <div className="col">
-                        <label className="form-label">Оцінка витрат, $</label>
-                        <input
-                            type="number"
-                            step="0.01"
-                            className="form-control"
-                            name="estimateCost"
-                            min="0"
-                            value={project.estimateCost}
-                            onChange={handleChange}
-                        />
-                    </div>
-                    <div className="col">
-                        <label className="form-label">Фактичні витрати, $</label>
-                        <input
-                            type="number"
-                            step="0.01"
-                            className="form-control"
-                            name="cost"
-                            min="0"
-                            value={project.cost}
-                            onChange={handleChange}
+                            disabled={isProjectExpired}
                         />
                     </div>
                 </div>
 
+                <div className="row g-2 mb-3">
+                    <div className="col">
+                        <label className="form-label">Оцінка витрат, ₴</label>
+                        <input
+                            type="number"
+                            step="0.01"
+                            className={`form-control ${errors.estimateCost ? "has-error" : ""}`}
+                            name="estimateCost"
+                            min="0"
+                            value={project.estimateCost}
+                            onChange={handleChange}
+                            disabled={isProjectExpired}
+                        />
+                        {errors.estimateCost && <div className="error-message">{errors.estimateCost}</div>}
+                    </div>
+                    <div className="col">
+                        <label className="form-label">Фактичні витрати, ₴</label>
+                        <input
+                            type="number"
+                            step="0.01"
+                            className={`form-control ${errors.cost ? "has-error" : ""}`}
+                            name="cost"
+                            min="0"
+                            value={project.cost}
+                            onChange={handleChange}
+                            disabled={isProjectExpired}
+                        />
+                        {errors.cost && <div className="error-message">{errors.cost}</div>}
+                    </div>
+                </div>
+
                 <h5 className="mt-3">Сервіси проєкту</h5>
+                {errors.services && <div className="error-message mb-2">{errors.services}</div>}
                 {project.services.map((s, idx) => (
                     <div key={idx} className="d-flex align-items-end gap-2 mb-2">
                         <select
-                            className={`form-select ${invalidServiceIndexes.includes(idx) ? "is-invalid" : ""}`}
+                            className={`form-select ${invalidServiceIndexes.includes(idx) ? "has-error" : ""}`}
                             style={{ flex: 1 }}
                             value={s.serviceId}
-                            disabled={!!s.id}  // блокуємо зміну типу для вже замовлених
+                            onChange={(e) => updateServiceRow(idx, "serviceId", e.target.value)}
+                            disabled={!!s.id || isProjectExpired}  // Disabled if already ordered or project expired
                         >
                             <option value="">
                                 {s.id
                                     ? ref.services.find(x => x.id === s.serviceId)?.serviceName
                                     : "— виберіть сервіс —"}
                             </option>
+                            {!s.id && ref.services.map(service => (
+                                <option key={service.id} value={service.id}>
+                                    {service.serviceName} (₴{service.estimateCost})
+                                </option>
+                            ))}
                         </select>
                         <input
                             type="number"
-                            min={s.initialAmount}
+                            min={s.initialAmount || 1}
                             className="form-control"
                             style={{ width: 90 }}
                             value={s.amount}
                             onChange={e => updateServiceRow(idx, "amount", e.target.value)}
+                            disabled={isProjectExpired}
                         />
-                        <Button variant="danger" size="sm" onClick={() => removeServiceRow(idx)}>
+                        <Button
+                            variant="danger"
+                            size="sm"
+                            onClick={() => removeServiceRow(idx)}
+                            disabled={isProjectExpired}
+                        >
                             🗑️
                         </Button>
+
+                        {s.id && s.initialAmount > 0 && (
+                            <span className="text-muted">
+                                Мін. кількість: {s.initialAmount}
+                            </span>
+                        )}
                     </div>
                 ))}
-                <Button variant="outline" size="sm" onClick={addServiceRow}>
+                <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={addServiceRow}
+                    disabled={isProjectExpired}
+                >
                     ➕ Додати сервіс
                 </Button>
 
                 <div className="mt-4 d-flex gap-2 justify-content-end">
                     <Button variant="outline" onClick={onClose}>Скасувати</Button>
-                    <Button variant="primary" type="submit" disabled={isSaving}>
+                    <Button
+                        variant="primary"
+                        type="submit"
+                        disabled={isSaving || isProjectExpired}
+                    >
                         {isSaving ? "Збереження…" : "💾 Оновити проєкт"}
                     </Button>
                 </div>
+
+                {isProjectExpired && (
+                    <div className="alert alert-warning mt-3">
+                        <strong>Увага!</strong> Цей проект був завершений більше 30 днів тому і не може бути відредагований.
+                    </div>
+                )}
             </form>
 
             <Modal isOpen={showCreateClient} onClose={() => setShowCreateClient(false)} title="➕ Новий клієнт">
@@ -428,6 +617,9 @@ export default function EditProjectModal({ isOpen, projectId, onClose, onUpdated
                     onSave={c => {
                         if (c?.id) {
                             setProject(p => ({ ...p, clientId: c.id }));
+                            if (errors.clientId) {
+                                setErrors(prev => ({ ...prev, clientId: null }));
+                            }
                             refetch();
                             toast.success("✅ Клієнта створено");
                         }
