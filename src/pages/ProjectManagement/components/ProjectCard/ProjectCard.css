@@ -232,3 +232,65 @@
         width: 80px;
     }
 }
+
+.project-card.project-status-paused {
+    border-left-color: #9333ea; /* Purple for paused/on-hold status */
+}
+
+/* Control button styles */
+.project-control-buttons {
+    display: flex;
+    gap: 4px;
+    margin-right: 8px;
+}
+
+/* Status badge colors for new statuses */
+.status-badge.paused,
+.status-badge.status-paused,
+.status-badge.on-hold,
+.status-badge.status-on-hold {
+    background-color: rgba(147, 51, 234, 0.1);
+    color: #9333ea;
+    border-color: rgba(147, 51, 234, 0.3);
+}
+
+.status-badge.paused .status-indicator,
+.status-badge.status-paused .status-indicator,
+.status-badge.on-hold .status-indicator,
+.status-badge.status-on-hold .status-indicator {
+    background-color: #9333ea;
+    box-shadow: 0 0 0 2px rgba(147, 51, 234, 0.2);
+}
+
+/* Tooltip styles */
+.button-tooltip {
+    position: relative;
+}
+
+.button-tooltip:hover::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    padding: 4px 8px;
+    background-color: #1e293b;
+    color: white;
+    border-radius: 4px;
+    font-size: 12px;
+    white-space: nowrap;
+    z-index: 10;
+    margin-bottom: 4px;
+}
+
+.button-tooltip:hover::before {
+    content: "";
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    border-width: 4px;
+    border-style: solid;
+    border-color: #1e293b transparent transparent transparent;
+    z-index: 10;
+}

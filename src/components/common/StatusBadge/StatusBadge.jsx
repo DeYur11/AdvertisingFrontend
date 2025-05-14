@@ -1,3 +1,5 @@
+// Modify the StatusBadge.jsx component to handle the 'paused' status
+
 import React from 'react';
 import './StatusBadge.css';
 
@@ -29,8 +31,10 @@ export default function StatusBadge({ status, type = 'default', size = 'medium',
         normalizedStatus.includes('scheduled') ||
         normalizedStatus.includes('planned')) {
         variant = 'warning';
+    } else if (normalizedStatus.includes('paused') ||
+        normalizedStatus.includes('on-hold')) {
+        variant = 'paused'; // New variant for paused status
     } else if (normalizedStatus.includes('cancelled') ||
-        normalizedStatus.includes('on-hold') ||
         normalizedStatus.includes('blocked')) {
         variant = 'danger';
     } else {
@@ -39,6 +43,7 @@ export default function StatusBadge({ status, type = 'default', size = 'medium',
 
     return (
         <div className={`status-badge ${variant} ${type} ${size} ${className}`}>
+            <span className="status-indicator"></span>
             <span className="status-text">{status}</span>
         </div>
     );

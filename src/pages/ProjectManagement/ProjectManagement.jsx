@@ -1,14 +1,3 @@
-// ==== ProjectManagement.jsx ====
-
-import { useState, useEffect } from "react";
-import { useQuery, useMutation, gql } from "@apollo/client";
-import { useTranslation } from "react-i18next";
-import { toast } from "react-toastify";
-
-import { GET_PAGINATED_PROJECTS_WITH_TOTAL } from "./graphql/projectsPagination.gql";
-import { DELETE_PAYMENT, GET_PAYMENT_PURPOSES } from "./graphql/projects.gql";
-import "./ProjectManagement.css";
-
 import ProjectCard from "./components/ProjectCard/ProjectCard";
 import ProjectFilterPanel from "./components/ProjectFilterPanel/ProjectFilterPanel";
 import Pagination from "../../components/common/Pagination/Pagination";
@@ -21,7 +10,22 @@ import ExportProjectDataModal from "./components/ExportDataModal/ExportProjectDa
 import Card from "../../components/common/Card/Card";
 import ServiceDetailsView from "./components/ServiceDetailsView/ServiceDetailsView";
 import ServiceImplementationDetailsModal from "./components/ServiceImplementationDetailsModal/ServiceImplementationDetailsModal";
-import {useSelector} from "react-redux";
+import { useSelector } from "react-redux";
+import { useState, useEffect } from "react";
+import { useQuery, useMutation, gql } from "@apollo/client";
+import { useTranslation } from "react-i18next";
+import { toast } from "react-toastify";
+import {
+    DELETE_PAYMENT,
+    GET_PAYMENT_PURPOSES,
+    CANCEL_PROJECT,
+    RESUME_PROJECT,
+    PAUSE_PROJECT
+} from "./graphql/projects.gql";
+
+import {
+    GET_PAGINATED_PROJECTS_WITH_TOTAL,
+} from "./graphql/projectsPagination.gql";
 
 const DELETE_PROJECT = gql`
     mutation DeleteProject($id: ID!) {
@@ -52,8 +56,78 @@ export default function ProjectManagement() {
     const [selectedServiceImplementation, setSelectedServiceImplementation] = useState(null);
     const [showImplementationDetailsModal, setShowImplementationDetailsModal] = useState(false);
 
+    // Новые состояния для модальных окон подтверждения статуса проекта
+    const [projectToPause, setProjectToPause] = useState(null);
+    const [projectToResume, setProjectToResume] = useState(null);
+    const [projectToCancel, setProjectToCancel] = useState(null);
+
     const { t } = useTranslation("projectManagement");
     const user = useSelector(state => state.user);
+
+    // Мутации для управления статусом проекта
+    const [pauseProject, { loading: pauseLoading }] = useMutation(PAUSE_PROJECT, {
+        onCompleted: (data) => {
+            toast.success(`Проект "${data.pauseProject.name}" успішно призупинено`);
+            refetch();
+        },
+        onError: (error) => {
+            toast.error(`Помилка призупинення проекту: ${error.message}`);
+        }
+    });
+
+    const [resumeProject, { loading: resumeLoading }] = useMutation(RESUME_PROJECT, {
+        onCompleted: (data) => {
+            toast.success(`Проект "${data.resumeProject.name}" успішно відновлено`);
+            refetch();
+        },
+        onError: (error) => {
+            toast.error(`Помилка відновлення проекту: ${error.message}`);
+        }
+    });
+
+    const [cancelProject, { loading: cancelLoading }] = useMutation(CANCEL_PROJECT, {
+        onCompleted: (data) => {
+            toast.success(`Проект "${data.cancelProject.name}" скасовано`);
+            refetch();
+        },
+        onError: (error) => {
+            toast.error(`Помилка скасування проекту: ${error.message}`);
+        }
+    });
+
+    // Обработчики действий над проектами
+    const handlePauseProject = async () => {
+        if (!projectToPause) return;
+        try {
+            await pauseProject({ variables: { projectId: projectToPause.id } });
+        } catch (error) {
+            console.error("Error pausing project:", error);
+        } finally {
+            setProjectToPause(null);
+        }
+    };
+
+    const handleResumeProject = async () => {
+        if (!projectToResume) return;
+        try {
+            await resumeProject({ variables: { projectId: projectToResume.id } });
+        } catch (error) {
+            console.error("Error resuming project:", error);
+        } finally {
+            setProjectToResume(null);
+        }
+    };
+
+    const handleCancelProject = async () => {
+        if (!projectToCancel) return;
+        try {
+            await cancelProject({ variables: { projectId: projectToCancel.id } });
+        } catch (error) {
+            console.error("Error canceling project:", error);
+        } finally {
+            setProjectToCancel(null);
+        }
+    };
 
     // Build filter input
     const buildFilterInput = () => {
@@ -261,6 +335,9 @@ export default function ProjectManagement() {
                                 onDeletePayment={() => setConfirmDeletePayment(p.payment)}
                                 onOpenServiceDetails={handleOpenServiceDetails}
                                 onShowImplementationDetails={handleShowImplementationDetails}
+                                onPauseProject={(project) => setProjectToPause(project)}
+                                onResumeProject={(project) => setProjectToResume(project)}
+                                onCancelProject={(project) => setProjectToCancel(project)}
                             />
                         ))}
                     </div>
@@ -282,6 +359,7 @@ export default function ProjectManagement() {
                 </>
             )}
 
+            {/* Модальные окна */}
             {showAddProject && (
                 <AddProjectModal
                     isOpen
@@ -305,6 +383,7 @@ export default function ProjectManagement() {
                 />
             )}
 
+            {/* Модальные окна подтверждения действий с проектами */}
             <ConfirmationDialog
                 isOpen={!!deleteProjectId}
                 onClose={() => setDeleteProjectId(null)}
@@ -327,6 +406,39 @@ export default function ProjectManagement() {
                 variant="danger"
             />
 
+            <ConfirmationDialog
+                isOpen={!!projectToPause}
+                onClose={() => setProjectToPause(null)}
+                onConfirm={handlePauseProject}
+                title="Призупинення проекту"
+                message={`Ви впевнені, що хочете призупинити проект "${projectToPause?.name}"? Це призупинить всі поточні роботи.`}
+                confirmText="Призупинити"
+                cancelText="Скасувати"
+                variant="warning"
+            />
+
+            <ConfirmationDialog
+                isOpen={!!projectToResume}
+                onClose={() => setProjectToResume(null)}
+                onConfirm={handleResumeProject}
+                title="Відновлення проекту"
+                message={`Ви впевнені, що хочете відновити роботу над проектом "${projectToResume?.name}"?`}
+                confirmText="Відновити"
+                cancelText="Скасувати"
+                variant="success"
+            />
+
+            <ConfirmationDialog
+                isOpen={!!projectToCancel}
+                onClose={() => setProjectToCancel(null)}
+                onConfirm={handleCancelProject}
+                title="Скасування проекту"
+                message={`Ви впевнені, що хочете скасувати проект "${projectToCancel?.name}"? Ця дія незворотна!`}
+                confirmText="Скасувати проект"
+                cancelText="Назад"
+                variant="danger"
+            />
+
             <PaymentModal
                 isOpen={showPaymentModal}
                 editMode={!!paymentToEdit}
@@ -341,6 +453,7 @@ export default function ProjectManagement() {
                 isOpen={showServiceDetailsModal}
                 onClose={handleCloseServiceDetails}
                 projectService={selectedProjectService}
+                onShowImplementationDetails={handleShowImplementationDetails}
             />
 
             <ExportProjectDataModal

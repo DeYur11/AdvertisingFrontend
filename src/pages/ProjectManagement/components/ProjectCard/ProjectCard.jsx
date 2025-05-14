@@ -1,6 +1,9 @@
 import { useState } from "react";
 import { useQuery } from "@apollo/client";
-import { GET_PROJECT_SERVICES, GET_PROJECT_PAYMENTS } from "../../graphql/projects.gql";
+import {
+    GET_PROJECT_SERVICES,
+    GET_PROJECT_PAYMENTS,
+} from "../../graphql/projects.gql";
 
 import Button from "../../../../components/common/Button/Button";
 import ServiceCard from "../ServiceCard/ServiceCard";
@@ -17,7 +20,10 @@ export default function ProjectCard({
                                         onAddPayment,
                                         onEditPayment,
                                         onOpenServiceDetails,
-                                        onShowImplementationDetails
+                                        onShowImplementationDetails,
+                                        onPauseProject,
+                                        onResumeProject,
+                                        onCancelProject
                                     }) {
     const [open, setOpen] = useState(false);
 
@@ -57,6 +63,24 @@ export default function ProjectCard({
         refetchPayments();
     };
 
+    // Helper function to check if the project can be paused
+    const canBePaused = () => {
+        const status = project.status?.name?.toLowerCase() || '';
+        return status.includes('progress') || status.includes('active') || status.includes('not started');
+    };
+
+    // Helper function to check if the project can be resumed
+    const canBeResumed = () => {
+        const status = project.status?.name?.toLowerCase() || '';
+        return status.includes('paused') || status.includes('on hold');
+    };
+
+    // Helper function to check if the project can be canceled
+    const canBeCanceled = () => {
+        const status = project.status?.name?.toLowerCase() || '';
+        return !status.includes('completed') && !status.includes('cancelled');
+    };
+
     // Форматування дати в компактному вигляді
     const formatDate = (dateString) => {
         if (!dateString) return "—";
@@ -70,7 +94,8 @@ export default function ProjectCard({
         if (status.includes('completed') || status.includes('done')) return 'project-status-completed';
         if (status.includes('in progress') || status.includes('active')) return 'project-status-in-progress';
         if (status.includes('pending') || status.includes('scheduled')) return 'project-status-pending';
-        if (status.includes('cancelled') || status.includes('on-hold')) return 'project-status-cancelled';
+        if (status.includes('paused') || status.includes('on-hold')) return 'project-status-paused';
+        if (status.includes('cancelled')) return 'project-status-cancelled';
         return '';
     };
 
@@ -84,6 +109,45 @@ export default function ProjectCard({
                     </div>
 
                     <div className="project-actions">
+                        {canBePaused() && (
+                            <Button
+                                variant="warning"
+                                size="small"
+                                icon="⏸️"
+                                title="Призупинити проект"
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    onPauseProject?.(project);
+                                }}
+                            />
+                        )}
+
+                        {canBeResumed() && (
+                            <Button
+                                variant="success"
+                                size="small"
+                                icon="▶️"
+                                title="Відновити проект"
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    onResumeProject?.(project);
+                                }}
+                            />
+                        )}
+
+                        {canBeCanceled() && (
+                            <Button
+                                variant="danger"
+                                size="small"
+                                icon="❌"
+                                title="Скасувати проект"
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    onCancelProject?.(project);
+                                }}
+                            />
+                        )}
+
                         <Button variant="outline" size="small" icon="✏️" onClick={handleEdit} />
                         <Button variant="danger" size="small" icon="🗑️" onClick={handleDelete} />
                         <Button
@@ -136,14 +200,14 @@ export default function ProjectCard({
                         <div className="project-info-item">
                             <span className="project-info-label">Оцін. вартість:</span>
                             <span className="project-info-value project-cost">
-                ${(+project.estimateCost || 0).toFixed(2)}
-              </span>
+                                ${(+project.estimateCost || 0).toFixed(2)}
+                            </span>
                         </div>
                         <div className="project-info-item">
                             <span className="project-info-label">Вартість:</span>
                             <span className="project-info-value project-cost">
-                ${(+project.cost || 0).toFixed(2)}
-              </span>
+                                ${(+project.cost || 0).toFixed(2)}
+                            </span>
                         </div>
                         <div className="project-info-item">
                             <span className="project-info-label">Термін оплати:</span>

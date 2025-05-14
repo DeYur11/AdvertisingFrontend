@@ -216,3 +216,42 @@ export const GET_PROJECT_DETAILS = gql`
         }
     }
 `;
+
+export const PAUSE_PROJECT = gql`
+    mutation PauseProject($projectId: ID!) {
+        pauseProject(projectId: $projectId) {
+            id
+            name
+            status {
+                id
+                name
+            }
+        }
+    }
+`;
+
+export const RESUME_PROJECT = gql`
+    mutation ResumeProject($projectId: ID!) {
+        resumeProject(projectId: $projectId) {
+            id
+            name
+            status {
+                id
+                name
+            }
+        }
+    }
+`;
+
+export const CANCEL_PROJECT = gql`
+    mutation CancelProject($projectId: ID!) {
+        cancelProject(projectId: $projectId) {
+            id
+            name
+            status {
+                id
+                name
+            }
+        }
+    }
+`;
