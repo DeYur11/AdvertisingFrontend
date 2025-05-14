@@ -120,6 +120,15 @@ export default function ProjectManagement() {
 
     const handleCancelProject = async () => {
         if (!projectToCancel) return;
+
+        // Check if the project is in a paused state before allowing cancellation
+        const status = projectToCancel.status?.name?.toLowerCase() || '';
+        if (!status.includes('paused') && !status.includes('on hold')) {
+            toast.error("Проект повинен бути призупиненим перед скасуванням");
+            setProjectToCancel(null);
+            return;
+        }
+
         try {
             await cancelProject({ variables: { projectId: projectToCancel.id } });
         } catch (error) {
@@ -197,21 +206,20 @@ export default function ProjectManagement() {
         }
     };
 
-    // Add / edit payment
     const handleAddPayment = (project, refetchFn) => {
         setPaymentToEdit(null);
         setPaymentProject(project);
         setRefetchPayments(() => refetchFn);
         setShowPaymentModal(true);
     };
-    const handleEditPayment = (payment, project, refetchFn) => {
+
+    const handleEditPayment = (payment, refetchFn, project) => {
         setPaymentToEdit(payment);
         setPaymentProject(project);
         setRefetchPayments(() => refetchFn);
         setShowPaymentModal(true);
     };
 
-    // Close payment modal
     const handleClosePaymentModal = () => {
         setShowPaymentModal(false);
         setPaymentToEdit(null);
@@ -433,7 +441,7 @@ export default function ProjectManagement() {
                 onClose={() => setProjectToCancel(null)}
                 onConfirm={handleCancelProject}
                 title="Скасування проекту"
-                message={`Ви впевнені, що хочете скасувати проект "${projectToCancel?.name}"? Ця дія незворотна!`}
+                message={`Ви впевнені, що хочете скасувати призупинений проект "${projectToCancel?.name}"? Ця дія незворотна!`}
                 confirmText="Скасувати проект"
                 cancelText="Назад"
                 variant="danger"
@@ -445,6 +453,7 @@ export default function ProjectManagement() {
                 payment={paymentToEdit}
                 projectId={paymentProject?.id}
                 purposes={paymentPurposesData?.paymentPurposes ?? []}
+                registrationDate={paymentProject?.registrationDate}
                 onClose={handleClosePaymentModal}
                 onSave={handlePaymentSaved}
             />

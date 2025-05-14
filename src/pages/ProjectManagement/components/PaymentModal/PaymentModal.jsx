@@ -34,6 +34,7 @@ export default function PaymentModal({
                                          onClose,
                                          payment,
                                          projectId,
+                                         registrationDate,   // новий проп — дата реєстрації проекту, рядок YYYY-MM-DD
                                          purposes = [],
                                          editMode,
                                          onSave
@@ -59,14 +60,13 @@ export default function PaymentModal({
                 paymentPurposeId: payment.paymentPurpose?.id || "",
                 transactionNumber: payment.transactionNumber || ""
             });
-            setErrors({});
         } else {
             setForm(defaultForm);
-            setErrors({});
         }
+        setErrors({});
     }, [editMode, payment, isOpen]);
 
-    const handleChange = (e) => {
+    const handleChange = e => {
         const { name, value } = e.target;
         setForm(prev => ({ ...prev, [name]: value }));
         if (errors[name]) {
@@ -74,7 +74,7 @@ export default function PaymentModal({
         }
     };
 
-    const handleDateChange = (date) => {
+    const handleDateChange = date => {
         setForm(prev => ({ ...prev, paymentDate: date }));
         if (errors.paymentDate) {
             setErrors(prev => ({ ...prev, paymentDate: null }));
@@ -103,14 +103,14 @@ export default function PaymentModal({
         return true;
     };
 
-    const handleSubmit = async (e) => {
+    const handleSubmit = async e => {
         e.preventDefault();
         if (!validate()) return;
 
         const input = {
             paymentSum: parseFloat(form.paymentSum),
             paymentDate: form.paymentDate.toISOString().split("T")[0],
-            paymentPurposeId: parseInt(form.paymentPurposeId),
+            paymentPurposeId: parseInt(form.paymentPurposeId, 10),
             transactionNumber: form.transactionNumber.trim()
         };
 
@@ -119,7 +119,11 @@ export default function PaymentModal({
                 await updatePayment({ variables: { id: payment.id, input } });
                 toast.success("Платіж оновлено");
             } else {
-                await createPayment({ variables: { input: { ...input, projectId: parseInt(projectId) } } });
+                await createPayment({
+                    variables: {
+                        input: { ...input, projectId: parseInt(projectId, 10) }
+                    }
+                });
                 toast.success("Платіж створено");
             }
             onSave();
@@ -131,87 +135,110 @@ export default function PaymentModal({
     };
 
     return (
-        <>
-            <Modal
-                isOpen={isOpen}
-                onClose={onClose}
-                title={editMode ? "Редагувати платіж" : "Додати платіж"}
-                size="small"
-            >
-                <form className="payment-form" onSubmit={handleSubmit}>
-                    <div className="form-group">
-                        <label htmlFor="paymentSum">Сума*</label>
-                        <input
-                            type="number"
-                            step="0.01"
-                            id="paymentSum"
-                            name="paymentSum"
-                            value={form.paymentSum}
-                            onChange={handleChange}
-                            className={`form-control ${errors.paymentSum ? "is-invalid" : ""}`}
-                            placeholder="наприклад, 1200.00"
-                        />
-                        {errors.paymentSum && <div className="invalid-feedback">{errors.paymentSum}</div>}
-                    </div>
+        <Modal
+            isOpen={isOpen}
+            onClose={onClose}
+            title={editMode ? "Редагувати платіж" : "Додати платіж"}
+            size="small"
+        >
+            <form className="payment-form" onSubmit={handleSubmit}>
+                <div className="form-group">
+                    <label htmlFor="paymentSum">Сума*</label>
+                    <input
+                        type="number"
+                        step="0.01"
+                        id="paymentSum"
+                        name="paymentSum"
+                        value={form.paymentSum}
+                        onChange={handleChange}
+                        className={`form-control ${errors.paymentSum ? "is-invalid" : ""}`}
+                        placeholder="наприклад, 1200.00"
+                    />
+                    {errors.paymentSum && (
+                        <div className="invalid-feedback">{errors.paymentSum}</div>
+                    )}
+                </div>
 
-                    <div className="form-group">
-                        <label htmlFor="paymentDate">Дата платежу*</label>
-                        <DatePicker
-                            selected={form.paymentDate}
-                            onChange={handleDateChange}
-                            placeholderText="Оберіть дату..."
-                            className={`${errors.paymentDate ? "is-invalid" : ""}`}
-                        />
-                        {errors.paymentDate && <div className="invalid-feedback">{errors.paymentDate}</div>}
-                    </div>
+                <div className="form-group">
+                    <label htmlFor="paymentDate">Дата платежу*</label>
+                    <DatePicker
+                        selected={form.paymentDate}
+                        onChange={handleDateChange}
+                        placeholderText="Оберіть дату..."
+                        className={errors.paymentDate ? "is-invalid" : ""}
+                        minDate={registrationDate ? new Date(registrationDate) : null}
+                    />
+                    {errors.paymentDate && (
+                        <div className="invalid-feedback">{errors.paymentDate}</div>
+                    )}
+                </div>
 
-                    <div className="form-group">
-                        <label htmlFor="paymentPurposeId">Призначення*</label>
-                        <select
-                            id="paymentPurposeId"
-                            name="paymentPurposeId"
-                            value={form.paymentPurposeId}
-                            onChange={handleChange}
-                            className={`form-control ${errors.paymentPurposeId ? "is-invalid" : ""}`}
-                        >
-                            <option value="">Оберіть призначення</option>
-                            {purposes.map(p => (
-                                <option key={p.id} value={p.id}>
-                                    {p.name}
-                                </option>
-                            ))}
-                        </select>
-                        {errors.paymentPurposeId && <div className="invalid-feedback">{errors.paymentPurposeId}</div>}
-                    </div>
+                <div className="form-group">
+                    <label htmlFor="paymentPurposeId">Призначення*</label>
+                    <select
+                        id="paymentPurposeId"
+                        name="paymentPurposeId"
+                        value={form.paymentPurposeId}
+                        onChange={handleChange}
+                        className={`form-control ${
+                            errors.paymentPurposeId ? "is-invalid" : ""
+                        }`}
+                    >
+                        <option value="">Оберіть призначення</option>
+                        {purposes.map(p => (
+                            <option key={p.id} value={p.id}>
+                                {p.name}
+                            </option>
+                        ))}
+                    </select>
+                    {errors.paymentPurposeId && (
+                        <div className="invalid-feedback">{errors.paymentPurposeId}</div>
+                    )}
+                </div>
 
-                    <div className="form-group">
-                        <label htmlFor="transactionNumber">Номер транзакції*</label>
-                        <input
-                            type="text"
-                            id="transactionNumber"
-                            name="transactionNumber"
-                            value={form.transactionNumber}
-                            onChange={handleChange}
-                            className={`form-control ${errors.transactionNumber ? "is-invalid" : ""}`}
-                            placeholder="наприклад, TXN-2024-001"
-                        />
-                        {errors.transactionNumber && <div className="invalid-feedback">{errors.transactionNumber}</div>}
-                    </div>
+                <div className="form-group">
+                    <label htmlFor="transactionNumber">Номер транзакції*</label>
+                    <input
+                        type="text"
+                        id="transactionNumber"
+                        name="transactionNumber"
+                        value={form.transactionNumber}
+                        onChange={handleChange}
+                        className={`form-control ${
+                            errors.transactionNumber ? "is-invalid" : ""
+                        }`}
+                        placeholder="наприклад, TXN-2024-001"
+                    />
+                    {errors.transactionNumber && (
+                        <div className="invalid-feedback">
+                            {errors.transactionNumber}
+                        </div>
+                    )}
+                </div>
 
-                    {errors.submit && <div className="submit-error-message">Помилка: {errors.submit}</div>}
+                {errors.submit && (
+                    <div className="submit-error-message">Помилка: {errors.submit}</div>
+                )}
 
-                    <div className="form-actions">
-                        <Button type="button" variant="outline" onClick={onClose}>
-                            Скасувати
-                        </Button>
-                        <Button type="submit" variant="primary" disabled={creating || updating}>
-                            {creating || updating
-                                ? (editMode ? "Оновлюється..." : "Створюється...")
-                                : (editMode ? "Оновити платіж" : "Створити платіж")}
-                        </Button>
-                    </div>
-                </form>
-            </Modal>
-        </>
+                <div className="form-actions">
+                    <Button type="button" variant="outline" onClick={onClose}>
+                        Скасувати
+                    </Button>
+                    <Button
+                        type="submit"
+                        variant="primary"
+                        disabled={creating || updating}
+                    >
+                        {creating || updating
+                            ? editMode
+                                ? "Оновлюється..."
+                                : "Створюється..."
+                            : editMode
+                                ? "Оновити платіж"
+                                : "Створити платіж"}
+                    </Button>
+                </div>
+            </form>
+        </Modal>
     );
 }

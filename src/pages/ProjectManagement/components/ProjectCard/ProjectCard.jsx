@@ -78,7 +78,8 @@ export default function ProjectCard({
     // Helper function to check if the project can be canceled
     const canBeCanceled = () => {
         const status = project.status?.name?.toLowerCase() || '';
-        return !status.includes('completed') && !status.includes('cancelled');
+        // Only allow cancellation for paused/on-hold projects
+        return status.includes('paused') || status.includes('on hold');
     };
 
     // Форматування дати в компактному вигляді
@@ -251,10 +252,10 @@ export default function ProjectCard({
                             loading={loadingPayments}
                             error={errorPayments}
                             onAddPayment={() => {
-                                onAddPayment?.(refetchPayments);
+                                onAddPayment?.(project, refetchPayments);
                                 refetchPayments();
                             }}
-                            onEditPayment={(payment) => onEditPayment?.(payment, refetchPayments)}
+                            onEditPayment={(payment, project) => onEditPayment?.(payment, refetchPayments, project)}
                             onDeletePayment={handleDeletePayment}
                         />
                     </div>

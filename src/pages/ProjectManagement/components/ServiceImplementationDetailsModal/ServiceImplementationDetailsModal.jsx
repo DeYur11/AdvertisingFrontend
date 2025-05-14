@@ -114,7 +114,7 @@ export default function ServiceImplementationDetailsModal({
                                             <span className="sipm-detail-value">{task.priority || "—"}</span>
                                         </div>
                                         <div className="sipm-task-detail-item">
-                                            <span className="sipm-detail-label">Термін:</span>
+                                            <span className="sipm-detail-label">Дедлайн:</span>
                                             <span className="sipm-detail-value">{formatDate(task.deadline)}</span>
                                         </div>
                                         <div className="sipm-task-detail-item">
