@@ -1,7 +1,18 @@
-// src/pages/ServiceTracker Page/components/ServicesList/ServicesList.jsx
+// src/pages/ServiceTrackerPage/components/ServicesList/ServicesList.jsx
+import React from "react";
 import Card from "../../../../components/common/Card/Card";
 import ServiceCard from "../ServiceCard/ServiceCard";
 import "./ServicesList.css";
+
+const uk = {
+    loading: "Завантаження сервісів...",
+    errorPrefix: "Помилка завантаження сервісів: ",
+    noServices: "Сервіси, що відповідають критеріям пошуку, відсутні.",
+    allImplemented: "Усі сервіси повністю реалізовані.",
+    sortBy: "Сортувати за:",
+    estCost: "Орієнтовна вартість",
+    project: "Проєкт",
+};
 
 export default function ServicesList({
                                          services,
@@ -13,17 +24,17 @@ export default function ServicesList({
                                          onSort,
                                          sortConfig = {
                                              field: "projectName",
-                                             direction: "ASC"
-                                         }
+                                             direction: "ASC",
+                                         },
                                      }) {
-    // Handle sorting clicks
+    // Обробка кліку по кнопці сортування
     const handleSortClick = (field) => {
         if (onSort) {
             onSort(field);
         }
     };
 
-    // Generate sort arrow indicator
+    // Визначення стрілки напрямку сортування
     const getSortArrow = (field) => {
         if (sortConfig.field === field) {
             return sortConfig.direction === "ASC" ? "↑" : "↓";
@@ -32,20 +43,25 @@ export default function ServicesList({
     };
 
     if (loading) {
-        return <div className="loading-message">Loading services...</div>;
+        return <div className="loading-message">{uk.loading}</div>;
     }
 
     if (error) {
-        return <div className="error-message">Error loading services: {error.message}</div>;
+        return (
+            <div className="error-message">
+                {uk.errorPrefix}
+                {error.message}
+            </div>
+        );
     }
 
     if (services.length === 0) {
         return (
             <Card className="empty-state-card">
                 <div className="no-services-message">
-                    {filters.searchQuery || filters.projectFilter ?
-                        "No services match your search criteria." :
-                        "All services have been fully implemented."}
+                    {filters.searchQuery || filters.projectFilter
+                        ? uk.noServices
+                        : uk.allImplemented}
                 </div>
             </Card>
         );
@@ -53,27 +69,31 @@ export default function ServicesList({
 
     return (
         <div className="services-list-container">
-            {/* Sort Controls */}
+            {/* Елементи керування сортуванням */}
             <div className="sort-controls">
-                <span className="sort-label">Sort by:</span>
+                <span className="sort-label">{uk.sortBy}</span>
 
                 <button
-                    className={`sort-button ${sortConfig.field === "serviceEstimateCost" ? "active" : ""}`}
+                    className={`sort-button ${
+                        sortConfig.field === "serviceEstimateCost" ? "active" : ""
+                    }`}
                     onClick={() => handleSortClick("serviceEstimateCost")}
                 >
-                    Est. Cost {getSortArrow("serviceEstimateCost")}
+                    {uk.estCost} {getSortArrow("serviceEstimateCost")}
                 </button>
                 <button
-                    className={`sort-button ${sortConfig.field === "projectName" ? "active" : ""}`}
+                    className={`sort-button ${
+                        sortConfig.field === "projectName" ? "active" : ""
+                    }`}
                     onClick={() => handleSortClick("projectName")}
                 >
-                    Project {getSortArrow("projectName")}
+                    {uk.project} {getSortArrow("projectName")}
                 </button>
             </div>
 
-            {/* Services Grid */}
+            {/* Сітка сервісів */}
             <div className="services-grid">
-                {services.map(service => (
+                {services.map((service) => (
                     <ServiceCard
                         key={service.id}
                         service={service}

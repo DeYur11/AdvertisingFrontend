@@ -12,26 +12,26 @@ export default function TaskMaterialsTab({
                                              onDelete,
                                              onSelect
                                          }) {
-    if (loading) return <div>Loading…</div>;
-    if (error) return <div>Error: {error.message}</div>;
+    if (loading) return <div>Завантаження…</div>;
+    if (error) return <div>Помилка: {error.message}</div>;
 
     return (
         <div>
             <div className="flex justify-between items-center mb-2">
-                <h3>Attached Materials</h3>
+                <h3>Прикріплені матеріали</h3>
                 {!isTaskCompleted && (
                     <Button variant="primary" size="small" icon="+" onClick={onAdd}>
-                        Add Material
+                        Додати матеріал
                     </Button>
                 )}
             </div>
 
             {materials.length === 0 ? (
                 <Card className="text-center">
-                    <p>No materials attached yet.</p>
+                    <p>Матеріали ще не прикріплені.</p>
                     {!isTaskCompleted && (
                         <Button variant="primary" onClick={onAdd}>
-                            Add First Material
+                            Додати перший матеріал
                         </Button>
                     )}
                 </Card>

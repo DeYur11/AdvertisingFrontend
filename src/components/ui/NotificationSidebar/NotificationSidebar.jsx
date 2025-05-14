@@ -1,7 +1,11 @@
+// src/components/ui/NotificationSidebar/NotificationSidebar.jsx (Modified Version)
+
 import { useEffect } from 'react';
 import { useQuery, gql } from '@apollo/client';
+import { useNavigate } from 'react-router-dom'; // Add this import
 import './NotificationSidebar.css';
 import { useSelector } from "react-redux";
+import Button from '../../common/Button/Button'; // Add this import
 
 // GraphQL queries aligned with the schema
 const GET_REVIEW_LOGS = gql`
@@ -85,10 +89,12 @@ export default function NotificationSidebar({
                                                 projectIds = []
                                             }) {
     const userRole = useSelector((s) => s.user.mainRole);
+    const navigate = useNavigate(); // Add this hook
 
     const isWorker = userRole === "WORKER";
     const isScrumMaster = userRole === "SCRUM_MASTER";
     const isProjectManager = userRole === "PROJECT_MANAGER";
+    const isAdmin = userRole === "ADMIN";
 
     /* Select the appropriate query and variables */
     const query = isWorker
@@ -193,6 +199,12 @@ export default function NotificationSidebar({
             ? "Сповіщення про завдання"
             : "Сповіщення про проєкти";
 
+    // Function to navigate to logs panel
+    const navigateToLogs = () => {
+        onClose(); // Close the sidebar first
+        navigate('/logs'); // Navigate to logs page
+    };
+
     return (
         <>
             <div id="notificationBackdrop" className={`backdrop ${isOpen ? 'open' : ''}`} onClick={onClose}></div>
@@ -203,6 +215,24 @@ export default function NotificationSidebar({
                 </div>
 
                 <div className="notification-sidebar-content">
+                    {/* Add View All Logs button - only visible for managers and admins */}
+                    {(isProjectManager || isAdmin) && (
+                        <div className="view-all-logs-container">
+                            <Button
+                                variant="primary"
+                                size="small"
+                                icon="📋"
+                                className="view-all-logs-button"
+                                onClick={navigateToLogs}
+                            >
+                                View All Logs
+                            </Button>
+                            <p className="logs-description">
+                                Access the full audit log system to view and manage all system activities
+                            </p>
+                        </div>
+                    )}
+
                     {loading && <div className="notification-loading">Завантаження сповіщень...</div>}
                     {error && <div className="notification-error">Помилка завантаження: {error.message}</div>}
                     {!loading && !error && (!notifications || notifications.length === 0) && (

@@ -15,7 +15,7 @@ const GET_MATERIALS_FOR_EXPORT = gql`
                 name
                 description
                 createDatetime
-                type {
+                materialType {
                     id
                     name
                 }
@@ -89,7 +89,9 @@ export default function ExportMaterialsModal({
                                                  filters = {},
                                                  currentSortField,
                                                  currentSortDirection,
-                                                 workerId
+                                                 workerId,
+                                                 filter
+
                                              }) {
     // State for export options
     const [exportFormat, setExportFormat] = useState("csv");
@@ -114,81 +116,6 @@ export default function ExportMaterialsModal({
     const [includeHeaders, setIncludeHeaders] = useState(true);
     const [isExporting, setIsExporting] = useState(false);
 
-    // Convert filters for GraphQL
-    const buildFilterInput = () => {
-        const filterInput = {};
-
-        // Add search query filter if it exists
-        if (filters.nameContains) {
-            filterInput.nameContains = filters.nameContains;
-        }
-
-        // Add description search if it exists
-        if (filters.descriptionContains) {
-            filterInput.descriptionContains = filters.descriptionContains;
-        }
-
-        // Add status filters
-        if (filters.status && filters.status.length > 0) {
-            filterInput.statusIds = filters.status;
-        }
-
-        // Add usage restriction filters
-        if (filters.usageRestriction && filters.usageRestriction.length > 0) {
-            filterInput.usageRestrictionIds = filters.usageRestriction;
-        }
-
-        // Add licence type filters
-        if (filters.licenceType && filters.licenceType.length > 0) {
-            filterInput.licenceTypeIds = filters.licenceType;
-        }
-
-        // Add target audience filters
-        if (filters.targetAudience && filters.targetAudience.length > 0) {
-            filterInput.targetAudienceIds = filters.targetAudience;
-        }
-
-        // Add material type filters
-        if (filters.type && filters.type.length > 0) {
-            filterInput.typeIds = filters.type;
-        }
-
-        // Add language filters
-        if (filters.language && filters.language.length > 0) {
-            filterInput.languageIds = filters.language;
-        }
-
-        // Add task filters
-        if (filters.task && filters.task.length > 0) {
-            filterInput.taskIds = filters.task;
-        }
-
-        // Add keyword filters
-        if (filters.keywords && filters.keywords.length > 0) {
-            filterInput.keywordIds = filters.keywords;
-        }
-
-        // Special handling for pending review status
-        if (filters.reviewStatus === 'pending') {
-            if (!filterInput.statusIds) {
-                filterInput.statusIds = [2]; // Pending Review status ID
-            } else if (!filterInput.statusIds.includes(2)) {
-                filterInput.statusIds.push(2);
-            }
-        }
-
-        // Date range filters
-        if (filters.dateRange) {
-            if (filters.dateRange.from) {
-                filterInput.createDatetimeFrom = filters.dateRange.from;
-            }
-            if (filters.dateRange.to) {
-                filterInput.createDatetimeTo = filters.dateRange.to;
-            }
-        }
-
-        return filterInput;
-    };
 
     // Query for materials
     const { loading, error, data } = useQuery(GET_MATERIALS_FOR_EXPORT, {
@@ -198,7 +125,7 @@ export default function ExportMaterialsModal({
                 size: 1000, // Limit to 1000 materials for export
                 sortField: currentSortField,
                 sortDirection: currentSortDirection,
-                filter: buildFilterInput()
+                filter: filters
             }
         },
         skip: !isOpen,
@@ -268,7 +195,6 @@ export default function ExportMaterialsModal({
         if (selectedFields.materialType) headers.push("Material Type");
         if (selectedFields.status) headers.push("Status");
         if (selectedFields.language) headers.push("Language");
-        if (selectedFields.createDatetime) headers.push("Created Date");
         if (selectedFields.licenceType) headers.push("Licence Type");
         if (selectedFields.usageRestriction) headers.push("Usage Restriction");
         if (selectedFields.targetAudience) headers.push("Target Audience");
@@ -299,7 +225,7 @@ export default function ExportMaterialsModal({
             const row = [];
             if (selectedFields.materialName) row.push(`"${material.name.replace(/"/g, '""')}"`);
             if (selectedFields.materialDescription) row.push(`"${(material.description || "").replace(/"/g, '""')}"`);
-            if (selectedFields.materialType) row.push(`"${material.type?.name || ""}"`);
+            if (selectedFields.materialType) row.push(`"${material.materialType?.name || ""}"`);
             if (selectedFields.status) row.push(`"${material.status?.name || ""}"`);
             if (selectedFields.language) row.push(`"${material.language?.name || ""}"`);
             if (selectedFields.createDatetime) row.push(material.createDatetime || "");
@@ -346,7 +272,7 @@ export default function ExportMaterialsModal({
 
             if (selectedFields.materialName) formattedMaterial.name = material.name;
             if (selectedFields.materialDescription) formattedMaterial.description = material.description;
-            if (selectedFields.materialType) formattedMaterial.type = material.type?.name;
+            if (selectedFields.materialType) formattedMaterial.type = material.materialType?.name;
             if (selectedFields.status) formattedMaterial.status = material.status?.name;
             if (selectedFields.language) formattedMaterial.language = material.language?.name;
             if (selectedFields.createDatetime) formattedMaterial.createdDate = material.createDatetime;
@@ -418,9 +344,8 @@ export default function ExportMaterialsModal({
                     <div className="export-error">Error loading data: {error.message}</div>
                 ) : (
                     <>
-                        <Card className="export-info">
+
                             <p>Available for export: <strong>{totalMaterials}</strong> materials</p>
-                        </Card>
 
                         <div className="export-sections">
                             <div className="export-section">
@@ -512,14 +437,6 @@ export default function ExportMaterialsModal({
                                                 onChange={() => handleFieldChange("language")}
                                             />
                                             <span>Language</span>
-                                        </label>
-                                        <label className="export-checkbox">
-                                            <input
-                                                type="checkbox"
-                                                checked={selectedFields.createDatetime}
-                                                onChange={() => handleFieldChange("createDatetime")}
-                                            />
-                                            <span>Created Date</span>
                                         </label>
                                     </div>
 

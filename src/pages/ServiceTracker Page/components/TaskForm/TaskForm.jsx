@@ -1,8 +1,35 @@
-// src/pages/ServiceTracker Page/components/TaskForm/TaskForm.jsx
-import { useState, useEffect } from "react";
+// src/pages/ServiceTrackerPage/components/TaskForm/TaskForm.jsx
+import React, { useState, useEffect } from "react";
 import Modal from "../../../../components/common/Modal/Modal";
 import Button from "../../../../components/common/Button/Button";
 import "./TaskForm.css";
+
+const uk = {
+    modalTitleAdd: "Додати завдання",
+    modalTitleEdit: "Редагувати завдання",
+    labels: {
+        name: "Назва завдання *",
+        description: "Опис",
+        deadline: "Термін *",
+        status: "Статус *",
+        assignTo: "Призначити виконавця *",
+        priority: "Пріоритет (1–10)",
+        value: "Вартість",
+    },
+    placeholders: {
+        name: "Введіть назву завдання",
+        description: "Введіть опис завдання",
+        priority: "5",
+        value: "Введіть вартість…",
+    },
+    optionDefaultStatus: "Виберіть статус",
+    optionDefaultWorker: "Виберіть виконавця",
+    buttons: {
+        cancel: "Скасувати",
+        save: "Зберегти зміни",
+        add: "Додати завдання",
+    },
+};
 
 export default function TaskForm({
                                      isOpen,
@@ -10,7 +37,7 @@ export default function TaskForm({
                                      onSave,
                                      task = null,
                                      workers = [],
-                                     statuses = []
+                                     statuses = [],
                                  }) {
     const [formData, setFormData] = useState({
         id: task?.id || "",
@@ -20,10 +47,9 @@ export default function TaskForm({
         assignedWorkerId: task?.assignedWorkerId || "",
         taskStatusId: task?.taskStatusId || "",
         priority: task?.priority || "5",
-        value: task?.value || ""
+        value: task?.value || "",
     });
 
-    // Update form data when task prop changes
     useEffect(() => {
         if (task) {
             setFormData({
@@ -34,67 +60,67 @@ export default function TaskForm({
                 assignedWorkerId: task.assignedWorkerId || "",
                 taskStatusId: task.taskStatusId || "",
                 priority: task.priority || "5",
-                value: task.value || ""
+                value: task.value || "",
             });
         }
     }, [task]);
 
     const handleChange = (e) => {
         const { name, value } = e.target;
-        setFormData(prev => ({ ...prev, [name]: value }));
+        setFormData((prev) => ({ ...prev, [name]: value }));
     };
 
     const handleSubmit = (e) => {
         e.preventDefault();
         const payload = { ...formData };
-
-        if (!formData.id) {
-            delete payload.taskStatusId;
-        }
-
+        if (!formData.id) delete payload.taskStatusId;
         onSave(payload);
     };
 
-    const isFormValid = formData.name && formData.deadline && formData.assignedWorkerId && (formData.taskStatusId || !formData.id);
+    const isFormValid =
+        formData.name &&
+        formData.deadline &&
+        formData.assignedWorkerId &&
+        (formData.taskStatusId || !formData.id);
 
-    const modalTitle = formData.id ? "Edit Task" : "Add Task";
+    const modalTitle = formData.id
+        ? uk.modalTitleEdit
+        : uk.modalTitleAdd;
+    const submitLabel = formData.id
+        ? uk.buttons.save
+        : uk.buttons.add;
 
     return (
-        <Modal
-            isOpen={isOpen}
-            onClose={onClose}
-            title={modalTitle}
-            size="medium"
-        >
+        <Modal isOpen={isOpen} onClose={onClose} title={modalTitle} size="medium">
             <form className="task-form" onSubmit={handleSubmit}>
                 <div className="form-group">
-                    <label className="form-label">Task Name *</label>
+                    <label className="form-label">{uk.labels.name}</label>
                     <input
                         type="text"
                         name="name"
                         value={formData.name}
                         onChange={handleChange}
                         className="form-control"
-                        placeholder="Enter task name"
+                        placeholder={uk.placeholders.name}
                         required
                     />
                 </div>
 
                 <div className="form-group">
-                    <label className="form-label">Description</label>
+                    <label className="form-label">{uk.labels.description}</label>
                     <textarea
                         name="description"
                         value={formData.description}
                         onChange={handleChange}
                         className="form-control"
-                        placeholder="Enter task description"
+                        placeholder={uk.placeholders.description}
                         rows="3"
                     />
                 </div>
 
                 <div className="form-grid">
                     <div className="form-group">
-                        <label className="form-label">Deadline *</label>
+                        <label className="form-label">{uk.labels.deadline}</label>
                         <input
                             type="date"
                             name="deadline"
@@ -106,17 +132,17 @@ export default function TaskForm({
                     </div>
 
                     <div className="form-group">
-                        <label className="form-label">Status *</label>
+                        <label className="form-label">{uk.labels.status}</label>
                         <select
                             name="taskStatusId"
                             value={formData.taskStatusId}
                             onChange={handleChange}
                             className="form-control"
                             required
-                            disabled={!formData.id}  // ⬅️ тут обмеження на створення
+                            disabled={!formData.id}
                         >
-                            <option value="">Select status</option>
-                            {statuses.map(status => (
+                            <option value="">{uk.optionDefaultStatus}</option>
+                            {statuses.map((status) => (
                                 <option key={status.id} value={status.id}>
                                     {status.name}
                                 </option>
@@ -124,9 +150,8 @@ export default function TaskForm({
                         </select>
                     </div>
 
-
                     <div className="form-group">
-                        <label className="form-label">Assign To *</label>
+                        <label className="form-label">{uk.labels.assignTo}</label>
                         <select
                             name="assignedWorkerId"
                             value={formData.assignedWorkerId}
@@ -134,8 +159,8 @@ export default function TaskForm({
                             className="form-control"
                             required
                         >
-                            <option value="">Select worker</option>
-                            {workers.map(worker => (
+                            <option value="">{uk.optionDefaultWorker}</option>
+                            {workers.map((worker) => (
                                 <option key={worker.id} value={worker.id}>
                                     {worker.name} {worker.surname}
                                 </option>
@@ -144,7 +169,7 @@ export default function TaskForm({
                     </div>
 
                     <div className="form-group">
-                        <label className="form-label">Priority (1-10)</label>
+                        <label className="form-label">{uk.labels.priority}</label>
                         <input
                             type="number"
                             name="priority"
@@ -153,12 +178,12 @@ export default function TaskForm({
                             className="form-control"
                             min="1"
                             max="10"
-                            placeholder="5"
+                            placeholder={uk.placeholders.priority}
                         />
                     </div>
 
                     <div className="form-group">
-                        <label className="form-label">Value</label>
+                        <label className="form-label">{uk.labels.value}</label>
                         <input
                             type="number"
                             name="value"
@@ -166,25 +191,17 @@ export default function TaskForm({
                             onChange={handleChange}
                             className="form-control"
                             step="0.01"
-                            placeholder="Enter value..."
+                            placeholder={uk.placeholders.value}
                         />
                     </div>
                 </div>
 
                 <div className="form-actions">
-                    <Button
-                        variant="outline"
-                        type="button"
-                        onClick={onClose}
-                    >
-                        Cancel
+                    <Button variant="outline" type="button" onClick={onClose}>
+                        {uk.buttons.cancel}
                     </Button>
-                    <Button
-                        variant="primary"
-                        type="submit"
-                        disabled={!isFormValid}
-                    >
-                        {formData.id ? "Save Changes" : "Add Task"}
+                    <Button variant="primary" type="submit" disabled={!isFormValid}>
+                        {submitLabel}
                     </Button>
                 </div>
             </form>

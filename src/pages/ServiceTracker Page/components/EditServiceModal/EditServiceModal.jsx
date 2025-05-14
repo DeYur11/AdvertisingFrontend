@@ -44,11 +44,11 @@ export default function EditServiceModal({
                 }
             });
 
-            toast.success("Service implementation updated successfully!");
+            toast.success("Реалізацію сервісу успішно оновлено!");
             onSave();
         } catch (error) {
-            console.error("Error updating service implementation:", error);
-            toast.error(error?.message || "Failed to update service implementation. Please try again.");
+            console.error("Помилка під час оновлення реалізації сервісу:", error);
+            toast.error(error?.message || "Не вдалося оновити реалізацію сервісу. Спробуйте ще раз.");
         }
     };
 
@@ -56,35 +56,13 @@ export default function EditServiceModal({
         <Modal
             isOpen={isOpen}
             onClose={onClose}
-            title="Edit Service Implementation"
+            title="Редагування реалізації сервісу"
             size="medium"
         >
             <form onSubmit={handleSubmit} className="edit-service-form">
-                <div className="form-group">
-                    <label className="form-label">Start Date *</label>
-                    <input
-                        type="date"
-                        name="startDate"
-                        value={formData.startDate}
-                        onChange={handleChange}
-                        className="form-control"
-                        required
-                    />
-                </div>
 
                 <div className="form-group">
-                    <label className="form-label">End Date</label>
-                    <input
-                        type="date"
-                        name="endDate"
-                        value={formData.endDate}
-                        onChange={handleChange}
-                        className="form-control"
-                    />
-                </div>
-
-                <div className="form-group">
-                    <label className="form-label">Cost</label>
+                    <label className="form-label">Вартість</label>
                     <input
                         type="number"
                         name="cost"
@@ -92,25 +70,8 @@ export default function EditServiceModal({
                         onChange={handleChange}
                         className="form-control"
                         step="0.01"
-                        placeholder="Enter cost..."
+                        placeholder="Введіть вартість..."
                     />
-                </div>
-
-                <div className="form-group">
-                    <label className="form-label">Status</label>
-                    <select
-                        name="statusId"
-                        value={formData.statusId}
-                        onChange={handleChange}
-                        className="form-control"
-                    >
-                        <option value="">Select status</option>
-                        {serviceStatuses.map(status => (
-                            <option key={status.id} value={status.id}>
-                                {status.name}
-                            </option>
-                        ))}
-                    </select>
                 </div>
 
                 <div className="form-actions">
@@ -119,14 +80,14 @@ export default function EditServiceModal({
                         type="button"
                         onClick={onClose}
                     >
-                        Cancel
+                        Скасувати
                     </Button>
                     <Button
                         variant="primary"
                         type="submit"
                         disabled={!formData.startDate}
                     >
-                        Save Changes
+                        Зберегти зміни
                     </Button>
                 </div>
             </form>

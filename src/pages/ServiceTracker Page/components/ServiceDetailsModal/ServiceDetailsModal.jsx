@@ -29,43 +29,43 @@ export default function ServiceDetailsModal({
                                                 projectService,
                                                 onCreateService
                                             }) {
-    // State for task management
+    // Стан для управління завданнями
     const [showTaskModal, setShowTaskModal] = useState(false);
     const [selectedServiceInProgress, setSelectedServiceInProgress] = useState(null);
     const [currentTask, setCurrentTask] = useState(null);
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
     const [taskToDelete, setTaskToDelete] = useState(null);
 
-    // State for service implementation management
+    // Стан для управління імплементаціями сервісу
     const [showEditServiceModal, setShowEditServiceModal] = useState(false);
     const [serviceToEdit, setServiceToEdit] = useState(null);
     const [showDeleteServiceConfirm, setShowDeleteServiceConfirm] = useState(false);
     const [serviceToDelete, setServiceToDelete] = useState(null);
 
-    // Fetch service implementation and project data
+    // Отримуємо дані про імплементацію сервісу та проект
     const { data: sipData, loading: sipLoading, error: sipError, refetch: refetchServiceData } = useQuery(GET_SERVICES_IN_PROGRESS_BY_PROJECT_SERVICE, {
         variables: { projectServiceId: projectService?.id || "" },
         skip: !projectService?.id,
         fetchPolicy: "network-only"
     });
 
-    const { data: projectData,refetch: refetchProject } = useQuery(GET_PROJECT_DETAILS, {
+    const { data: projectData, refetch: refetchProject } = useQuery(GET_PROJECT_DETAILS, {
         variables: { projectId: projectService?.project?.id || "" },
         skip: !projectService?.project?.id,
         fetchPolicy: "network-only"
     });
 
-    // Fetch workers and statuses for forms
+    // Отримуємо дані про працівників та статуси для форм
     const { data: workersData } = useQuery(GET_WORKERS);
     const { data: taskStatusesData } = useQuery(GET_TASK_STATUSES);
     const { data: serviceStatusesData } = useQuery(GET_SERVICE_STATUSES);
 
-    // Mutations for task management
+    // Мутації для управління завданнями
     const [createTask] = useMutation(CREATE_TASK);
     const [updateTask] = useMutation(UPDATE_TASK);
     const [deleteTask] = useMutation(DELETE_TASK);
 
-    // Mutations for service implementation management
+    // Мутації для управління імплементаціями сервісу
     const [deleteServiceInProgress] = useMutation(DELETE_SERVICE_IN_PROGRESS);
 
     if (!isOpen || !projectService) return null;
@@ -75,7 +75,7 @@ export default function ServiceDetailsModal({
         onClose();
     };
 
-    // Service implementation management functions
+    // Функції управління імплементаціями сервісу
     const handleEditService = (serviceInProgress) => {
         setServiceToEdit(serviceInProgress);
         setShowEditServiceModal(true);
@@ -93,12 +93,12 @@ export default function ServiceDetailsModal({
                     id: parseInt(serviceToDelete.id)
                 }
             });
-            toast.success("Service implementation deleted successfully!");
+            toast.success("Імплементацію видалено успішно");
             refetchServiceData();
             refetchProject();
         } catch (error) {
-            console.error("Error deleting service implementation:", error);
-            toast.error(error?.message || "Failed to delete service implementation. Please try again.");
+            console.error("Помилка видалення імплементації сервісу:", error);
+            toast.error(error?.message || "Неможливо видалити імплементацію.");
         }
         setShowDeleteServiceConfirm(false);
     };
@@ -109,7 +109,7 @@ export default function ServiceDetailsModal({
         refetchProject();
     };
 
-    // Task management functions
+    // Функції управління завданнями
     const handleAddTask = (serviceInProgress) => {
         setSelectedServiceInProgress(serviceInProgress);
         setCurrentTask({
@@ -151,12 +151,12 @@ export default function ServiceDetailsModal({
                     id: parseInt(taskToDelete.id)
                 }
             });
-            toast.success("Task deleted successfully!");
+            toast.success("Завдання видалено успішно!");
             refetchServiceData();
             refetchProject();
         } catch (error) {
-            console.error("Error deleting task:", error);
-            toast.error(error?.message || "Failed to delete task. Please try again.");
+            console.error("Помилка видалення завдання:", error);
+            toast.error(error?.message || "Неможливо видалити завдання.");
         }
         setShowDeleteConfirm(false);
     };
@@ -178,7 +178,7 @@ export default function ServiceDetailsModal({
                         }
                     }
                 });
-                toast.success("Task updated successfully!");
+                toast.success("Завдання оновлено успішно!");
             } else {
                 await createTask({
                     variables: {
@@ -193,15 +193,15 @@ export default function ServiceDetailsModal({
                         }
                     }
                 });
-                toast.success("Task created successfully!");
+                toast.success("Завдання створено успішно!");
             }
 
             refetchServiceData();
             refetchProject();
             setShowTaskModal(false);
         } catch (error) {
-            console.error("Error saving task:", error);
-            toast.error(error?.message || "Failed to save task. Please try again.");
+            console.error("Помилка збереження завдання:", error);
+            toast.error(error?.message || "Неможливо зберегти завдання...");
         }
     };
 
@@ -232,52 +232,52 @@ export default function ServiceDetailsModal({
             <Modal
                 isOpen={isOpen}
                 onClose={onClose}
-                title={`Service Details: ${projectService?.service?.serviceName || "—"}`}
+                title={`Деталі сервісу: ${projectService?.service?.serviceName || "—"}`}
                 size="large"
             >
                 <div className="service-details-container">
                     <section className="service-overview">
-                        <h3>Service Information</h3>
+                        <h3>Інформація про сервіс</h3>
                         <div className="info-horizontal-layout">
                             <div className="service-info-section">
-                                <h4>Service Details</h4>
+                                <h4>Деталі сервісу</h4>
                                 <div className="horizontal-detail-group">
                                     <div className="detail-item">
-                                        <span className="detail-label">Service Name:</span>
+                                        <span className="detail-label">Назва сервісу:</span>
                                         <span className="detail-value">{projectService?.service?.serviceName || "—"}</span>
                                     </div>
                                     <div className="detail-item">
-                                        <span className="detail-label">Service Type:</span>
+                                        <span className="detail-label">Тип сервісу:</span>
                                         <span className="detail-value">{projectService?.service?.serviceType?.name || "—"}</span>
                                     </div>
                                     <div className="detail-item">
-                                        <span className="detail-label">Estimated Cost:</span>
+                                        <span className="detail-label">Орієнтовна вартість:</span>
                                         <span className="detail-value cost">
                                             ${parseFloat(projectService?.service?.estimateCost || 0).toFixed(2)}
                                         </span>
                                     </div>
                                     {projectService?.service?.duration && (
                                         <div className="detail-item">
-                                            <span className="detail-label">Expected Duration:</span>
-                                            <span className="detail-value">{projectService.service.duration} days</span>
+                                            <span className="detail-label">Очікувана тривалість:</span>
+                                            <span className="detail-value">{projectService.service.duration} днів</span>
                                         </div>
                                     )}
                                 </div>
                             </div>
 
                             <div className="project-info-section">
-                                <h4>Project Details</h4>
+                                <h4>Деталі проекту</h4>
                                 <div className="horizontal-detail-group">
                                     <div className="detail-item">
-                                        <span className="detail-label">Project:</span>
+                                        <span className="detail-label">Проект:</span>
                                         <span className="detail-value">{project?.name || "—"}</span>
                                     </div>
                                     <div className="detail-item">
-                                        <span className="detail-label">Client:</span>
+                                        <span className="detail-label">Клієнт:</span>
                                         <span className="detail-value">{project?.client?.name || "—"}</span>
                                     </div>
                                     <div className="detail-item">
-                                        <span className="detail-label">Project Status:</span>
+                                        <span className="detail-label">Статус проекту:</span>
                                         <span className="detail-value">
                                             <Badge
                                                 variant={project?.status?.name?.toLowerCase() === "completed" ? "success" : "primary"}
@@ -289,7 +289,7 @@ export default function ServiceDetailsModal({
                                     </div>
                                     {project?.manager && (
                                         <div className="detail-item">
-                                            <span className="detail-label">Project Manager:</span>
+                                            <span className="detail-label">Менеджер проекту:</span>
                                             <span className="detail-value">
                                                 {project.manager.name || "—"} {project.manager.surname || ""}
                                             </span>
@@ -301,40 +301,40 @@ export default function ServiceDetailsModal({
 
                         {project?.description && (
                             <div className="project-description">
-                                <h4>Project Description</h4>
+                                <h4>Опис проекту</h4>
                                 <p>{project.description}</p>
                             </div>
                         )}
 
                         <div className="horizontal-layout">
                             <div className="project-dates">
-                                <h4>Project Timeline</h4>
+                                <h4>Часові рамки проекту</h4>
                                 <div className="dates-container">
                                     <div className="detail-item">
-                                        <span className="detail-label">Project Start:</span>
+                                        <span className="detail-label">Початок проекту:</span>
                                         <span className="detail-value">{formatDate(project?.startDate)}</span>
                                     </div>
                                     <div className="detail-item">
-                                        <span className="detail-label">Project End:</span>
+                                        <span className="detail-label">Кінець проекту:</span>
                                         <span className="detail-value">{formatDate(project?.endDate)}</span>
                                     </div>
                                 </div>
                             </div>
 
                             <div className="implementation-stats">
-                                <h4>Implementation Stats</h4>
+                                <h4>Статистика імплементацій</h4>
                                 <div className="stats-container">
                                     <div className="stat-item">
                                         <div className="stat-value">{projectService?.amount || 0}</div>
-                                        <div className="stat-label">Required</div>
+                                        <div className="stat-label">Необхідно</div>
                                     </div>
                                     <div className="stat-item">
                                         <div className="stat-value">{projectService?.servicesInProgress?.length || 0}</div>
-                                        <div className="stat-label">Current</div>
+                                        <div className="stat-label">Наявно</div>
                                     </div>
                                     <div className="stat-item">
                                         <div className="stat-value">{missingCount}</div>
-                                        <div className="stat-label">Missing</div>
+                                        <div className="stat-label">Бракує</div>
                                     </div>
                                 </div>
                             </div>
@@ -342,7 +342,7 @@ export default function ServiceDetailsModal({
                             {missingCount > 0 && (
                                 <div className="action-buttons">
                                     <Button variant="primary" onClick={handleCreateServiceClick}>
-                                        Create New Service Implementation
+                                        Створити нову імплементацію сервісу
                                     </Button>
                                 </div>
                             )}
@@ -350,36 +350,36 @@ export default function ServiceDetailsModal({
                     </section>
 
                     <section className="implementations-section">
-                        <h3>Service Implementations</h3>
+                        <h3>Імплементації сервісу</h3>
 
                         {sipLoading ? (
-                            <div className="loading-message">Loading service implementations...</div>
+                            <div className="loading-message">Завантаження імплементацій сервісу...</div>
                         ) : sipError ? (
-                            <div className="error-message">Error loading implementations: {sipError.message}</div>
+                            <div className="error-message">Помилка завантаження імплементацій: {sipError.message}</div>
                         ) : !sipData?.servicesInProgressByProjectService?.length ? (
                             <div className="no-implementations">
-                                <p>No service implementations have been created yet.</p>
+                                <p>Ще не створено жодної імплементації сервісу.</p>
                             </div>
                         ) : (
                             <div className="implementations-grid">
                                 {sipData.servicesInProgressByProjectService.map(sip => (
                                     <Card key={sip.id} className="implementation-card">
                                         <div className="implementation-header">
-                                            <h4>Implementation</h4>
+                                            <h4>Імплементація</h4>
                                             <div className="implementation-actions">
                                                 <Button
                                                     variant="outline"
                                                     size="small"
                                                     onClick={() => handleEditService(sip)}
                                                 >
-                                                    Edit
+                                                    Редагувати
                                                 </Button>
                                                 <Button
                                                     variant="danger"
                                                     size="small"
                                                     onClick={() => handleDeleteService(sip)}
                                                 >
-                                                    Delete
+                                                    Видалити
                                                 </Button>
                                             </div>
                                         </div>
@@ -395,28 +395,28 @@ export default function ServiceDetailsModal({
 
                                         <div className="implementation-details-row">
                                             <div className="detail-item">
-                                                <span className="detail-label">Start Date:</span>
+                                                <span className="detail-label">Дата початку:</span>
                                                 <span className="detail-value">{formatDate(sip.startDate)}</span>
                                             </div>
                                             <div className="detail-item">
-                                                <span className="detail-label">End Date:</span>
+                                                <span className="detail-label">Дата завершення:</span>
                                                 <span className="detail-value">{formatDate(sip.endDate)}</span>
                                             </div>
                                             <div className="detail-item">
-                                                <span className="detail-label">Cost:</span>
+                                                <span className="detail-label">Вартість:</span>
                                                 <span className="detail-value cost">
-                                                    {sip.cost ? `$${parseFloat(sip.cost).toFixed(2)}` : "—"}
+                                                    {sip.cost ? `${parseFloat(sip.cost).toFixed(2)}` : "—"}
                                                 </span>
                                             </div>
                                             <div className="detail-item">
-                                                <span className="detail-label">Tasks:</span>
-                                                <span className="detail-value">{sip.tasks?.length || 0} total</span>
+                                                <span className="detail-label">Завдання:</span>
+                                                <span className="detail-value">{sip.tasks?.length || 0} загалом</span>
                                             </div>
                                         </div>
 
                                         <div className="task-progress">
                                             <div className="progress-label">
-                                                <span>Task Completion</span>
+                                                <span>Прогрес виконання</span>
                                                 <span>{calculateTaskCompletion(sip)}%</span>
                                             </div>
                                             <div className="progress-bar">
@@ -429,26 +429,26 @@ export default function ServiceDetailsModal({
 
                                         <div className="tasks-list">
                                             <div className="tasks-header">
-                                                <h4>Tasks ({sip.tasks?.length || 0})</h4>
+                                                <h4>Завдання ({sip.tasks?.length || 0})</h4>
                                                 <Button
                                                     variant="primary"
                                                     size="small"
                                                     onClick={() => handleAddTask(sip)}
                                                 >
-                                                    + Add Task
+                                                    + Додати завдання
                                                 </Button>
                                             </div>
 
                                             {sip.tasks?.length > 0 ? (
                                                 <div className="compact-tasks-table">
                                                     <div className="task-table-header">
-                                                        <div className="task-col task-name-col">Task</div>
-                                                        <div className="task-col task-status-col">Status</div>
-                                                        <div className="task-col task-priority-col">Priority</div>
-                                                        <div className="task-col task-deadline-col">Deadline</div>
-                                                        <div className="task-col task-assigned-col">Assigned To</div>
-                                                        <div className="task-col task-value-col">Value</div>
-                                                        <div className="task-col task-actions-col">Actions</div>
+                                                        <div className="task-col task-name-col">Завдання</div>
+                                                        <div className="task-col task-status-col">Статус</div>
+                                                        <div className="task-col task-priority-col">Пріоритет</div>
+                                                        <div className="task-col task-deadline-col">Дедлайн</div>
+                                                        <div className="task-col task-assigned-col">Виконавець</div>
+                                                        <div className="task-col task-value-col">Вартість</div>
+                                                        <div className="task-col task-actions-col">Дії</div>
                                                     </div>
                                                     {sip.tasks.map(task => (
                                                         <div key={task.id} className="task-table-row">
@@ -486,7 +486,7 @@ export default function ServiceDetailsModal({
                                                             </div>
                                                             <div className="task-col task-value-col">
                                                                 {task.value
-                                                                    ? `$${parseFloat(task.value).toFixed(2)}`
+                                                                    ? `${parseFloat(task.value).toFixed(2)}`
                                                                     : "—"}
                                                             </div>
                                                             <div className="task-col task-actions-col">
@@ -496,14 +496,14 @@ export default function ServiceDetailsModal({
                                                                         size="small"
                                                                         onClick={() => handleEditTask(task, sip)}
                                                                     >
-                                                                        Edit
+                                                                        Редагувати
                                                                     </Button>
                                                                     <Button
                                                                         variant="danger"
                                                                         size="small"
                                                                         onClick={() => handleDeleteTask(task)}
                                                                     >
-                                                                        Delete
+                                                                        Видалити
                                                                     </Button>
                                                                 </div>
                                                             </div>
@@ -512,7 +512,7 @@ export default function ServiceDetailsModal({
                                                 </div>
                                             ) : (
                                                 <div className="no-tasks-message">
-                                                    No tasks have been added for this service implementation yet.
+                                                    Для цієї імплементації сервісу ще не додано жодного завдання.
                                                 </div>
                                             )}
                                         </div>
@@ -524,7 +524,7 @@ export default function ServiceDetailsModal({
                 </div>
             </Modal>
 
-            {/* Task Form Modal */}
+            {/* Модальне вікно форми завдання */}
             {showTaskModal && (
                 <TaskForm
                     isOpen={showTaskModal}
@@ -536,19 +536,19 @@ export default function ServiceDetailsModal({
                 />
             )}
 
-            {/* Delete Task Confirmation Dialog */}
+            {/* Діалог підтвердження видалення завдання */}
             <ConfirmationDialog
                 isOpen={showDeleteConfirm}
                 onClose={() => setShowDeleteConfirm(false)}
                 onConfirm={confirmDeleteTask}
-                title="Delete Task"
-                message={`Are you sure you want to delete the task "${taskToDelete?.name}"? This action cannot be undone.`}
-                confirmText="Delete"
-                cancelText="Cancel"
+                title="Видалення завдання"
+                message={`Ви впевнені, що хочете видалити завдання "${taskToDelete?.name}"? Цю дію неможливо скасувати.`}
+                confirmText="Видалити"
+                cancelText="Скасувати"
                 variant="danger"
             />
 
-            {/* Edit Service Modal */}
+            {/* Модальне вікно редагування сервісу */}
             {showEditServiceModal && serviceToEdit && (
                 <EditServiceModal
                     isOpen={showEditServiceModal}
@@ -559,15 +559,15 @@ export default function ServiceDetailsModal({
                 />
             )}
 
-            {/* Delete Service Confirmation Dialog */}
+            {/* Діалог підтвердження видалення сервісу */}
             <ConfirmationDialog
                 isOpen={showDeleteServiceConfirm}
                 onClose={() => setShowDeleteServiceConfirm(false)}
                 onConfirm={confirmDeleteService}
-                title="Delete Service Implementation"
-                message={`Are you sure you want to delete this service implementation? This will also delete all associated tasks. This action cannot be undone.`}
-                confirmText="Delete"
-                cancelText="Cancel"
+                title="Видалення імплементації сервісу"
+                message={`Ви впевнені, що хочете видалити цю імплементацію сервісу? Це також видалить усі пов'язані завдання. Цю дію неможливо скасувати.`}
+                confirmText="Видалити"
+                cancelText="Скасувати"
                 variant="danger"
             />
         </>

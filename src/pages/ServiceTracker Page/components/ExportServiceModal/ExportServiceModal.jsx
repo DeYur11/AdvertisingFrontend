@@ -384,23 +384,23 @@ export default function ExportServiceModal({ isOpen, onClose, filters = {}, curr
         <Modal
             isOpen={isOpen}
             onClose={onClose}
-            title="Export Service Data"
+            title="Експорт даних сервісів"
             size="medium"
         >
             <div className="export-modal-content">
                 {loading ? (
-                    <div className="export-loading">Loading data...</div>
+                    <div className="export-loading">Завантаження даних...</div>
                 ) : error ? (
-                    <div className="export-error">Error loading data: {error.message}</div>
+                    <div className="export-error">Помилка при завантаженні: {error.message}</div>
                 ) : (
                     <>
                         <Card className="export-info">
-                            <p>Available for export: <strong>{totalServices}</strong> services</p>
+                            <p>Доступно для експорту: <strong>{totalServices}</strong> сервісів</p>
                         </Card>
 
                         <div className="export-sections">
                             <div className="export-section">
-                                <h3 className="export-section-title">Export Format</h3>
+                                <h3 className="export-section-title">Формат експорту</h3>
                                 <div className="export-format-options">
                                     <label className="export-radio">
                                         <input
@@ -427,178 +427,66 @@ export default function ExportServiceModal({ isOpen, onClose, filters = {}, curr
 
                             <div className="export-section">
                                 <div className="export-section-header">
-                                    <h3 className="export-section-title">Select Fields to Export</h3>
+                                    <h3 className="export-section-title">Оберіть поля для експорту</h3>
                                     <div className="export-select-all">
                                         <Button
                                             variant="outline"
                                             size="small"
                                             onClick={() => toggleAllFields(true)}
                                         >
-                                            Select All
+                                            Позначити всі
                                         </Button>
                                         <Button
                                             variant="outline"
                                             size="small"
                                             onClick={() => toggleAllFields(false)}
                                         >
-                                            Clear All
+                                            Очистити все
                                         </Button>
                                     </div>
                                 </div>
 
                                 <div className="export-fields-grid">
                                     <div className="export-field-column">
-                                        <h4 className="export-column-title">Service Info</h4>
-                                        <label className="export-checkbox">
-                                            <input
-                                                type="checkbox"
-                                                checked={selectedFields.serviceName}
-                                                onChange={() => handleFieldChange("serviceName")}
-                                            />
-                                            <span>Service Name</span>
-                                        </label>
-                                        <label className="export-checkbox">
-                                            <input
-                                                type="checkbox"
-                                                checked={selectedFields.serviceType}
-                                                onChange={() => handleFieldChange("serviceType")}
-                                            />
-                                            <span>Service Type</span>
-                                        </label>
-                                        <label className="export-checkbox">
-                                            <input
-                                                type="checkbox"
-                                                checked={selectedFields.estimateCost}
-                                                onChange={() => handleFieldChange("estimateCost")}
-                                            />
-                                            <span>Estimated Cost</span>
-                                        </label>
-                                        <label className="export-checkbox">
-                                            <input
-                                                type="checkbox"
-                                                checked={selectedFields.requiredCount}
-                                                onChange={() => handleFieldChange("requiredCount")}
-                                            />
-                                            <span>Required Count</span>
-                                        </label>
-                                        <label className="export-checkbox">
-                                            <input
-                                                type="checkbox"
-                                                checked={selectedFields.implementedCount}
-                                                onChange={() => handleFieldChange("implementedCount")}
-                                            />
-                                            <span>Implemented Count</span>
-                                        </label>
+                                        <h4 className="export-column-title">Інформація про сервіс</h4>
+                                        <label className="export-checkbox"><input type="checkbox" checked={selectedFields.serviceName} onChange={() => handleFieldChange("serviceName")} /> <span>Назва сервісу</span></label>
+                                        <label className="export-checkbox"><input type="checkbox" checked={selectedFields.serviceType} onChange={() => handleFieldChange("serviceType")} /> <span>Тип сервісу</span></label>
+                                        <label className="export-checkbox"><input type="checkbox" checked={selectedFields.estimateCost} onChange={() => handleFieldChange("estimateCost")} /> <span>Оцінена вартість</span></label>
+                                        <label className="export-checkbox"><input type="checkbox" checked={selectedFields.requiredCount} onChange={() => handleFieldChange("requiredCount")} /> <span>Кількість (заплановано)</span></label>
+                                        <label className="export-checkbox"><input type="checkbox" checked={selectedFields.implementedCount} onChange={() => handleFieldChange("implementedCount")} /> <span>Кількість (реалізовано)</span></label>
                                     </div>
 
                                     <div className="export-field-column">
-                                        <h4 className="export-column-title">Project Info</h4>
-                                        <label className="export-checkbox">
-                                            <input
-                                                type="checkbox"
-                                                checked={selectedFields.projectName}
-                                                onChange={() => handleFieldChange("projectName")}
-                                            />
-                                            <span>Project Name</span>
-                                        </label>
-                                        <label className="export-checkbox">
-                                            <input
-                                                type="checkbox"
-                                                checked={selectedFields.projectStatus}
-                                                onChange={() => handleFieldChange("projectStatus")}
-                                            />
-                                            <span>Project Status</span>
-                                        </label>
-                                        <label className="export-checkbox">
-                                            <input
-                                                type="checkbox"
-                                                checked={selectedFields.clientName}
-                                                onChange={() => handleFieldChange("clientName")}
-                                            />
-                                            <span>Client</span>
-                                        </label>
-                                        <label className="export-checkbox">
-                                            <input
-                                                type="checkbox"
-                                                checked={selectedFields.projectManager}
-                                                onChange={() => handleFieldChange("projectManager")}
-                                            />
-                                            <span>Project Manager</span>
-                                        </label>
-                                        <label className="export-checkbox">
-                                            <input
-                                                type="checkbox"
-                                                checked={selectedFields.projectStartDate}
-                                                onChange={() => handleFieldChange("projectStartDate")}
-                                            />
-                                            <span>Project Start Date</span>
-                                        </label>
-                                        <label className="export-checkbox">
-                                            <input
-                                                type="checkbox"
-                                                checked={selectedFields.projectEndDate}
-                                                onChange={() => handleFieldChange("projectEndDate")}
-                                            />
-                                            <span>Project End Date</span>
-                                        </label>
+                                        <h4 className="export-column-title">Інформація про проєкт</h4>
+                                        <label className="export-checkbox"><input type="checkbox" checked={selectedFields.projectName} onChange={() => handleFieldChange("projectName")} /> <span>Назва проєкту</span></label>
+                                        <label className="export-checkbox"><input type="checkbox" checked={selectedFields.projectStatus} onChange={() => handleFieldChange("projectStatus")} /> <span>Статус проєкту</span></label>
+                                        <label className="export-checkbox"><input type="checkbox" checked={selectedFields.clientName} onChange={() => handleFieldChange("clientName")} /> <span>Клієнт</span></label>
+                                        <label className="export-checkbox"><input type="checkbox" checked={selectedFields.projectManager} onChange={() => handleFieldChange("projectManager")} /> <span>Менеджер проєкту</span></label>
+                                        <label className="export-checkbox"><input type="checkbox" checked={selectedFields.projectStartDate} onChange={() => handleFieldChange("projectStartDate")} /> <span>Дата початку</span></label>
+                                        <label className="export-checkbox"><input type="checkbox" checked={selectedFields.projectEndDate} onChange={() => handleFieldChange("projectEndDate")} /> <span>Дата завершення</span></label>
                                     </div>
 
                                     <div className="export-field-column">
-                                        <h4 className="export-column-title">Implementation Info</h4>
-                                        <label className="export-checkbox">
-                                            <input
-                                                type="checkbox"
-                                                checked={selectedFields.implementationStatus}
-                                                onChange={() => handleFieldChange("implementationStatus")}
-                                            />
-                                            <span>Implementation Status</span>
-                                        </label>
-                                        <label className="export-checkbox">
-                                            <input
-                                                type="checkbox"
-                                                checked={selectedFields.implementationStartDate}
-                                                onChange={() => handleFieldChange("implementationStartDate")}
-                                            />
-                                            <span>Start Date</span>
-                                        </label>
-                                        <label className="export-checkbox">
-                                            <input
-                                                type="checkbox"
-                                                checked={selectedFields.implementationEndDate}
-                                                onChange={() => handleFieldChange("implementationEndDate")}
-                                            />
-                                            <span>End Date</span>
-                                        </label>
-                                        <label className="export-checkbox">
-                                            <input
-                                                type="checkbox"
-                                                checked={selectedFields.implementationCost}
-                                                onChange={() => handleFieldChange("implementationCost")}
-                                            />
-                                            <span>Actual Cost</span>
-                                        </label>
-                                        <label className="export-checkbox">
-                                            <input
-                                                type="checkbox"
-                                                checked={selectedFields.taskCount}
-                                                onChange={() => handleFieldChange("taskCount")}
-                                            />
-                                            <span>Task Count</span>
-                                        </label>
+                                        <h4 className="export-column-title">Інформація про виконання</h4>
+                                        <label className="export-checkbox"><input type="checkbox" checked={selectedFields.implementationStatus} onChange={() => handleFieldChange("implementationStatus")} /> <span>Статус виконання</span></label>
+                                        <label className="export-checkbox"><input type="checkbox" checked={selectedFields.implementationStartDate} onChange={() => handleFieldChange("implementationStartDate")} /> <span>Дата початку</span></label>
+                                        <label className="export-checkbox"><input type="checkbox" checked={selectedFields.implementationEndDate} onChange={() => handleFieldChange("implementationEndDate")} /> <span>Дата завершення</span></label>
+                                        <label className="export-checkbox"><input type="checkbox" checked={selectedFields.implementationCost} onChange={() => handleFieldChange("implementationCost")} /> <span>Фактична вартість</span></label>
+                                        <label className="export-checkbox"><input type="checkbox" checked={selectedFields.taskCount} onChange={() => handleFieldChange("taskCount")} /> <span>Кількість завдань</span></label>
                                     </div>
                                 </div>
                             </div>
 
                             {exportFormat === "csv" && (
                                 <div className="export-section">
-                                    <h3 className="export-section-title">Additional Settings</h3>
+                                    <h3 className="export-section-title">Додаткові параметри</h3>
                                     <label className="export-checkbox">
                                         <input
                                             type="checkbox"
                                             checked={includeHeaders}
                                             onChange={() => setIncludeHeaders(!includeHeaders)}
                                         />
-                                        <span>Include column headers</span>
+                                        <span>Додати заголовки колонок</span>
                                     </label>
                                 </div>
                             )}
@@ -609,7 +497,7 @@ export default function ExportServiceModal({ isOpen, onClose, filters = {}, curr
                                 variant="outline"
                                 onClick={onClose}
                             >
-                                Cancel
+                                Скасувати
                             </Button>
                             <Button
                                 variant="primary"
@@ -617,12 +505,13 @@ export default function ExportServiceModal({ isOpen, onClose, filters = {}, curr
                                 onClick={exportData}
                                 disabled={isExporting || !Object.values(selectedFields).some(v => v)}
                             >
-                                {isExporting ? "Exporting..." : "Export Data"}
+                                {isExporting ? "Експортується..." : "Експортувати дані"}
                             </Button>
                         </div>
                     </>
                 )}
             </div>
         </Modal>
+
     );
 }

@@ -141,7 +141,7 @@ export default function ReviewerFilterPanel({
                             onClick={() => applyFilter('reviewStatus', 'all')}
                             className="filter-button"
                         >
-                            All Materials
+                            Усі матеріали
                         </Button>
                         <Button
                             variant={filters.reviewStatus === "pending" ? "primary" : "outline"}
@@ -149,7 +149,7 @@ export default function ReviewerFilterPanel({
                             onClick={() => applyFilter('reviewStatus', 'pending')}
                             className="filter-button"
                         >
-                            Pending Review
+                            Очікують перевірки
                         </Button>
                     </div>
                     <Button
@@ -159,7 +159,7 @@ export default function ReviewerFilterPanel({
                         className={`advanced-filter-button ${activeFilterCount > 0 ? 'has-active-filters' : ''}`}
                         onClick={() => setExpanded(!expanded)}
                     >
-                        Filters {activeFilterCount > 0 && `(${activeFilterCount})`}
+                        Фільтри {activeFilterCount > 0 && `(${activeFilterCount})`}
                     </Button>
                 </div>
 
@@ -167,12 +167,12 @@ export default function ReviewerFilterPanel({
                     <input
                         type="text"
                         className="search-input"
-                        placeholder={`Search materials by ${searchType === "name" ? "name" : searchType === "description" ? "description" : "name or description"}...`}
+                        placeholder={`Шукати матеріали за ${searchType === "name" ? "назвою" : searchType === "description" ? "описом" : "назвою або описом"}...`}
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
                     />
                     {searchQuery && (
-                        <button className="clear-search" onClick={() => setSearchQuery("")} aria-label="Clear search">✕</button>
+                        <button className="clear-search" onClick={() => setSearchQuery("")} aria-label="Очистити пошук">✕</button>
                     )}
                 </div>
 
@@ -183,7 +183,7 @@ export default function ReviewerFilterPanel({
                         onClick={() => handleSearchTypeChange("both")}
                         className="search-type-button"
                     >
-                        All Fields
+                        Усі поля
                     </Button>
                     <Button
                         variant={searchType === "name" ? "primary" : "outline"}
@@ -191,7 +191,7 @@ export default function ReviewerFilterPanel({
                         onClick={() => handleSearchTypeChange("name")}
                         className="search-type-button"
                     >
-                        Name Only
+                        Тільки назва
                     </Button>
                     <Button
                         variant={searchType === "description" ? "primary" : "outline"}
@@ -199,24 +199,24 @@ export default function ReviewerFilterPanel({
                         onClick={() => handleSearchTypeChange("description")}
                         className="search-type-button"
                     >
-                        Description Only
+                        Тільки опис
                     </Button>
                 </div>
 
                 <div className="sort-controls">
-                    <span className="sort-label">Sort by:</span>
+                    <span className="sort-label">Сортувати за:</span>
                     <div className="sort-options">
                         <button
                             className={`sort-option ${currentSortField === "name" ? "active" : ""}`}
                             onClick={() => handleSortChange("name")}
                         >
-                            Name {renderSortIndicator("name")}
+                            Назва {renderSortIndicator("name")}
                         </button>
                         <button
                             className={`sort-option ${currentSortField === "status" ? "active" : ""}`}
                             onClick={() => handleSortChange("status")}
                         >
-                            Status {renderSortIndicator("status")}
+                            Статус {renderSortIndicator("status")}
                         </button>
                     </div>
                 </div>
@@ -225,13 +225,13 @@ export default function ReviewerFilterPanel({
             {/* Active Filters Display */}
             {activeFilterCount > 0 && (
                 <div className="active-filters-display">
-                    <div className="active-filters-label">Active Filters:</div>
+                    <div className="active-filters-label">Активні фільтри:</div>
                     <div className="active-filters-list">
                         {/* Status */}
                         {filters.status?.length > 0 && (
                             <div className="active-filter">
-                                <span className="filter-name">Status:</span>
-                                <span className="filter-value">{filters.status.length} selected</span>
+                                <span className="filter-name">Статус:</span>
+                                <span className="filter-value">{filters.status.length} вибрано</span>
                                 <button className="remove-filter" onClick={() => applyFilter('status', [])}>✕</button>
                             </div>
                         )}
@@ -239,8 +239,8 @@ export default function ReviewerFilterPanel({
                         {/* Material Type */}
                         {filters.materialType?.length > 0 && (
                             <div className="active-filter">
-                                <span className="filter-name">Material Type:</span>
-                                <span className="filter-value">{filters.materialType.length} selected</span>
+                                <span className="filter-name">Тип матеріалу:</span>
+                                <span className="filter-value">{filters.materialType.length} вибрано</span>
                                 <button className="remove-filter" onClick={() => applyFilter('materialType', [])}>✕</button>
                             </div>
                         )}
@@ -248,8 +248,8 @@ export default function ReviewerFilterPanel({
                         {/* Language */}
                         {filters.language?.length > 0 && (
                             <div className="active-filter">
-                                <span className="filter-name">Language:</span>
-                                <span className="filter-value">{filters.language.length} selected</span>
+                                <span className="filter-name">Мова:</span>
+                                <span className="filter-value">{filters.language.length} вибрано</span>
                                 <button className="remove-filter" onClick={() => applyFilter('language', [])}>✕</button>
                             </div>
                         )}
@@ -258,8 +258,8 @@ export default function ReviewerFilterPanel({
                         {/* Usage Restriction */}
                         {filters.usageRestriction?.length > 0 && (
                             <div className="active-filter">
-                                <span className="filter-name">Usage Restriction:</span>
-                                <span className="filter-value">{filters.usageRestriction.length} selected</span>
+                                <span className="filter-name">Обмеження використання:</span>
+                                <span className="filter-value">{filters.usageRestriction.length} вибрано</span>
                                 <button className="remove-filter" onClick={() => applyFilter('usageRestriction', [])}>✕</button>
                             </div>
                         )}
@@ -267,8 +267,8 @@ export default function ReviewerFilterPanel({
                         {/* Licence Type */}
                         {filters.licenceType?.length > 0 && (
                             <div className="active-filter">
-                                <span className="filter-name">Licence Type:</span>
-                                <span className="filter-value">{filters.licenceType.length} selected</span>
+                                <span className="filter-name">Тип ліцензії:</span>
+                                <span className="filter-value">{filters.licenceType.length} вибрано</span>
                                 <button className="remove-filter" onClick={() => applyFilter('licenceType', [])}>✕</button>
                             </div>
                         )}
@@ -276,8 +276,8 @@ export default function ReviewerFilterPanel({
                         {/* Target Audience */}
                         {filters.targetAudience?.length > 0 && (
                             <div className="active-filter">
-                                <span className="filter-name">Target Audience:</span>
-                                <span className="filter-value">{filters.targetAudience.length} selected</span>
+                                <span className="filter-name">Цільова аудиторія:</span>
+                                <span className="filter-value">{filters.targetAudience.length} вибрано</span>
                                 <button className="remove-filter" onClick={() => applyFilter('targetAudience', [])}>✕</button>
                             </div>
                         )}
@@ -285,8 +285,8 @@ export default function ReviewerFilterPanel({
                         {/* Keywords */}
                         {filters.keywords?.length > 0 && (
                             <div className="active-filter">
-                                <span className="filter-name">Keywords:</span>
-                                <span className="filter-value">{filters.keywords.length} selected</span>
+                                <span className="filter-name">Ключові слова:</span>
+                                <span className="filter-value">{filters.keywords.length} вибрано</span>
                                 <button className="remove-filter" onClick={() => applyFilter('keywords', [])}>✕</button>
                             </div>
                         )}
@@ -294,11 +294,11 @@ export default function ReviewerFilterPanel({
                         {/* Date Range */}
                         {filters.dateRange && (
                             <div className="active-filter">
-                                <span className="filter-name">Date Range:</span>
+                                <span className="filter-name">Діапазон дат:</span>
                                 <span className="filter-value">
-                                    {filters.dateRange.from && `From: ${new Date(filters.dateRange.from).toLocaleDateString()}`}
+                                    {filters.dateRange.from && `Від: ${new Date(filters.dateRange.from).toLocaleDateString()}`}
                                     {filters.dateRange.from && filters.dateRange.to && ' - '}
-                                    {filters.dateRange.to && `To: ${new Date(filters.dateRange.to).toLocaleDateString()}`}
+                                    {filters.dateRange.to && `До: ${new Date(filters.dateRange.to).toLocaleDateString()}`}
                                 </span>
                                 <button className="remove-filter" onClick={() => applyFilter('dateRange', {})}>✕</button>
                             </div>
@@ -307,9 +307,9 @@ export default function ReviewerFilterPanel({
                         {/* Review Status */}
                         {filters.reviewStatus && filters.reviewStatus !== 'all' && (
                             <div className="active-filter">
-                                <span className="filter-name">Review Status:</span>
+                                <span className="filter-name">Статус перевірки:</span>
                                 <span className="filter-value">
-                                    {filters.reviewStatus === 'pending' ? 'Pending Review' : 'Reviewed by Me'}
+                                    {filters.reviewStatus === 'pending' ? 'Очікує перевірки' : 'Перевірено мною'}
                                 </span>
                                 <button className="remove-filter" onClick={() => applyFilter('reviewStatus', 'all')}>✕</button>
                             </div>
@@ -318,9 +318,9 @@ export default function ReviewerFilterPanel({
                         {/* Search Type */}
                         {searchType !== "both" && (
                             <div className="active-filter">
-                                <span className="filter-name">Search In:</span>
+                                <span className="filter-name">Пошук у:</span>
                                 <span className="filter-value">
-                                    {searchType === "name" ? "Name Only" : "Description Only"}
+                                    {searchType === "name" ? "Тільки назва" : "Тільки опис"}
                                 </span>
                                 <button className="remove-filter" onClick={() => setSearchType("both")}>✕</button>
                             </div>
@@ -328,7 +328,7 @@ export default function ReviewerFilterPanel({
                     </div>
 
                     <Button variant="outline" size="small" className="clear-filters-btn" onClick={handleResetFilters}>
-                        Clear All
+                        Очистити все
                     </Button>
                 </div>
             )}
@@ -338,12 +338,12 @@ export default function ReviewerFilterPanel({
                 <Card className="advanced-filters-panel">
                     <div className="filters-content">
                         {loading ? (
-                            <div className="loading-filters">Loading filter options...</div>
+                            <div className="loading-filters">Завантаження параметрів фільтрів...</div>
                         ) : (
                             <>
                                 {/* Status */}
                                 <div className="filter-section">
-                                    <h3 className="filter-section-title">Material Status</h3>
+                                    <h3 className="filter-section-title">Статус матеріалу</h3>
                                     <div className="filter-chips">
                                         {refData?.materialStatuses.map(status => {
                                             const isDisabled = filters.reviewStatus === "pending" && status.id === pendingReviewStatusId;
@@ -353,7 +353,7 @@ export default function ReviewerFilterPanel({
                                                     key={status.id}
                                                     className={`filter-chip ${isSelected ? 'selected' : ''} ${isDisabled ? 'disabled' : ''}`}
                                                     onClick={() => !isDisabled && handleOptionToggle('status', status.id)}
-                                                    title={isDisabled ? 'Included automatically with "Pending Review"' : ''}
+                                                    title={isDisabled ? 'Автоматично включено з "Очікують перевірки"' : ''}
                                                 >
                                                     {status.name}
                                                 </div>
@@ -364,13 +364,13 @@ export default function ReviewerFilterPanel({
 
                                 {/* Material Type */}
                                 <div className="filter-section">
-                                    <h3 className="filter-section-title">Material Type</h3>
+                                    <h3 className="filter-section-title">Тип матеріалу</h3>
                                     <div className="filter-chips">
                                         {refData?.materialTypes.map(mt => (
                                             <div
                                                 key={mt.id}
-                                                className={`filter-chip ${(filters.materialType || []).includes(mt.id) ? 'selected' : ''}`}
-                                                onClick={() => handleOptionToggle('materialType', mt.id)}
+                                                className={`filter-chip ${(filters.type || []).includes(parseInt(mt.id, 10)) ? 'selected' : ''}`}
+                                                onClick={() => handleOptionToggle('type', mt.id)}
                                             >
                                                 {mt.name}
                                             </div>
@@ -380,7 +380,7 @@ export default function ReviewerFilterPanel({
 
                                 {/* Language */}
                                 <div className="filter-section">
-                                    <h3 className="filter-section-title">Language</h3>
+                                    <h3 className="filter-section-title">Мова</h3>
                                     <div className="filter-chips">
                                         {refData?.languages.map(lang => (
                                             <div
@@ -397,7 +397,7 @@ export default function ReviewerFilterPanel({
                                 {/* Usage Restriction */}
                                 {refData?.usageRestrictions && (
                                     <div className="filter-section">
-                                        <h3 className="filter-section-title">Usage Restriction</h3>
+                                        <h3 className="filter-section-title">Обмеження використання</h3>
                                         <div className="filter-chips">
                                             {refData.usageRestrictions.map(res => (
                                                 <div
@@ -415,7 +415,7 @@ export default function ReviewerFilterPanel({
                                 {/* Licence Type */}
                                 {refData?.licenceTypes && (
                                     <div className="filter-section">
-                                        <h3 className="filter-section-title">Licence Type</h3>
+                                        <h3 className="filter-section-title">Тип ліцензії</h3>
                                         <div className="filter-chips">
                                             {refData.licenceTypes.map(lc => (
                                                 <div
@@ -433,7 +433,7 @@ export default function ReviewerFilterPanel({
                                 {/* Target Audience */}
                                 {refData?.targetAudiences && (
                                     <div className="filter-section">
-                                        <h3 className="filter-section-title">Target Audience</h3>
+                                        <h3 className="filter-section-title">Цільова аудиторія</h3>
                                         <div className="filter-chips">
                                             {refData.targetAudiences.map(aud => (
                                                 <div
@@ -451,7 +451,7 @@ export default function ReviewerFilterPanel({
                                 {/* Keywords */}
                                 {refData?.keywords && (
                                     <div className="filter-section">
-                                        <h3 className="filter-section-title">Keywords</h3>
+                                        <h3 className="filter-section-title">Ключові слова</h3>
                                         <div className="filter-chips keywords-filter">
                                             {refData.keywords.map(kw => (
                                                 <div
@@ -465,31 +465,6 @@ export default function ReviewerFilterPanel({
                                         </div>
                                     </div>
                                 )}
-
-                                {/* Date Range */}
-                                <div className="filter-section">
-                                    <h3 className="filter-section-title">Creation Date</h3>
-                                    <div className="date-filter-grid">
-                                        <div className="date-inputs">
-                                            <div className="date-range-input">
-                                                <label>From:</label>
-                                                <input
-                                                    type="date"
-                                                    value={filters.dateRange?.from || ""}
-                                                    onChange={e => handleDateChange("from", e.target.value)}
-                                                />
-                                            </div>
-                                            <div className="date-range-input">
-                                                <label>To:</label>
-                                                <input
-                                                    type="date"
-                                                    value={filters.dateRange?.to || ""}
-                                                    onChange={e => handleDateChange("to", e.target.value)}
-                                                />
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
                             </>
                         )}
                     </div>

@@ -31,7 +31,8 @@ export default function ReviewerDashboard() {
     const [sortField, setSortField] = useState("createDatetime");
     const [sortDirection, setSortDirection] = useState("DESC");
 
-    // Конвертація UI фільтрів у GraphQL фільтр
+
+
     const buildFilterInput = () => {
         const filterInput = {};
 
@@ -66,6 +67,8 @@ export default function ReviewerDashboard() {
         }
 
         // Додаємо фільтри типу матеріалу - забезпечуємо цілі числа
+        // ВИПРАВЛЕННЯ: Зміна filters.type на filters.materialType як в панелі фільтрації
+        // АБО Зміна filters.materialType на filters.type в обох місцях
         if (filters.type && filters.type.length > 0) {
             filterInput.typeIds = filters.type.map(id => parseInt(id, 10));
         }

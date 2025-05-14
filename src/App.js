@@ -7,7 +7,6 @@ import './styles/global.css';
 
 import Layout from './components/layout/Layout';
 import Login from './pages/Login/Login';
-import Home from './pages/Home/Home'
 import WorkerTasks from './pages/WorkerTasks/WorkerTasks';
 import Settings from './pages/Settings/Settings';
 import ProjectManagement from "./pages/ProjectManagement/ProjectManagement";
@@ -20,6 +19,7 @@ import {jwtDecode} from "jwt-decode";
 import {login} from "./store/userSlice";
 import EmployeeManagement from "./pages/EmployeeManagement/EmployeeManagement";
 import ServiceDashboard from "./pages/ServiceDashboard/ServiceDashboard";
+import LogsPanel from "./pages/LogsPanel/LogsPanel";
 
 export default function App() {
     // const dispatch = useDispatch();
@@ -42,12 +42,16 @@ export default function App() {
         <BrowserRouter>
             <Routes>
                 <Route path="/login" element={<Login />} />
+                <Route path="/" element={<Login />} />
                 <Route element={<Layout />}>
-                    <Route path="/" element={
-                        <ProtectedRoute>
-                            <Home />
-                        </ProtectedRoute>
-                    } />
+                    <Route
+                        path="/logs"
+                        element={
+                            <ProtectedRoute>
+                                <LogsPanel />
+                            </ProtectedRoute>
+                        }
+                    />
                     <Route path="/service-tracker" element={
                         <ProtectedRoute>
                             <ServiceTracker />

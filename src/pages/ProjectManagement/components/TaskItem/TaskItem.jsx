@@ -1,23 +1,34 @@
+// src/pages/ServiceTrackerPage/components/TaskItem/TaskItem.jsx
+import React from "react";
 import { highlightMatch } from "../../../../utils/highlightMatch";
 import Badge from "../../../../components/common/Badge/Badge";
 import "./TaskItem.css";
 
+const uk = {
+    priorityLabel: "Пріоритет:",
+    deadlineLabel: "Термін:",
+    status: {
+        completed: "Виконано",
+        "in progress": "В процесі",
+        pending: "В очікуванні",
+        unknown: "Невідомо",
+    },
+};
+
 export default function TaskItem({
                                      task,
                                      searchQuery,
-                                     compact = false
+                                     compact = false,
                                  }) {
-    const status = task.taskStatus?.name?.toLowerCase() || "";
+    const statusKey = task.taskStatus?.name?.toLowerCase() || "";
     const formattedDeadline = task.deadline
-        ? new Date(task.deadline).toLocaleDateString()
+        ? new Date(task.deadline).toLocaleDateString("uk-UA")
         : "—";
 
-    // Define priority display and class
+    // Define priority display class
     let priorityClass = "default";
-
     if (task.priority) {
-        const priority = parseInt(task.priority);
-
+        const priority = parseInt(task.priority, 10);
         if (priority >= 8) {
             priorityClass = "priority-high";
         } else if (priority >= 4) {
@@ -27,22 +38,39 @@ export default function TaskItem({
         }
     }
 
-    // Determine if task deadline is approaching or passed
+    // Determine deadline status class
     let deadlineClass = "";
     if (task.deadline) {
         const now = new Date();
         const deadline = new Date(task.deadline);
-        const daysUntilDeadline = Math.ceil((deadline - now) / (1000 * 60 * 60 * 24));
-
+        const daysUntil = Math.ceil((deadline - now) / (1000 * 60 * 60 * 24));
         if (deadline < now) {
             deadlineClass = "deadline-passed";
-        } else if (daysUntilDeadline <= 3) {
+        } else if (daysUntil <= 3) {
             deadlineClass = "deadline-soon";
         }
     }
 
+    // Determine badge text
+    const badgeText = compact
+        ? (
+            uk.status[statusKey] ||
+            uk.status.unknown
+        )
+        : task.taskStatus?.name || uk.status.unknown;
+
+    // Determine badge variant
+    const badgeVariant =
+        statusKey === "completed"
+            ? "success"
+            : statusKey === "in progress"
+                ? "primary"
+                : statusKey === "pending"
+                    ? "warning"
+                    : "default";
+
     return (
-        <div className={`task-item ${compact ? 'compact' : ''}`}>
+        <div className={`task-item ${compact ? "compact" : ""}`}>
             <div className="task-content">
                 <div className="task-name">
                     {highlightMatch(task.name, searchQuery)}
@@ -51,14 +79,14 @@ export default function TaskItem({
                 {!compact && (
                     <div className="task-meta">
                         <div className="meta-item">
-                            <span className="meta-label">Priority:</span>
+                            <span className="meta-label">{uk.priorityLabel}</span>
                             <Badge className={priorityClass} size="small">
                                 {task.priority || "—"}
                             </Badge>
                         </div>
 
                         <div className="meta-item">
-                            <span className="meta-label">Deadline:</span>
+                            <span className="meta-label">{uk.deadlineLabel}</span>
                             <span className={`meta-value ${deadlineClass}`}>
                 {formattedDeadline}
               </span>
@@ -69,21 +97,11 @@ export default function TaskItem({
 
             <div className="task-status">
                 <Badge
-                    className={`status-badge status-${status}`}
-                    variant={
-                        status === "completed" ? "success" :
-                            status === "in progress" ? "primary" :
-                                status === "pending" ? "warning" :
-                                    "default"
-                    }
+                    className={`status-badge status-${statusKey || "unknown"}`}
+                    variant={badgeVariant}
                     size={compact ? "small" : "medium"}
                 >
-                    {compact ?
-                        (status === "in progress" ? "In Progress" :
-                            status === "completed" ? "Done" :
-                                status === "pending" ? "Pending" : task.taskStatus?.name || "Unknown") :
-                        task.taskStatus?.name || "Unknown"
-                    }
+                    {badgeText}
                 </Badge>
             </div>
         </div>

@@ -1,5 +1,5 @@
 // src/pages/ServiceTracker Page/ServiceTracker.jsx
-// Updated with export functionality
+// Оновлено з функціональністю експорту
 import { useState, useEffect } from "react";
 import { useQuery } from "@apollo/client";
 import {
@@ -25,7 +25,6 @@ import Button from "../../components/common/Button/Button";
 import "./ServiceTracker.css";
 
 export default function ServiceTracker() {
-    // Add service tracker header with export button
     const renderHeader = () => {
         return (
             <div className="service-tracker-header">
@@ -37,28 +36,25 @@ export default function ServiceTracker() {
                         icon="📊"
                         onClick={() => setExportModalOpen(true)}
                     >
-                        Export Data
+                        Експортувати дані
                     </Button>
                 </div>
             </div>
         );
     };
 
-    // Pagination state for services
     const [pagination, setPagination] = useState({
-        page: 0, // GraphQL uses zero-based indexing
+        page: 0,
         size: 10,
         sortField: "projectName",
         sortDirection: "ASC"
     });
 
-    // State for service modals
     const [selectedService, setSelectedService] = useState(null);
     const [showCreateModal, setShowCreateModal] = useState(false);
     const [showDetailsModal, setShowDetailsModal] = useState(false);
     const [exportModalOpen, setExportModalOpen] = useState(false);
 
-    // Filter state
     const [filters, setFilters] = useState({
         onlyMismatched: true,
         searchQuery: "",
@@ -81,7 +77,6 @@ export default function ServiceTracker() {
         }
     });
 
-    // Convert filters to GraphQL format
     const getGraphQLFilters = () => {
         const gqlFilters = {
             onlyMismatched: filters.onlyMismatched
@@ -92,7 +87,6 @@ export default function ServiceTracker() {
             gqlFilters.projectNameContains = filters.searchQuery;
         }
 
-        // Only apply service-specific filters when not grouped by project
         if (!filters.groupByProject) {
             if (filters.serviceTypeIds.length > 0) {
                 gqlFilters.serviceTypeIds = filters.serviceTypeIds;
@@ -107,7 +101,6 @@ export default function ServiceTracker() {
             }
         }
 
-        // Date ranges
         if (filters.dateRange.startDateFrom) {
             gqlFilters.startDateFrom = filters.dateRange.startDateFrom;
         }
@@ -124,7 +117,6 @@ export default function ServiceTracker() {
             gqlFilters.endDateTo = filters.dateRange.endDateTo;
         }
 
-        // Cost ranges
         if (filters.costRange.costMin) {
             gqlFilters.costMin = parseFloat(filters.costRange.costMin);
         }
@@ -136,15 +128,13 @@ export default function ServiceTracker() {
         return gqlFilters;
     };
 
-    // Reset pagination page when filters change
     useEffect(() => {
         setPagination(prev => ({
             ...prev,
-            page: 0 // Reset to first page when filters change
+            page: 0
         }));
     }, [filters]);
 
-    // Fetch reference data for filters
     const { data: serviceTypesData } = useQuery(GET_SERVICE_TYPES);
     const { data: projectStatusesData } = useQuery(GET_PROJECT_STATUSES);
     const { data: projectTypesData } = useQuery(GET_PROJECT_TYPES);
@@ -152,7 +142,6 @@ export default function ServiceTracker() {
     const { data: managersData } = useQuery(GET_MANAGERS);
     const { data: serviceStatusesData } = useQuery(GET_SERVICE_STATUSES);
 
-    // Prepare reference data for filters
     const filterOptions = {
         serviceTypes: serviceTypesData?.serviceTypes || [],
         projectStatuses: projectStatusesData?.projectStatuses || [],
@@ -162,7 +151,6 @@ export default function ServiceTracker() {
         serviceStatuses: serviceStatusesData?.serviceInProgressStatuses || []
     };
 
-    // Fetch paginated service data
     const {
         data: servicesData,
         loading: servicesLoading,
@@ -178,37 +166,31 @@ export default function ServiceTracker() {
                 filter: getGraphQLFilters()
             }
         },
-        skip: filters.groupByProject, // Skip this query when using project grouping
+        skip: filters.groupByProject,
         fetchPolicy: "network-only"
     });
 
-    // Determine loading and error states
     const loading = servicesLoading;
     const error = servicesError;
 
-    // Handle page change
     const handlePageChange = (newPage) => {
         setPagination(prev => ({
             ...prev,
-            page: newPage - 1 // Convert to zero-based indexing
+            page: newPage - 1
         }));
     };
 
-    // Handle page size change
     const handlePageSizeChange = (newSize) => {
         setPagination(prev => ({
             ...prev,
             size: newSize,
-            page: 0 // Reset to first page when changing page size
+            page: 0
         }));
     };
 
-    // Handle sort change
     const handleSortChange = (field) => {
         setPagination(prev => {
-            // If clicking the same field, toggle direction
             const newDirection = prev.sortField === field && prev.sortDirection === "ASC" ? "DESC" : "ASC";
-
             return {
                 ...prev,
                 sortField: field,
@@ -217,7 +199,6 @@ export default function ServiceTracker() {
         });
     };
 
-    // Service handlers
     const handleServiceCreated = () => {
         setShowCreateModal(false);
         refetchServices();
@@ -233,16 +214,12 @@ export default function ServiceTracker() {
         setShowDetailsModal(true);
     };
 
-    // Handle data refresh
     const handleRefresh = () => {
         refetchServices();
     };
 
-    // Get data for display
     const paginatedServices = servicesData?.paginatedProjectServices?.content || [];
     const pageInfo = servicesData?.paginatedProjectServices?.pageInfo;
-
-    // Calculate pagination info
     const totalPages = pageInfo?.totalPages || 1;
     const totalItems = pageInfo?.totalElements || 0;
 
@@ -257,7 +234,6 @@ export default function ServiceTracker() {
                 filterOptions={filterOptions}
             />
 
-            {/* Display either flat list or project-grouped view */}
             {filters.groupByProject ? (
                 <ProjectGroupView
                     filters={filters}
@@ -280,10 +256,9 @@ export default function ServiceTracker() {
                         }}
                     />
 
-                    {/* Pagination component */}
                     {!loading && !error && paginatedServices.length > 0 && (
                         <Pagination
-                            currentPage={pagination.page + 1} // Convert to one-based for UI
+                            currentPage={pagination.page + 1}
                             totalPages={totalPages}
                             onPageChange={handlePageChange}
                             pageSize={pagination.size}
@@ -295,7 +270,6 @@ export default function ServiceTracker() {
                 </>
             )}
 
-            {/* Service creation modal */}
             {showCreateModal && selectedService && (
                 <CreateServiceModal
                     isOpen={showCreateModal}
@@ -305,7 +279,6 @@ export default function ServiceTracker() {
                 />
             )}
 
-            {/* Service details modal */}
             {showDetailsModal && selectedService && (
                 <ServiceDetailsModal
                     isOpen={showDetailsModal}
@@ -315,7 +288,6 @@ export default function ServiceTracker() {
                 />
             )}
 
-            {/* Export data modal */}
             <ExportServiceModal
                 isOpen={exportModalOpen}
                 onClose={() => setExportModalOpen(false)}

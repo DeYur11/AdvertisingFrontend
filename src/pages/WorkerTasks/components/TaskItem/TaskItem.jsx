@@ -1,3 +1,4 @@
+// src/pages/ServiceTrackerPage/components/TaskItem/TaskItem.jsx
 import { useMutation, gql } from "@apollo/client";
 import { highlightMatch } from "../../../../utils/highlightMatch";
 import Badge from "../../../../components/common/Badge/Badge";
@@ -14,6 +15,20 @@ const TRANSITION_TASK_STATUS = gql`
     }
 `;
 
+const uk = {
+    priorityLabel: "Пріоритет:",
+    deadlineLabel: "Термін:",
+    status: {
+        "completed": "Виконано",
+        "in progress": "В процесі",
+        "pending": "В очікуванні",
+        "not started": "Не розпочато",
+        "default": "Невідомо"
+    },
+    startButton: "Розпочати",
+    finishButton: "Завершити",
+};
+
 export default function TaskItem({ task, searchQuery, onSelect, compact = false }) {
     const [transitionTaskStatus] = useMutation(TRANSITION_TASK_STATUS);
 
@@ -26,23 +41,29 @@ export default function TaskItem({ task, searchQuery, onSelect, compact = false 
         event.stopPropagation();
         try {
             await transitionTaskStatus({
-                variables: {
-                    taskId: parseInt(task.id),
-                    event: nextEvent
-                },
-                refetchQueries: ["PaginatedTasksByWorker"]
+                variables: { taskId: parseInt(task.id, 10), event: nextEvent },
+                refetchQueries: ["PaginatedTasksByWorker"],
             });
         } catch (err) {
-            console.error("Failed to transition status:", err.message);
+            console.error("Не вдалося змінити статус:", err.message);
         }
     }
 
-    const status = task.taskStatus?.name?.toLowerCase() || "";
-    const formattedDeadline = task.deadline ? new Date(task.deadline).toLocaleDateString() : "—";
+    const statusKey = task.taskStatus?.name?.toLowerCase() || "";
+    const badgeText = uk.status[statusKey] || uk.status.default;
+    const badgeVariant =
+        statusKey === "completed" ? "success" :
+            statusKey === "in progress" ? "primary" :
+                statusKey === "pending" ? "danger" :
+                    "default";
+
+    const formattedDeadline = task.deadline
+        ? new Date(task.deadline).toLocaleDateString("uk-UA")
+        : "—";
 
     let priorityClass = "default";
     if (task.priority) {
-        const priority = parseInt(task.priority);
+        const priority = parseInt(task.priority, 10);
         if (priority >= 8) {
             priorityClass = "priority-high";
         } else if (priority >= 4) {
@@ -56,16 +77,16 @@ export default function TaskItem({ task, searchQuery, onSelect, compact = false 
     if (task.deadline) {
         const now = new Date();
         const deadline = new Date(task.deadline);
-        const daysUntilDeadline = Math.ceil((deadline - now) / (1000 * 60 * 60 * 24));
+        const daysUntil = Math.ceil((deadline - now) / (1000 * 60 * 60 * 24));
         if (deadline < now) {
             deadlineClass = "deadline-passed";
-        } else if (daysUntilDeadline <= 3) {
+        } else if (daysUntil <= 3) {
             deadlineClass = "deadline-soon";
         }
     }
 
     return (
-        <div className={`task-item ${compact ? 'compact' : ''}`} onClick={handleClick}>
+        <div className={`task-item ${compact ? "compact" : ""}`} onClick={handleClick}>
             <div className="task-content">
                 <div className="task-name">
                     {highlightMatch(task.name, searchQuery)}
@@ -74,14 +95,14 @@ export default function TaskItem({ task, searchQuery, onSelect, compact = false 
                 {!compact && (
                     <div className="task-meta">
                         <div className="meta-item">
-                            <span className="meta-label">Priority:</span>
+                            <span className="meta-label">{uk.priorityLabel}</span>
                             <Badge className={priorityClass} size="small">
                                 {task.priority || "—"}
                             </Badge>
                         </div>
 
                         <div className="meta-item">
-                            <span className="meta-label">Deadline:</span>
+                            <span className="meta-label">{uk.deadlineLabel}</span>
                             <span className={`meta-value ${deadlineClass}`}>
                                 {formattedDeadline}
                             </span>
@@ -92,42 +113,31 @@ export default function TaskItem({ task, searchQuery, onSelect, compact = false 
 
             <div className="task-controls">
                 <Badge
-                    className={`status-badge status-${status}`}
-                    variant={
-                        status === "completed" ? "success" :
-                            status === "in progress" ? "primary" :
-                                status === "pending" ? "danger" :
-                                    "default"
-                    }
+                    className={`status-badge status-${statusKey || "default"}`}
+                    variant={badgeVariant}
                     size={compact ? "small" : "medium"}
                 >
-                    {compact ? (
-                        status === "in progress" ? "In Progress" :
-                            status === "completed" ? "Done" :
-                                status === "pending" ? "Pending" :
-                                    task.taskStatus?.name || "Unknown"
-                    ) : (
-                        task.taskStatus?.name || "Unknown"
-                    )}
+                    {compact
+                        ? badgeText
+                        : (uk.status[statusKey] || task.taskStatus?.name || uk.status.default)
+                    }
                 </Badge>
 
-                {!compact && (
-                    (status === "not started" || status === "pending") && (
-                        <button
-                            className="task-action-btn"
-                            onClick={(e) => handleStatusChange(e, "START")}
-                        >
-                            Start
-                        </button>
-                    )
+                {!compact && (statusKey === "not started" || statusKey === "pending") && (
+                    <button
+                        className="task-action-btn"
+                        onClick={(e) => handleStatusChange(e, "START")}
+                    >
+                        {uk.startButton}
+                    </button>
                 )}
 
-                {!compact && status === "in progress" && (
+                {!compact && statusKey === "in progress" && (
                     <button
                         className="task-action-btn"
                         onClick={(e) => handleStatusChange(e, "COMPLETE")}
                     >
-                        Finish
+                        {uk.finishButton}
                     </button>
                 )}
             </div>

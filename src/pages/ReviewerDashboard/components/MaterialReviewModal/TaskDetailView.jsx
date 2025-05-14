@@ -66,11 +66,6 @@ export default function TaskDetailView({ task, onClose }) {
             title: "Терміни виконання",
             fields: [
                 {
-                    label: "Дата створення",
-                    key: "createDatetime",
-                    render: (data) => formatDate(data.createDatetime)
-                },
-                {
                     label: "Дата початку",
                     key: "startDate",
                     render: (data) => data.startDate ? formatDate(data.startDate) : "—"

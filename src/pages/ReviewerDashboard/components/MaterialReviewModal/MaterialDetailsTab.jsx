@@ -64,19 +64,12 @@ export default function MaterialDetailsTab({
                 <div className="detail-column">
                     <div className="detail-item">
                         <span className="detail-label">Тип матеріалу:</span>
-                        <span className="detail-value">{material.type?.name || "—"}</span>
+                        <span className="detail-value">{material.materialType?.name || "—"}</span>
                     </div>
 
                     <div className="detail-item">
                         <span className="detail-label">Мова:</span>
                         <span className="detail-value">{material.language?.name || "—"}</span>
-                    </div>
-
-                    <div className="detail-item">
-                        <span className="detail-label">Створено:</span>
-                        <span className="detail-value">
-                            {formatDate(material.createDatetime)}
-                        </span>
                     </div>
                 </div>
 

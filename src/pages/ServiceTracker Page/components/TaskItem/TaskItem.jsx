@@ -1,7 +1,17 @@
-// src/pages/ServiceTracker Page/components/TaskItem/TaskItem.jsx
+// src/pages/ServiceTrackerPage/components/TaskItem/TaskItem.jsx
+import React from "react";
 import Button from "../../../../components/common/Button/Button";
 import { getWorkerNameById } from "../../utils/serviceUtils";
 import "./TaskItem.css";
+
+const uk = {
+    deadlineLabel: "Термін:",
+    assignedLabel: "Відповідальний:",
+    priorityLabel: "Пріоритет:",
+    edit: "Редагувати",
+    remove: "Видалити",
+    unknown: "Невідомо",
+};
 
 export default function TaskItem({ task, index, onEdit, onRemove }) {
     const handleEdit = () => {
@@ -12,24 +22,33 @@ export default function TaskItem({ task, index, onEdit, onRemove }) {
         onRemove(index);
     };
 
+    const formattedDeadline = task.deadline
+        ? new Date(task.deadline).toLocaleDateString("uk-UA")
+        : "—";
+
+    const assignedName =
+        task.assignedWorkerName ||
+        getWorkerNameById(task.assignedWorkerId) ||
+        uk.unknown;
+
     return (
         <div className="task-list-item">
             <div className="task-info">
                 <div className="task-name">{task.name}</div>
                 <div className="task-details">
+          <span className="task-detail">
+            <span className="detail-label">{uk.deadlineLabel}</span>
+            <span className="detail-value">{formattedDeadline}</span>
+          </span>
                     <span className="task-detail">
-                        <span className="detail-label">Deadline:</span>
-                        <span className="detail-value">{new Date(task.deadline).toLocaleDateString()}</span>
-                    </span>
-                    <span className="task-detail">
-                        <span className="detail-label">Assigned to:</span>
-                        <span className="detail-value">{task.assignedWorkerName || "Unknown"}</span>
-                    </span>
+            <span className="detail-label">{uk.assignedLabel}</span>
+            <span className="detail-value">{assignedName}</span>
+          </span>
                     {task.priority && (
                         <span className="task-detail">
-                            <span className="detail-label">Priority:</span>
-                            <span className="detail-value">{task.priority}</span>
-                        </span>
+              <span className="detail-label">{uk.priorityLabel}</span>
+              <span className="detail-value">{task.priority}</span>
+            </span>
                     )}
                 </div>
                 {task.description && (
@@ -43,7 +62,7 @@ export default function TaskItem({ task, index, onEdit, onRemove }) {
                     type="button"
                     onClick={handleEdit}
                 >
-                    Edit
+                    {uk.edit}
                 </Button>
                 <Button
                     variant="danger"
@@ -51,7 +70,7 @@ export default function TaskItem({ task, index, onEdit, onRemove }) {
                     type="button"
                     onClick={handleRemove}
                 >
-                    Remove
+                    {uk.remove}
                 </Button>
             </div>
         </div>

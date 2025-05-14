@@ -8,17 +8,17 @@ export default function TaskDetailsModal({ isOpen, onClose, selectedItem, active
     if (!selectedItem) return null;
 
     const { type, data } = selectedItem;
-    const title = type === "service" ? `Service: ${data.serviceName}` : `Task: ${data.name}`;
+    const title = type === "service" ? `Сервіс: ${data.serviceName}` : `Завдання: ${data.name}`;
 
     return (
         <Modal isOpen={isOpen} onClose={onClose} title={title} size="large">
             {(activeProject || (activeService && type === "task")) && (
                 <Card variant="subtle" className="mb-3">
                     {activeProject && (
-                        <InfoRow label="Project:" value={activeProject.name} />
+                        <InfoRow label="Проєкт:" value={activeProject.name} />
                     )}
                     {activeService && type === "task" && (
-                        <InfoRow label="Service:" value={activeService.serviceName} />
+                        <InfoRow label="Сервіс:" value={activeService.serviceName} />
                     )}
                 </Card>
             )}

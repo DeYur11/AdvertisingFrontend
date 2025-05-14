@@ -40,7 +40,12 @@ export default function TaskDetails({ data }) {
 
     return (
         <div>
-            <TaskTabs activeTab={activeTab} setActiveTab={setActiveTab} materialsCount={materials.length} loading={loading} />
+            <TaskTabs
+                activeTab={activeTab}
+                setActiveTab={setActiveTab}
+                materialsCount={materials.length}
+                loading={loading}
+            />
 
             {activeTab === "info" && <TaskInfoTab data={data} />}
             {activeTab === "materials" && (
@@ -59,7 +64,7 @@ export default function TaskDetails({ data }) {
             <Modal
                 isOpen={!!selectedMaterial}
                 onClose={() => setSelectedMaterial(null)}
-                title="Material Details"
+                title="Деталі матеріалу"
                 size="medium"
             >
                 {selectedMaterial && (
@@ -73,7 +78,7 @@ export default function TaskDetails({ data }) {
             <Modal
                 isOpen={showAddMaterial}
                 onClose={() => setShowAddMaterial(false)}
-                title="Add Material"
+                title="Додати матеріал"
                 size="large"
             >
                 <AddMaterialForm
@@ -88,7 +93,7 @@ export default function TaskDetails({ data }) {
             <Modal
                 isOpen={!!editingMaterial}
                 onClose={() => setEditingMaterial(null)}
-                title="Edit Material"
+                title="Редагувати матеріал"
                 size="large"
             >
                 <EditMaterialModal
@@ -105,10 +110,10 @@ export default function TaskDetails({ data }) {
                 isOpen={!!deleteConfirmation}
                 onClose={() => setDeleteConfirmation(null)}
                 onConfirm={confirmDelete}
-                title="Delete Material"
-                message="Are you sure you want to delete this material? This action cannot be undone."
-                confirmText="Delete"
-                cancelText="Cancel"
+                title="Видалити матеріал"
+                message="Ви впевнені, що хочете видалити цей матеріал? Цю дію не можна скасувати."
+                confirmText="Видалити"
+                cancelText="Скасувати"
                 variant="danger"
             />
         </div>

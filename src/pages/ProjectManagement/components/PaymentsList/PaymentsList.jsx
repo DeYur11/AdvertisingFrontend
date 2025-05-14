@@ -8,9 +8,9 @@ export default function PaymentsList({
                                          payments,
                                          loading,
                                          error,
-                                         onAddPayment,    // function(project)
-                                         onEditPayment,   // function(payment, project)
-                                         onDeletePayment  // function(payment)
+                                         onAddPayment,    // функція(project)
+                                         onEditPayment,   // функція(payment, project)
+                                         onDeletePayment  // функція(payment)
                                      }) {
     const calculateTotals = () => {
         let income = 0, expenses = 0;
@@ -30,10 +30,9 @@ export default function PaymentsList({
     const projectCost = parseFloat(project?.cost || 0);
     const netProfit = (parseFloat(totals.income) - parseFloat(totals.expenses) - projectCost).toFixed(2);
 
-    const formatDate = (date) => date ? new Date(date).toLocaleDateString() : "—";
+    const formatDate = (date) => date ? new Date(date).toLocaleDateString("uk-UA") : "—";
     const sortedPayments = [...payments].sort((a, b) => new Date(b.paymentDate) - new Date(a.paymentDate));
 
-    // Function to check if payment is older than 90 days
     const isPaymentOlderThan90Days = (paymentDate) => {
         if (!paymentDate) return false;
 
@@ -48,7 +47,7 @@ export default function PaymentsList({
         <div className="payments-container">
             <div className="payments-header">
                 <div className="header-title">
-                    <h1>Project Payments</h1>
+                    <h1>Платежі проєкту</h1>
                     <p className="project-name">{project?.name}</p>
                 </div>
                 <div className="header-actions">
@@ -58,7 +57,7 @@ export default function PaymentsList({
                         icon="💰"
                         onClick={() => onAddPayment?.(project)}
                     >
-                        Add Payment
+                        Додати платіж
                     </Button>
                 </div>
             </div>
@@ -67,21 +66,21 @@ export default function PaymentsList({
                 <Card className="summary-card income">
                     <div className="summary-icon">💵</div>
                     <div className="summary-content">
-                        <div className="summary-label">Income</div>
+                        <div className="summary-label">Надходження</div>
                         <div className="summary-value">${totals.income}</div>
                     </div>
                 </Card>
                 <Card className="summary-card expenses">
                     <div className="summary-icon">💸</div>
                     <div className="summary-content">
-                        <div className="summary-label">Expenses</div>
+                        <div className="summary-label">Витрати</div>
                         <div className="summary-value">${totals.expenses}</div>
                     </div>
                 </Card>
                 <Card className="summary-card balance">
                     <div className="summary-icon">📊</div>
                     <div className="summary-content">
-                        <div className="summary-label">Balance</div>
+                        <div className="summary-label">Баланс</div>
                         <div className={`summary-value ${parseFloat(totals.balance) < 0 ? 'negative' : ''}`}>
                             ${totals.balance}
                         </div>
@@ -90,7 +89,7 @@ export default function PaymentsList({
                 <Card className="summary-card balance">
                     <div className="summary-icon">📈</div>
                     <div className="summary-content">
-                        <div className="summary-label">Net Profit</div>
+                        <div className="summary-label">Чистий прибуток</div>
                         <div className={`summary-value ${netProfit < 0 ? 'negative' : ''}`}>
                             ${netProfit}
                         </div>
@@ -99,18 +98,18 @@ export default function PaymentsList({
             </div>
 
             {loading ? (
-                <div className="loading-message">Loading payments...</div>
+                <div className="loading-message">Завантаження платежів...</div>
             ) : error ? (
-                <div className="error-message">Error loading payments: {error.message}</div>
+                <div className="error-message">Помилка при завантаженні: {error.message}</div>
             ) : (
                 <div className="payments-list">
                     <div className="payments-header-row" style={{ gridTemplateColumns: '100px 120px 1fr 120px 120px 160px' }}>
-                        <div className="payment-date-col">Date</div>
-                        <div className="payment-purpose-col">Purpose</div>
-                        <div className="payment-description-col">Description</div>
-                        <div className="payment-amount-col">Amount</div>
-                        <div className="payment-delta-col">Δ vs Cost</div>
-                        <div className="payment-actions-col">Actions</div>
+                        <div className="payment-date-col">Дата</div>
+                        <div className="payment-purpose-col">Призначення</div>
+                        <div className="payment-description-col">Опис</div>
+                        <div className="payment-amount-col">Сума</div>
+                        <div className="payment-delta-col">Δ до вартості</div>
+                        <div className="payment-actions-col">Дії</div>
                     </div>
 
                     {sortedPayments.length > 0 ? (
@@ -122,7 +121,7 @@ export default function PaymentsList({
                                     key={payment.id}
                                     className={`payment-row ${parseFloat(payment.paymentSum) < 0 ? 'expense' : 'income'} ${isOlderThan90Days ? 'historical-payment' : ''}`}
                                     style={{ gridTemplateColumns: '100px 120px 1fr 120px 120px 160px' }}
-                                    title={`Transaction #: ${payment.transactionNumber}\nCreated: ${formatDate(payment.createDatetime)}\nUpdated: ${formatDate(payment.updateDatetime)}${isOlderThan90Days ? '\nThis payment is over 90 days old and cannot be edited or deleted' : ''}`}
+                                    title={`Транзакція №: ${payment.transactionNumber}\nСтворено: ${formatDate(payment.createDatetime)}\nОновлено: ${formatDate(payment.updateDatetime)}${isOlderThan90Days ? '\nЦей платіж старший за 90 днів і не може бути змінений або видалений' : ''}`}
                                 >
                                     <div className="payment-date-col">{formatDate(payment.paymentDate)}</div>
                                     <div className="payment-purpose-col">
@@ -151,7 +150,7 @@ export default function PaymentsList({
                                             className="edit-button"
                                             disabled={isOlderThan90Days}
                                         >
-                                            Edit
+                                            Редагувати
                                         </Button>
                                         <Button
                                             variant="danger"
@@ -161,7 +160,7 @@ export default function PaymentsList({
                                             className="delete-button"
                                             disabled={isOlderThan90Days}
                                         >
-                                            Delete
+                                            Видалити
                                         </Button>
                                     </div>
                                 </div>
@@ -170,7 +169,7 @@ export default function PaymentsList({
                     ) : (
                         <Card className="empty-state-card">
                             <div className="no-payments-message">
-                                No payments found for this project. Click "Add Payment" to register a payment.
+                                Для цього проєкту ще немає платежів. Натисніть "Додати платіж", щоб зареєструвати новий.
                             </div>
                         </Card>
                     )}

@@ -101,6 +101,11 @@ export default function EditProjectModal({ isOpen, projectId, onClose, onUpdated
     const [isProjectExpired, setIsProjectExpired] = useState(false);
     const client = useApolloClient();
 
+    // Нові стани для відстеження бюджету
+    const [currentTotalCost, setCurrentTotalCost] = useState(0);
+    const [remainingBudget, setRemainingBudget] = useState(0);
+    const [exceedsBudget, setExceedsBudget] = useState(false);
+
     const { data: ref, loading: refLoading, refetch } = useQuery(
         GET_PROJECT_REFERENCE_DATA,
         { onError: err => toast.error(`Помилка довідників: ${err.message}`) }
@@ -119,6 +124,33 @@ export default function EditProjectModal({ isOpen, projectId, onClose, onUpdated
     const [createPS] = useMutation(CREATE_PS);
     const [updatePS] = useMutation(UPDATE_PS);
     const [deletePS] = useMutation(DELETE_PS);
+
+    // Розрахунок поточної вартості та залишку бюджету
+    useEffect(() => {
+        if (ref && project.services.length > 0) {
+            let total = 0;
+            project.services
+                .filter(service => !service._delete) // Ігноруємо сервіси, позначені для видалення
+                .forEach(service => {
+                    if (service.serviceId && service.amount) {
+                        const serviceObj = ref.services.find(s => s.id === service.serviceId);
+                        if (serviceObj) {
+                            total += serviceObj.estimateCost * service.amount;
+                        }
+                    }
+                });
+
+            setCurrentTotalCost(total);
+
+            const estimateValue = parseFloat(project.estimateCost) || 0;
+            setRemainingBudget(estimateValue > 0 ? estimateValue - total : 0);
+            setExceedsBudget(estimateValue > 0 && total > estimateValue);
+        } else {
+            setCurrentTotalCost(0);
+            setRemainingBudget(parseFloat(project.estimateCost) || 0);
+            setExceedsBudget(false);
+        }
+    }, [project.services, project.estimateCost, ref]);
 
     // Перевірка, чи проект закінчився більше 30 днів тому та його статус "Завершено"
     useEffect(() => {
@@ -240,12 +272,18 @@ export default function EditProjectModal({ isOpen, projectId, onClose, onUpdated
 
         // Перевірка сервісів
         const invalids = project.services
+            .filter(s => !s._delete) // Перевіряємо тільки невидалені сервіси
             .map((s, idx) => (!s.serviceId ? idx : -1))
             .filter(idx => idx !== -1);
 
         if (invalids.length) {
             setInvalidServiceIndexes(invalids);
             newErrors.services = "Виберіть тип для всіх сервісів";
+        }
+
+        // Перевірка на перевищення бюджету
+        if (exceedsBudget) {
+            newErrors.budget = "Вартість послуг перевищує бюджет проекту";
         }
 
         setErrors(newErrors);
@@ -302,7 +340,7 @@ export default function EditProjectModal({ isOpen, projectId, onClose, onUpdated
                 clientId: project.clientId,
                 projectTypeId: project.projectTypeId,
                 description: project.description || null,
-                cost: project.cost ? parseFloat(project.cost) : null,
+                cost: project.cost ? parseFloat(project.cost) : null, // Залишаємо оригінальне значення вартості
                 estimateCost: project.estimateCost ? parseFloat(project.estimateCost) : null,
                 paymentDeadline: project.paymentDeadline || null
             };
@@ -474,11 +512,11 @@ export default function EditProjectModal({ isOpen, projectId, onClose, onUpdated
 
                 <div className="row g-2 mb-3">
                     <div className="col">
-                        <label className="form-label">Оцінка витрат, ₴</label>
+                        <label className="form-label">Бюджет проекту, ₴</label>
                         <input
                             type="number"
                             step="0.01"
-                            className={`form-control ${errors.estimateCost ? "has-error" : ""}`}
+                            className={`form-control ${errors.estimateCost || errors.budget ? "has-error" : ""}`}
                             name="estimateCost"
                             min="0"
                             value={project.estimateCost}
@@ -486,6 +524,7 @@ export default function EditProjectModal({ isOpen, projectId, onClose, onUpdated
                             disabled={isProjectExpired}
                         />
                         {errors.estimateCost && <div className="error-message">{errors.estimateCost}</div>}
+                        {errors.budget && <div className="error-message">{errors.budget}</div>}
                     </div>
                     <div className="col">
                         <label className="form-label">Фактичні витрати, ₴</label>
@@ -500,6 +539,23 @@ export default function EditProjectModal({ isOpen, projectId, onClose, onUpdated
                             disabled={isProjectExpired}
                         />
                         {errors.cost && <div className="error-message">{errors.cost}</div>}
+                    </div>
+                </div>
+
+                {/* Інформація про бюджет та вартість */}
+                <div className="budget-info mb-3">
+                    <div className={`alert ${exceedsBudget ? "alert-danger" : "alert-info"} py-2`}>
+                        <div className="d-flex justify-content-between align-items-center">
+                            <span>Поточна вартість: <strong>{currentTotalCost.toLocaleString()} ₴</strong></span>
+                            {parseFloat(project.estimateCost) > 0 && (
+                                <span>
+                                    {exceedsBudget
+                                        ? <span className="text-danger">Перевищення бюджету: <strong>{Math.abs(remainingBudget).toLocaleString()} ₴</strong></span>
+                                        : <span>Залишок бюджету: <strong>{remainingBudget.toLocaleString()} ₴</strong></span>
+                                    }
+                                </span>
+                            )}
+                        </div>
                     </div>
                 </div>
 
@@ -544,6 +600,13 @@ export default function EditProjectModal({ isOpen, projectId, onClose, onUpdated
                             🗑️
                         </Button>
 
+                        {/* Відображення вартості конкретної послуги */}
+                        {s.serviceId && s.amount && ref?.services && (
+                            <div style={{minWidth: '100px'}}>
+                                {(ref.services.find(svc => svc.id === s.serviceId)?.estimateCost * s.amount).toLocaleString()} ₴
+                            </div>
+                        )}
+
                         {s.id && s.initialAmount > 0 && (
                             <span className="text-muted">
                                 Мін. кількість: {s.initialAmount}
@@ -565,7 +628,7 @@ export default function EditProjectModal({ isOpen, projectId, onClose, onUpdated
                     <Button
                         variant="primary"
                         type="submit"
-                        disabled={isSaving || isProjectExpired}
+                        disabled={isSaving || isProjectExpired || exceedsBudget}
                     >
                         {isSaving ? "Збереження…" : "💾 Оновити проєкт"}
                     </Button>
@@ -574,6 +637,12 @@ export default function EditProjectModal({ isOpen, projectId, onClose, onUpdated
                 {isProjectExpired && (
                     <div className="alert alert-danger mt-3">
                         <strong>Редагування заблоковано!</strong> Цей проект був завершений більше 30 днів тому і не може бути відредагований.
+                    </div>
+                )}
+
+                {exceedsBudget && (
+                    <div className="alert alert-warning mt-3">
+                        <strong>Увага!</strong> Вартість послуг перевищує бюджет проекту. Збільшіть бюджет або зменшіть кількість послуг.
                     </div>
                 )}
             </form>

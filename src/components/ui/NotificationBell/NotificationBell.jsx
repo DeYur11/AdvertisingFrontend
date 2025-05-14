@@ -10,7 +10,7 @@ const SUB_MATERIAL_REVIEW = gql`
             id action entity description timestamp
             worker { id name surname }
             material { id name }
-            review { id comment }
+            review { id comments }
             username role
         }
     }

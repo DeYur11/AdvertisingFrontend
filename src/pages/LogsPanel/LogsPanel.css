@@ -1,0 +1,376 @@
+/* src/pages/LogsPanel/LogsPanel.css */
+.logs-panel-container {
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.logs-header {
+    margin-bottom: 24px;
+}
+
+.logs-header h1 {
+    font-size: 28px;
+    font-weight: 700;
+    color: #1e293b;
+    margin: 0 0 8px;
+}
+
+.logs-subtitle {
+    color: #64748b;
+    font-size: 16px;
+    margin: 0;
+}
+
+/* Filter card */
+.logs-filter-card {
+    margin-bottom: 20px;
+    padding: 16px;
+}
+
+.logs-filter-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 16px;
+}
+
+.search-container {
+    position: relative;
+    flex-grow: 1;
+    max-width: 400px;
+}
+
+.search-input {
+    width: 100%;
+    padding: 10px 40px 10px 16px;
+    border-radius: 8px;
+    border: 1px solid #cbd5e1;
+    font-size: 14px;
+    outline: none;
+    transition: all 0.2s ease;
+}
+
+.search-input:focus {
+    border-color: #2563eb;
+    box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.1);
+}
+
+.clear-search {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    color: #64748b;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background-color: #e2e8f0;
+}
+
+.clear-search:hover {
+    background-color: #cbd5e1;
+    color: #1e293b;
+}
+
+.filter-actions {
+    display: flex;
+    gap: 8px;
+}
+
+/* Advanced filters */
+.advanced-filters {
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 1px solid #e2e8f0;
+    animation: fadeIn 0.3s ease;
+}
+
+.filter-section {
+    margin-bottom: 16px;
+}
+
+.filter-section h3 {
+    font-size: 16px;
+    font-weight: 600;
+    color: #334155;
+    margin: 0 0 12px;
+}
+
+.date-filters {
+    display: flex;
+    gap: 16px;
+}
+
+.date-input {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    flex: 1;
+}
+
+.date-input label {
+    font-size: 14px;
+    color: #64748b;
+}
+
+.date-input input {
+    padding: 8px 12px;
+    border: 1px solid #cbd5e1;
+    border-radius: 6px;
+    font-size: 14px;
+    outline: none;
+}
+
+.date-input input:focus {
+    border-color: #2563eb;
+    box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.1);
+}
+
+.filter-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.filter-chip {
+    padding: 6px 12px;
+    border-radius: 16px;
+    background-color: #f1f5f9;
+    border: 1px solid #e2e8f0;
+    font-size: 13px;
+    color: #475569;
+    cursor: pointer;
+    transition: all 0.2s;
+    user-select: none;
+}
+
+.filter-chip:hover {
+    background-color: #e2e8f0;
+    transform: translateY(-1px);
+}
+
+.filter-chip.selected {
+    background-color: #e0e7ff;
+    border-color: #4f46e5;
+    color: #1e3a8a;
+    font-weight: 500;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+/* Logs table */
+.logs-table-wrapper {
+    overflow-x: auto;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.logs-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+    background-color: white;
+}
+
+.logs-table th,
+.logs-table td {
+    padding: 12px 16px;
+    text-align: left;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.logs-table th {
+    background-color: #f8fafc;
+    font-weight: 600;
+    color: #475569;
+    white-space: nowrap;
+}
+
+.logs-table tr:hover {
+    background-color: #f8fafc;
+}
+
+.logs-table tr:last-child td {
+    border-bottom: none;
+}
+
+/* Column widths */
+.timestamp-col {
+    width: 180px;
+    white-space: nowrap;
+}
+
+.user-col {
+    width: 160px;
+}
+
+.action-col {
+    width: 110px;
+}
+
+.entity-col {
+    width: 120px;
+}
+
+.entity-name-col {
+    width: 200px;
+}
+
+.description-col {
+    min-width: 250px;
+}
+
+.actions-col {
+    width: 120px;
+    white-space: nowrap;
+}
+
+/* User role display */
+.user-role {
+    font-size: 12px;
+    color: #64748b;
+    margin-top: 2px;
+}
+
+/* Row styling based on action type */
+.log-row.create {
+    border-left: 3px solid #10b981;
+}
+
+.log-row.update {
+    border-left: 3px solid #3b82f6;
+}
+
+.log-row.delete {
+    border-left: 3px solid #ef4444;
+}
+
+.log-row.status_change {
+    border-left: 3px solid #f59e0b;
+}
+
+/* Cannot undo message */
+.cannot-undo {
+    font-size: 12px;
+    color: #94a3b8;
+    font-style: italic;
+}
+
+/* Empty state message */
+.no-logs-message {
+    padding: 30px;
+    text-align: center;
+    color: #64748b;
+    font-style: italic;
+}
+
+/* Loading and error states */
+.loading-indicator,
+.error-message {
+    padding: 20px;
+    text-align: center;
+    background-color: #f8fafc;
+    border-radius: 8px;
+    border: 1px solid #e2e8f0;
+    margin: 20px 0;
+}
+
+.loading-indicator {
+    color: #2563eb;
+}
+
+.error-message {
+    color: #ef4444;
+}
+
+/* Access denied */
+.access-denied {
+    padding: 30px;
+    text-align: center;
+    max-width: 500px;
+    margin: 100px auto;
+}
+
+.access-denied-icon {
+    font-size: 48px;
+    margin-bottom: 16px;
+}
+
+.access-denied h2 {
+    margin-bottom: 12px;
+    color: #ef4444;
+}
+
+/* Animations */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Responsive adjustments */
+@media (max-width: 992px) {
+    .logs-filter-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .search-container {
+        max-width: 100%;
+        width: 100%;
+    }
+
+    .filter-actions {
+        width: 100%;
+        justify-content: flex-end;
+    }
+
+    .date-filters {
+        flex-direction: column;
+    }
+}
+
+@media (max-width: 768px) {
+    .logs-table th,
+    .logs-table td {
+        padding: 10px 12px;
+    }
+
+    .entity-name-col,
+    .timestamp-col,
+    .description-col {
+        max-width: 150px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+}
+
+@media (max-width: 576px) {
+    .logs-table {
+        font-size: 12px;
+    }
+
+    .logs-table th,
+    .logs-table td {
+        padding: 8px;
+    }
+
+    .filter-actions {
+        flex-wrap: wrap;
+    }
+}

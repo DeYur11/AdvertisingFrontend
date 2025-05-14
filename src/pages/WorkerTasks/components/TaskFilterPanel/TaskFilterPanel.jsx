@@ -5,7 +5,7 @@ import Card from "../../../../components/common/Card/Card";
 import Badge from "../../../../components/common/Badge/Badge";
 import "./TaskFilterPanel.css";
 
-// GraphQL query for reference data
+// GraphQL запит для довідкових даних
 const GET_FILTER_REFERENCE_DATA = gql`
     query GetFilterReferenceData {
         projectTypes {
@@ -45,33 +45,33 @@ export default function TaskFilterPanel({
                                             currentSortDirection,
                                             onClearAllFilters
                                         }) {
-    // Fetch reference data
+    // Отримання довідкових даних
     const { data: refData, loading } = useQuery(GET_FILTER_REFERENCE_DATA);
 
-    // Local state for tracking active filters count and client search
+    // Локальний стан для відстеження кількості активних фільтрів та пошуку клієнтів
     const [activeFilterCount, setActiveFilterCount] = useState(0);
     const [clientSearchQuery, setClientSearchQuery] = useState("");
 
-    // Update active filter count when filters change
+    // Оновлення кількості активних фільтрів при зміні фільтрів
     useEffect(() => {
         let count = 0;
 
-        // Count statusIds
+        // Підрахунок statusIds
         if (filters.statusIds?.length > 0) count++;
 
-        // Count priorityIn
+        // Підрахунок priorityIn
         if (filters.priorityIn?.length > 0) count++;
 
-        // Count deadline date range
+        // Підрахунок діапазону дат дедлайну
         if (filters.deadlineFrom || filters.deadlineTo) count++;
 
-        // Count nameContains (search)
+        // Підрахунок nameContains (пошук)
         if (filters.nameContains) count++;
 
-        // Count serviceInProgressIds
+        // Підрахунок serviceInProgressIds
         if (filters.serviceInProgressIds?.length > 0) count++;
 
-        // Count other date ranges
+        // Підрахунок інших діапазонів дат
         if (filters.startDateFrom || filters.startDateTo) count++;
         if (filters.endDateFrom || filters.endDateTo) count++;
         if (filters.createdFrom || filters.createdTo) count++;
@@ -79,12 +79,12 @@ export default function TaskFilterPanel({
         setActiveFilterCount(count);
     }, [filters]);
 
-    // Handle filter changes
+    // Обробка змін фільтрів
     const applyFilter = (key, value) => {
-        // Create a new filter object
+        // Створення нового об'єкта фільтрів
         const updatedFilters = { ...filters };
 
-        // Handle array type filters
+        // Обробка фільтрів типу масив
         if (Array.isArray(value)) {
             if (value.length === 0) {
                 delete updatedFilters[key];
@@ -92,7 +92,7 @@ export default function TaskFilterPanel({
                 updatedFilters[key] = value;
             }
         }
-        // Handle date ranges
+        // Обробка діапазонів дат
         else if (
             key === 'deadlineFrom' || key === 'deadlineTo' ||
             key === 'startDateFrom' || key === 'startDateTo' ||
@@ -105,7 +105,7 @@ export default function TaskFilterPanel({
                 updatedFilters[key] = value;
             }
         }
-        // Handle simple value filters
+        // Обробка простих фільтрів зі значеннями
         else {
             if (!value && value !== 0) {
                 delete updatedFilters[key];
@@ -117,7 +117,7 @@ export default function TaskFilterPanel({
         onFiltersChange(updatedFilters);
     };
 
-    // Handle toggling a status ID in the filter
+    // Обробка перемикання ID статусу у фільтрі
     const handleStatusToggle = (statusId) => {
         const currentStatusIds = filters.statusIds || [];
         let newStatusIds;
@@ -131,12 +131,12 @@ export default function TaskFilterPanel({
         applyFilter('statusIds', newStatusIds);
     };
 
-    // Handle toggling a priority value in the filter
+    // Обробка перемикання значення пріоритету у фільтрі
     const handlePriorityToggle = (priorityLevel) => {
         const currentPriorities = filters.priorityIn || [];
         let newPriorities;
 
-        // Map priority levels to actual priority values
+        // Відображення рівнів пріоритету на фактичні значення пріоритету
         const priorityRanges = {
             "high": [8, 9, 10],
             "medium": [4, 5, 6, 7],
@@ -145,14 +145,14 @@ export default function TaskFilterPanel({
 
         const allPriorities = priorityRanges[priorityLevel] || [];
 
-        // Check if all the priorities in this level are already selected
+        // Перевірка, чи всі пріоритети цього рівня вже вибрані
         const allSelected = allPriorities.every(p => currentPriorities.includes(p));
 
         if (allSelected) {
-            // If all are selected, remove them all
+            // Якщо всі вибрані, видаляємо їх усі
             newPriorities = currentPriorities.filter(p => !allPriorities.includes(p));
         } else {
-            // If not all selected, add the missing ones
+            // Якщо не всі вибрані, додаємо відсутні
             newPriorities = [
                 ...currentPriorities.filter(p => !allPriorities.includes(p)),
                 ...allPriorities
@@ -162,22 +162,22 @@ export default function TaskFilterPanel({
         applyFilter('priorityIn', newPriorities);
     };
 
-    // Handle deadline date changes
+    // Обробка змін дат дедлайну
     const handleDateChange = (type, value) => {
         applyFilter(type, value);
     };
 
-    // Apply quick date filters
+    // Застосування швидких фільтрів дат
     const applyQuickDateFilter = (days) => {
         const today = new Date();
         const todayStr = today.toISOString().split('T')[0];
 
         if (days === 'overdue') {
-            // For overdue, set deadlineTo as today
+            // Для прострочених, встановлюємо deadlineTo на сьогодні
             applyFilter('deadlineTo', todayStr);
             applyFilter('deadlineFrom', null);
         } else {
-            // For future dates
+            // Для майбутніх дат
             const targetDate = new Date();
             targetDate.setDate(today.getDate() + days);
             const targetStr = targetDate.toISOString().split('T')[0];
@@ -187,19 +187,19 @@ export default function TaskFilterPanel({
         }
     };
 
-    // Handle sort changes
+    // Обробка змін сортування
     const handleSortChange = (field) => {
         if (field === currentSortField) {
-            // Toggle direction if clicking the same field
+            // Перемикання напрямку при натисканні на те саме поле
             onSortChange(field, currentSortDirection === "ASC" ? "DESC" : "ASC");
         } else {
-            // Default to ASC for new field (except CREATE_DATETIME which defaults to DESC)
+            // За замовчуванням ASC для нового поля (окрім CREATE_DATETIME, яке за замовчуванням DESC)
             const defaultDirection = field === "CREATE_DATETIME" ? "DESC" : "ASC";
             onSortChange(field, defaultDirection);
         }
     };
 
-    // Render sort indicator
+    // Відображення індикатора сортування
     const renderSortIndicator = (field) => {
         if (field !== currentSortField) return null;
         return (
@@ -209,14 +209,14 @@ export default function TaskFilterPanel({
         );
     };
 
-    // Define priority options
+    // Визначення варіантів пріоритету
     const priorityOptions = [
-        { value: "high", label: "High (8-10)", class: "priority-high" },
-        { value: "medium", label: "Medium (4-7)", class: "priority-medium" },
-        { value: "low", label: "Low (1-3)", class: "priority-low" }
+        { value: "high", label: "Високий (8-10)", class: "priority-high" },
+        { value: "medium", label: "Середній (4-7)", class: "priority-medium" },
+        { value: "low", label: "Низький (1-3)", class: "priority-low" }
     ];
 
-    // Get client list with search filtering
+    // Отримання списку клієнтів з фільтрацією пошуку
     const getSortedClients = () => {
         if (!refData?.clients) return [];
 
@@ -233,7 +233,7 @@ export default function TaskFilterPanel({
         return sortedClients;
     };
 
-    // Check if a priority level is selected (partially or fully)
+    // Перевірка, чи вибрано рівень пріоритету (частково або повністю)
     const isPrioritySelected = (priorityLevel) => {
         const currentPriorities = filters.priorityIn || [];
         const priorityRanges = {
@@ -242,13 +242,13 @@ export default function TaskFilterPanel({
             "low": [1, 2, 3]
         };
 
-        // Check if any priority in this level is selected
+        // Перевірка, чи вибрано будь-який пріоритет цього рівня
         return priorityRanges[priorityLevel].some(p => currentPriorities.includes(p));
     };
 
     return (
         <div className="task-filter-panel-container">
-            {/* Search and Basic Filters Bar */}
+            {/* Рядок пошуку та основних фільтрів */}
             <div className="task-filter-bar">
                 <div className="filter-actions">
                     <div className="filter-buttons">
@@ -258,7 +258,7 @@ export default function TaskFilterPanel({
                             onClick={() => onViewModeChange("active")}
                             className="filter-button"
                         >
-                            Active Tasks
+                            Активні завдання
                         </Button>
                         <Button
                             variant={viewMode === "all" ? "primary" : "outline"}
@@ -266,7 +266,7 @@ export default function TaskFilterPanel({
                             onClick={() => onViewModeChange("all")}
                             className="filter-button"
                         >
-                            All Tasks
+                            Всі завдання
                         </Button>
                     </div>
 
@@ -277,7 +277,7 @@ export default function TaskFilterPanel({
                         className={`advanced-filter-button ${activeFilterCount > 0 ? 'has-active-filters' : ''}`}
                         onClick={() => setExpanded(!expanded)}
                     >
-                        Filters {activeFilterCount > 0 && `(${activeFilterCount})`}
+                        Фільтри {activeFilterCount > 0 && `(${activeFilterCount})`}
                     </Button>
                 </div>
 
@@ -285,67 +285,67 @@ export default function TaskFilterPanel({
                     <input
                         type="text"
                         className="search-input"
-                        placeholder="Search by task name..."
+                        placeholder="Пошук за назвою завдання..."
                         value={searchQuery}
                         onChange={(e) => onSearchChange(e.target.value)}
-                        aria-label="Search tasks"
+                        aria-label="Пошук завдань"
                     />
                     {searchQuery && (
                         <button
                             className="clear-search"
                             onClick={() => onSearchChange("")}
-                            aria-label="Clear search"
+                            aria-label="Очистити пошук"
                         >
                             ✕
                         </button>
                     )}
                 </div>
 
-                {/* Sort Controls */}
+                {/* Елементи керування сортуванням */}
                 <div className="sort-controls">
-                    <span className="sort-label">Sort by:</span>
+                    <span className="sort-label">Сортувати за:</span>
                     <div className="sort-options">
                         <button
                             className={`sort-option ${currentSortField === "NAME" ? "active" : ""}`}
                             onClick={() => handleSortChange("NAME")}
                         >
-                            Name {renderSortIndicator("NAME")}
+                            Назва {renderSortIndicator("NAME")}
                         </button>
                         <button
                             className={`sort-option ${currentSortField === "PRIORITY" ? "active" : ""}`}
                             onClick={() => handleSortChange("PRIORITY")}
                         >
-                            Priority {renderSortIndicator("PRIORITY")}
+                            Пріоритет {renderSortIndicator("PRIORITY")}
                         </button>
                         <button
                             className={`sort-option ${currentSortField === "DEADLINE" ? "active" : ""}`}
                             onClick={() => handleSortChange("DEADLINE")}
                         >
-                            Deadline {renderSortIndicator("DEADLINE")}
+                            Дедлайн {renderSortIndicator("DEADLINE")}
                         </button>
                         <button
                             className={`sort-option ${currentSortField === "STATUS" ? "active" : ""}`}
                             onClick={() => handleSortChange("STATUS")}
                         >
-                            Status {renderSortIndicator("STATUS")}
+                            Статус {renderSortIndicator("STATUS")}
                         </button>
                     </div>
                 </div>
             </div>
 
-            {/* Active Filters Display */}
+            {/* Відображення активних фільтрів */}
             {activeFilterCount > 0 && (
                 <div className="active-filters-display">
-                    <div className="active-filters-label">Active Filters:</div>
+                    <div className="active-filters-label">Активні фільтри:</div>
                     <div className="active-filters-list">
                         {filters.nameContains && (
                             <div className="active-filter">
-                                <span className="filter-name">Search:</span>
+                                <span className="filter-name">Пошук:</span>
                                 <span className="filter-value">"{filters.nameContains}"</span>
                                 <button
                                     className="remove-filter"
                                     onClick={() => onSearchChange("")}
-                                    aria-label="Remove search filter"
+                                    aria-label="Видалити фільтр пошуку"
                                 >
                                     ✕
                                 </button>
@@ -354,7 +354,7 @@ export default function TaskFilterPanel({
 
                         {filters.statusIds?.length > 0 && (
                             <div className="active-filter">
-                                <span className="filter-name">Status:</span>
+                                <span className="filter-name">Статус:</span>
                                 <span className="filter-value">
                                     {refData?.taskStatuses
                                         .filter(s => filters.statusIds.includes(s.id))
@@ -364,7 +364,7 @@ export default function TaskFilterPanel({
                                 <button
                                     className="remove-filter"
                                     onClick={() => applyFilter('statusIds', [])}
-                                    aria-label="Remove status filter"
+                                    aria-label="Видалити фільтр статусу"
                                 >
                                     ✕
                                 </button>
@@ -373,14 +373,14 @@ export default function TaskFilterPanel({
 
                         {filters.priorityIn?.length > 0 && (
                             <div className="active-filter">
-                                <span className="filter-name">Priority:</span>
+                                <span className="filter-name">Пріоритет:</span>
                                 <span className="filter-value">
-                                    {filters.priorityIn.length} values
+                                    {filters.priorityIn.length} значень
                                 </span>
                                 <button
                                     className="remove-filter"
                                     onClick={() => applyFilter('priorityIn', [])}
-                                    aria-label="Remove priority filter"
+                                    aria-label="Видалити фільтр пріоритету"
                                 >
                                     ✕
                                 </button>
@@ -389,11 +389,11 @@ export default function TaskFilterPanel({
 
                         {(filters.deadlineFrom || filters.deadlineTo) && (
                             <div className="active-filter">
-                                <span className="filter-name">Deadline:</span>
+                                <span className="filter-name">Дедлайн:</span>
                                 <span className="filter-value">
-                                    {filters.deadlineFrom && `From: ${filters.deadlineFrom}`}
+                                    {filters.deadlineFrom && `З: ${filters.deadlineFrom}`}
                                     {filters.deadlineFrom && filters.deadlineTo && ' - '}
-                                    {filters.deadlineTo && `To: ${filters.deadlineTo}`}
+                                    {filters.deadlineTo && `До: ${filters.deadlineTo}`}
                                 </span>
                                 <button
                                     className="remove-filter"
@@ -401,14 +401,14 @@ export default function TaskFilterPanel({
                                         applyFilter('deadlineFrom', null);
                                         applyFilter('deadlineTo', null);
                                     }}
-                                    aria-label="Remove deadline filter"
+                                    aria-label="Видалити фільтр дедлайну"
                                 >
                                     ✕
                                 </button>
                             </div>
                         )}
 
-                        {/* Add more active filters here as needed */}
+                        {/* Додайте тут інші активні фільтри за потреби */}
                     </div>
 
                     <Button
@@ -417,22 +417,22 @@ export default function TaskFilterPanel({
                         className="clear-filters-btn"
                         onClick={onClearAllFilters}
                     >
-                        Clear All
+                        Очистити все
                     </Button>
                 </div>
             )}
 
-            {/* Advanced Filters Collapsible Panel */}
+            {/* Розгорнута панель розширених фільтрів */}
             {expanded && (
                 <Card className="advanced-filters-panel">
                     <div className="filters-content">
                         {loading ? (
-                            <div className="loading-filters">Loading filter options...</div>
+                            <div className="loading-filters">Завантаження параметрів фільтрації...</div>
                         ) : (
                             <>
-                                {/* Task Status Filters */}
+                                {/* Фільтри статусу завдання */}
                                 <div className="filter-section">
-                                    <h3 className="filter-section-title">Task Status</h3>
+                                    <h3 className="filter-section-title">Статус завдання</h3>
                                     <div className="filter-chips">
                                         {refData?.taskStatuses.map(status => (
                                             <div
@@ -446,9 +446,9 @@ export default function TaskFilterPanel({
                                     </div>
                                 </div>
 
-                                {/* Priority Filters */}
+                                {/* Фільтри пріоритету */}
                                 <div className="filter-section">
-                                    <h3 className="filter-section-title">Priority</h3>
+                                    <h3 className="filter-section-title">Пріоритет</h3>
                                     <div className="filter-chips">
                                         {priorityOptions.map(option => (
                                             <div
@@ -462,13 +462,13 @@ export default function TaskFilterPanel({
                                     </div>
                                 </div>
 
-                                {/* Deadline Filters */}
+                                {/* Фільтри дедлайну */}
                                 <div className="filter-section">
-                                    <h3 className="filter-section-title">Deadline</h3>
+                                    <h3 className="filter-section-title">Дедлайн</h3>
                                     <div className="date-filter-grid">
                                         <div className="date-inputs">
                                             <div className="date-range-input">
-                                                <label>From:</label>
+                                                <label>З:</label>
                                                 <input
                                                     type="date"
                                                     value={filters.deadlineFrom || ""}
@@ -476,7 +476,7 @@ export default function TaskFilterPanel({
                                                 />
                                             </div>
                                             <div className="date-range-input">
-                                                <label>To:</label>
+                                                <label>До:</label>
                                                 <input
                                                     type="date"
                                                     value={filters.deadlineTo || ""}
@@ -491,39 +491,39 @@ export default function TaskFilterPanel({
                                                 variant="outline"
                                                 onClick={() => applyQuickDateFilter(7)}
                                             >
-                                                Next 7 days
+                                                Наступні 7 днів
                                             </Button>
                                             <Button
                                                 size="small"
                                                 variant="outline"
                                                 onClick={() => applyQuickDateFilter(30)}
                                             >
-                                                Next 30 days
+                                                Наступні 30 днів
                                             </Button>
                                             <Button
                                                 size="small"
                                                 variant="outline"
                                                 onClick={() => applyQuickDateFilter('overdue')}
                                             >
-                                                Overdue
+                                                Прострочені
                                             </Button>
                                         </div>
                                     </div>
                                 </div>
 
-                                {/* More filters can be added here as needed */}
-                                {/* For example: Start Date, End Date, Service Type filters */}
+                                {/* Тут можна додати більше фільтрів за потреби */}
+                                {/* Наприклад: Фільтри дати початку, дати закінчення, типу послуги */}
 
-                                {/* Advanced Dates Section - can be extended */}
+                                {/* Розділ додаткових дат - може бути розширений */}
                                 <div className="filter-section">
-                                    <h3 className="filter-section-title">More Date Filters</h3>
+                                    <h3 className="filter-section-title">Додаткові фільтри дат</h3>
                                     <div className="date-subsections">
-                                        {/* Start Date Range */}
+                                        {/* Діапазон дати початку */}
                                         <div className="date-subsection">
-                                            <h4 className="date-subsection-title">Start Date</h4>
+                                            <h4 className="date-subsection-title">Дата початку</h4>
                                             <div className="date-inputs">
                                                 <div className="date-range-input">
-                                                    <label>From:</label>
+                                                    <label>З:</label>
                                                     <input
                                                         type="date"
                                                         value={filters.startDateFrom || ""}
@@ -531,7 +531,7 @@ export default function TaskFilterPanel({
                                                     />
                                                 </div>
                                                 <div className="date-range-input">
-                                                    <label>To:</label>
+                                                    <label>До:</label>
                                                     <input
                                                         type="date"
                                                         value={filters.startDateTo || ""}
@@ -541,12 +541,12 @@ export default function TaskFilterPanel({
                                             </div>
                                         </div>
 
-                                        {/* End Date Range */}
+                                        {/* Діапазон дати закінчення */}
                                         <div className="date-subsection">
-                                            <h4 className="date-subsection-title">End Date</h4>
+                                            <h4 className="date-subsection-title">Дата закінчення</h4>
                                             <div className="date-inputs">
                                                 <div className="date-range-input">
-                                                    <label>From:</label>
+                                                    <label>З:</label>
                                                     <input
                                                         type="date"
                                                         value={filters.endDateFrom || ""}
@@ -554,34 +554,11 @@ export default function TaskFilterPanel({
                                                     />
                                                 </div>
                                                 <div className="date-range-input">
-                                                    <label>To:</label>
+                                                    <label>До:</label>
                                                     <input
                                                         type="date"
                                                         value={filters.endDateTo || ""}
                                                         onChange={(e) => handleDateChange("endDateTo", e.target.value)}
-                                                    />
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        {/* Created Date Range */}
-                                        <div className="date-subsection">
-                                            <h4 className="date-subsection-title">Created Date</h4>
-                                            <div className="date-inputs">
-                                                <div className="date-range-input">
-                                                    <label>From:</label>
-                                                    <input
-                                                        type="date"
-                                                        value={filters.createdFrom || ""}
-                                                        onChange={(e) => handleDateChange("createdFrom", e.target.value)}
-                                                    />
-                                                </div>
-                                                <div className="date-range-input">
-                                                    <label>To:</label>
-                                                    <input
-                                                        type="date"
-                                                        value={filters.createdTo || ""}
-                                                        onChange={(e) => handleDateChange("createdTo", e.target.value)}
                                                     />
                                                 </div>
                                             </div>

@@ -8,14 +8,14 @@ export default function TaskTabs({ activeTab, setActiveTab, materialsCount, load
                 size="small"
                 onClick={() => setActiveTab("info")}
             >
-                Info
+                Інформація
             </Button>
             <Button
                 variant={activeTab === "materials" ? "primary" : "outline"}
                 size="small"
                 onClick={() => setActiveTab("materials")}
             >
-                Materials ({loading ? "…" : materialsCount})
+                Матеріали ({loading ? "…" : materialsCount})
             </Button>
         </div>
     );

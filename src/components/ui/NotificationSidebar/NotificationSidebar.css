@@ -208,3 +208,38 @@
         --sidebar-width: 100%;
     }
 }
+
+/* Add these styles to src/components/ui/NotificationSidebar/NotificationSidebar.css */
+
+.view-all-logs-container {
+    padding: 16px;
+    margin-bottom: 20px;
+    background-color: #f8fafc;
+    border-radius: 8px;
+    border: 1px solid #e2e8f0;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin: 16px;
+}
+
+.view-all-logs-button {
+    align-self: center;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+    transition: transform 0.2s ease;
+}
+
+.view-all-logs-button:hover {
+    transform: translateY(-1px);
+}
+
+.logs-description {
+    color: #64748b;
+    font-size: 12px;
+    margin: 0;
+    text-align: center;
+}

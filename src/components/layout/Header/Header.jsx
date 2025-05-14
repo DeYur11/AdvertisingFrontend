@@ -1,4 +1,6 @@
+// Update the Header.jsx component to include the logs link in the navigation
 // src/components/layout/Header/Header.jsx
+
 import { NavLink } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { useSelector } from "react-redux";
@@ -50,6 +52,7 @@ export default function Header() {
     const isWorker = role === "WORKER";
     const isScrum = role === "SCRUM_MASTER";
     const isPm = role === "PROJECT_MANAGER";
+    const isAdmin = role === "ADMIN";
 
     /* ────────── запити ідентифікаторів ────────── */
 
@@ -113,7 +116,9 @@ export default function Header() {
         { to: "/service-tracker", label: "Призначення сервісів" },
         { to: "/employee-management", label: "Менеджмент" },
         { to: "/service-dashboard", label: "Огляд сервісів" },
-        { to: "/reviewer", label: "Рецензування" }
+        { to: "/reviewer", label: "Рецензування" },
+        // Add logs link for managers and admins
+        ...(isPm || isAdmin ? [{ to: "/logs", label: "Аудит і логи" }] : [])
     ];
 
     /* ────────── UI ────────── */
@@ -145,25 +150,29 @@ export default function Header() {
                 {/* ███ nav (для SCRUM/WORKER) ███ */}
                 {!isPm && (
                     <nav className="nav">
-                        <NavLink to="/" end className={({ isActive }) => isActive ? "nav-button active" : "nav-button"}>
-                            Home
-                        </NavLink>
 
                         {isScrum && (
                             <NavLink to="/service-tracker" className={({ isActive }) => isActive ? "nav-button active" : "nav-button"}>
-                                Service Tracker
+                                Відстеження сервісів
                             </NavLink>
                         )}
 
                         {isWorker && (
                             <NavLink to="/dashboard" className={({ isActive }) => isActive ? "nav-button active" : "nav-button"}>
-                                My Tasks
+                                Мої завдання
                             </NavLink>
                         )}
 
                         {user.isReviewer && (
                             <NavLink to="/reviewer" className={({ isActive }) => isActive ? "nav-button active" : "nav-button"}>
-                                Review Materials
+                                Рецензії матеріалів
+                            </NavLink>
+                        )}
+
+                        {/* Add logs link for admins even if they're not managers */}
+                        {isAdmin && (
+                            <NavLink to="/logs" className={({ isActive }) => isActive ? "nav-button active" : "nav-button"}>
+                                Логи
                             </NavLink>
                         )}
                     </nav>

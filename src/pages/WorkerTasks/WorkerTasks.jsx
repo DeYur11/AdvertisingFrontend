@@ -83,7 +83,7 @@ export default function WorkerTasks() {
         <div className="dashboard-container">
             <div className="dashboard-header">
                 <div className="user-welcome">
-                    <h2>Welcome, {user.name} {user.surname}</h2>
+                    <h2>Вітаю, {user.name} {user.surname}</h2>
                     {user.isReviewer && <div className="user-role">Worker + Reviewer</div>}
                 </div>
                 <div className="dashboard-actions">
@@ -99,7 +99,7 @@ export default function WorkerTasks() {
             </div>
 
             <div className="dashboard-content">
-                <h3>Your Tasks</h3>
+                <h3>Ваші завдання</h3>
                 <TaskList
                     pageState={pageState}
                     updatePageState={updatePageState}

@@ -26,15 +26,15 @@ export default function MaterialCard({ material, onEdit, onDelete, onClick, disa
                 variables: {
                     id: material.id,
                     input: {
-                        statusId: "pending_review" // 🔁 заміни на реальний ID або зроби пошук перед цим
+                        statusId: 2 // 🔁 замінити на справжній ID статусу "Очікує перевірки"
                     }
                 }
             });
 
             if (onStatusChange) onStatusChange();
         } catch (err) {
-            console.error("Failed to submit for review", err);
-            alert("An error occurred while submitting for review.");
+            console.error("Не вдалося відправити на перевірку", err);
+            alert("Сталася помилка під час відправки на перевірку.");
         }
     };
 
@@ -43,7 +43,7 @@ export default function MaterialCard({ material, onEdit, onDelete, onClick, disa
             <div className="flex justify-between items-center">
                 <strong>{material.name}</strong>
                 <Badge variant={material.status?.name === "Accepted" ? "success" : "default"}>
-                    {material.status?.name || "Unknown"}
+                    {material.status?.name || "Невідомо"}
                 </Badge>
             </div>
 
@@ -69,7 +69,7 @@ export default function MaterialCard({ material, onEdit, onDelete, onClick, disa
                             onEdit(material.id);
                         }}
                     >
-                        Edit
+                        Редагувати
                     </Button>
                     <Button
                         variant="danger"
@@ -80,7 +80,7 @@ export default function MaterialCard({ material, onEdit, onDelete, onClick, disa
                             onDelete(material.id);
                         }}
                     >
-                        Delete
+                        Видалити
                     </Button>
 
                     {material.status?.name === "Draft" && (
@@ -88,25 +88,9 @@ export default function MaterialCard({ material, onEdit, onDelete, onClick, disa
                             variant="primary"
                             size="small"
                             icon="🚀"
-                            onClick={async (e) => {
-                                e.stopPropagation();
-                                try {
-                                    await updateMaterial({
-                                        variables: {
-                                            id: material.id,
-                                            input: {
-                                                statusId: 2 // ← змінено з "pending_review" на числовий ID статусу "PendingReview"
-                                            }
-                                        }
-                                    });
-                                    if (onStatusChange) onStatusChange();
-                                } catch (err) {
-                                    console.error("Failed to submit for review", err);
-                                    alert("An error occurred while submitting for review.");
-                                }
-                            }}
+                            onClick={handleSubmitForReview}
                         >
-                            Submit for Review
+                            Надіслати на перевірку
                         </Button>
                     )}
                 </div>

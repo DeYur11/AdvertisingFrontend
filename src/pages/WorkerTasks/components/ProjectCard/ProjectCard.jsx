@@ -6,8 +6,8 @@ import Button from "../../../../components/common/Button/Button";
 import "./ProjectCard.css";
 
 export default function ProjectCard({ project, expanded, onToggle, services, searchQuery, onSelect }) {
-    // Get project status for styling
-    // Calculate project stats
+    // Отримати статус проєкту для стилізації
+    // Обчислити статистику по завданнях
     const tasksCount = services.reduce((count, service) =>
         count + (service.tasks?.length || 0), 0);
 
@@ -17,18 +17,18 @@ export default function ProjectCard({ project, expanded, onToggle, services, sea
             return status === "in progress" || status === "pending";
         }).length, 0);
 
-    // Format dates
+    // Форматування дат
     const formatDate = (dateString) => {
         if (!dateString) return "—";
         return new Date(dateString).toLocaleDateString();
     };
 
     const normalizeStatus = (name) =>
-        name?.toLowerCase().replace(/\s+/g, "-") || "unknown";
+        name?.toLowerCase().replace(/\s+/g, "-") || "невідомо";
 
     const projectStatus = normalizeStatus(project.status?.name);
 
-    // Create toggle button
+    // Кнопка розгортання
     const toggleButton = (
         <Button
             variant="text"
@@ -39,28 +39,28 @@ export default function ProjectCard({ project, expanded, onToggle, services, sea
                 e.stopPropagation();
                 onToggle();
             }}
-            aria-label={expanded ? "Collapse project" : "Expand project"}
+            aria-label={expanded ? "Згорнути проєкт" : "Розгорнути проєкт"}
         >
-            {expanded ? "Collapse" : "Expand"}
+            {expanded ? "Згорнути" : "Розгорнути"}
         </Button>
     );
 
     return (
         <div className="compact-project-wrapper">
             <Card className={`compact-project-card project-card-status-${projectStatus}`}>
-            <div className="compact-project-header">
+                <div className="compact-project-header">
                     <div className="project-title">
                         {highlightMatch(project.name, searchQuery)}
                     </div>
 
                     <div className="project-meta">
                         <div className="meta-item">
-                            <span className="meta-label">Type:</span>
+                            <span className="meta-label">Тип:</span>
                             <span className="meta-value">{project.projectType?.name || "—"}</span>
                         </div>
 
                         <div className="meta-item">
-                            <span className="meta-label">Status:</span>
+                            <span className="meta-label">Статус:</span>
                             <Badge
                                 variant={
                                     projectStatus === "completed" ? "success" :
@@ -69,29 +69,29 @@ export default function ProjectCard({ project, expanded, onToggle, services, sea
                                 }
                                 size="small"
                             >
-                                {project.status?.name || "Unknown"}
+                                {project.status?.name || "Невідомо"}
                             </Badge>
                         </div>
 
                         <div className="meta-item">
-                            <span className="meta-label">Client:</span>
+                            <span className="meta-label">Клієнт:</span>
                             <span className="meta-value">{project.client?.name || "—"}</span>
                         </div>
 
                         <div className="meta-item">
-                            <span className="meta-label">Manager:</span>
+                            <span className="meta-label">Менеджер:</span>
                             <span className="meta-value">
                                 {project.manager ? `${project.manager.name} ${project.manager.surname}` : "—"}
                             </span>
                         </div>
 
                         <div className="meta-item date-item">
-                            <span className="meta-label">Start:</span>
+                            <span className="meta-label">Початок:</span>
                             <span className="meta-value date-value">{formatDate(project.startDate)}</span>
                         </div>
 
                         <div className="meta-item date-item">
-                            <span className="meta-label">End:</span>
+                            <span className="meta-label">Кінець:</span>
                             <span className="meta-value date-value">{formatDate(project.endDate)}</span>
                         </div>
                     </div>
@@ -99,11 +99,11 @@ export default function ProjectCard({ project, expanded, onToggle, services, sea
                     <div className="project-stats">
                         <div className="stat-item">
                             <span className="stat-value">{tasksCount}</span>
-                            <span className="stat-label">Total</span>
+                            <span className="stat-label">Усього</span>
                         </div>
                         <div className="stat-item active">
                             <span className="stat-value">{activeTasksCount}</span>
-                            <span className="stat-label">Active</span>
+                            <span className="stat-label">Активні</span>
                         </div>
                     </div>
 
@@ -116,7 +116,7 @@ export default function ProjectCard({ project, expanded, onToggle, services, sea
             {expanded && (
                 <div className="services-section">
                     <div className="services-header">
-                        <h4 className="services-title">Services</h4>
+                        <h4 className="services-title">Сервіси</h4>
                     </div>
 
                     {services.length > 0 ? (
@@ -131,7 +131,7 @@ export default function ProjectCard({ project, expanded, onToggle, services, sea
                             ))}
                         </div>
                     ) : (
-                        <div className="no-services">No services found for this project</div>
+                        <div className="no-services">Для цього проєкту не знайдено сервісів</div>
                     )}
                 </div>
             )}

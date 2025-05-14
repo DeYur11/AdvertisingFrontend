@@ -4,8 +4,7 @@ import "./ServiceTrackerHeader.css";
 export default function ServiceTrackerHeader() {
     return (
         <div className="page-header">
-            <h1>Service Implementation Tracker</h1>
-            <p className="subheading">Track planned services vs. actual implementations</p>
+            <h1>Відстеження імплементацій сервісів та завдань</h1>
         </div>
     );
 }
