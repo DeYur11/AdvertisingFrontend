@@ -33,6 +33,17 @@ export default function PaymentsList({
     const formatDate = (date) => date ? new Date(date).toLocaleDateString() : "—";
     const sortedPayments = [...payments].sort((a, b) => new Date(b.paymentDate) - new Date(a.paymentDate));
 
+    // Function to check if payment is older than 90 days
+    const isPaymentOlderThan90Days = (paymentDate) => {
+        if (!paymentDate) return false;
+
+        const paymentTime = new Date(paymentDate).getTime();
+        const ninetyDaysAgo = new Date();
+        ninetyDaysAgo.setDate(ninetyDaysAgo.getDate() - 90);
+
+        return paymentTime < ninetyDaysAgo.getTime();
+    };
+
     return (
         <div className="payments-container">
             <div className="payments-header">
@@ -103,53 +114,59 @@ export default function PaymentsList({
                     </div>
 
                     {sortedPayments.length > 0 ? (
-                        sortedPayments.map(payment => (
-                            <div
-                                key={payment.id}
-                                className={`payment-row ${parseFloat(payment.paymentSum) < 0 ? 'expense' : 'income'}`}
-                                style={{ gridTemplateColumns: '100px 120px 1fr 120px 120px 160px' }}
-                                title={`Transaction #: ${payment.transactionNumber}\nCreated: ${formatDate(payment.createDatetime)}\nUpdated: ${formatDate(payment.updateDatetime)}`}
-                            >
-                                <div className="payment-date-col">{formatDate(payment.paymentDate)}</div>
-                                <div className="payment-purpose-col">
-                                    <Badge
-                                        variant={parseFloat(payment.paymentSum) < 0 ? 'warning' : 'success'}
-                                        size="small"
-                                    >
-                                        {payment.paymentPurpose?.name || "—"}
-                                    </Badge>
+                        sortedPayments.map(payment => {
+                            const isOlderThan90Days = isPaymentOlderThan90Days(payment.paymentDate);
+
+                            return (
+                                <div
+                                    key={payment.id}
+                                    className={`payment-row ${parseFloat(payment.paymentSum) < 0 ? 'expense' : 'income'} ${isOlderThan90Days ? 'historical-payment' : ''}`}
+                                    style={{ gridTemplateColumns: '100px 120px 1fr 120px 120px 160px' }}
+                                    title={`Transaction #: ${payment.transactionNumber}\nCreated: ${formatDate(payment.createDatetime)}\nUpdated: ${formatDate(payment.updateDatetime)}${isOlderThan90Days ? '\nThis payment is over 90 days old and cannot be edited or deleted' : ''}`}
+                                >
+                                    <div className="payment-date-col">{formatDate(payment.paymentDate)}</div>
+                                    <div className="payment-purpose-col">
+                                        <Badge
+                                            variant={parseFloat(payment.paymentSum) < 0 ? 'warning' : 'success'}
+                                            size="small"
+                                        >
+                                            {payment.paymentPurpose?.name || "—"}
+                                        </Badge>
+                                    </div>
+                                    <div className="payment-description-col">{payment.transactionNumber || "—"}</div>
+                                    <div className="payment-amount-col">
+                                        <span className={parseFloat(payment.paymentSum) < 0 ? 'negative' : 'positive'}>
+                                            ${Math.abs(parseFloat(payment.paymentSum)).toFixed(2)}
+                                        </span>
+                                    </div>
+                                    <div className="payment-delta-col">
+                                        ${(parseFloat(payment.paymentSum) - projectCost).toFixed(2)}
+                                    </div>
+                                    <div className="payment-actions-col">
+                                        <Button
+                                            variant="outline"
+                                            size="small"
+                                            icon="✏️"
+                                            onClick={() => onEditPayment?.(payment, project)}
+                                            className="edit-button"
+                                            disabled={isOlderThan90Days}
+                                        >
+                                            Edit
+                                        </Button>
+                                        <Button
+                                            variant="danger"
+                                            size="small"
+                                            icon="🗑"
+                                            onClick={() => onDeletePayment(payment)}
+                                            className="delete-button"
+                                            disabled={isOlderThan90Days}
+                                        >
+                                            Delete
+                                        </Button>
+                                    </div>
                                 </div>
-                                <div className="payment-description-col">{payment.transactionNumber || "—"}</div>
-                                <div className="payment-amount-col">
-                                    <span className={parseFloat(payment.paymentSum) < 0 ? 'negative' : 'positive'}>
-                                        ${Math.abs(parseFloat(payment.paymentSum)).toFixed(2)}
-                                    </span>
-                                </div>
-                                <div className="payment-delta-col">
-                                    ${(parseFloat(payment.paymentSum) - projectCost).toFixed(2)}
-                                </div>
-                                <div className="payment-actions-col">
-                                    <Button
-                                        variant="outline"
-                                        size="small"
-                                        icon="✏️"
-                                        onClick={() => onEditPayment?.(payment, project)}
-                                        className="edit-button"
-                                    >
-                                        Edit
-                                    </Button>
-                                    <Button
-                                        variant="danger"
-                                        size="small"
-                                        icon="🗑"
-                                        onClick={() => onDeletePayment(payment)}
-                                        className="delete-button"
-                                    >
-                                        Delete
-                                    </Button>
-                                </div>
-                            </div>
-                        ))
+                            );
+                        })
                     ) : (
                         <Card className="empty-state-card">
                             <div className="no-payments-message">

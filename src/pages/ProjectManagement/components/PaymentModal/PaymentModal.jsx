@@ -124,7 +124,6 @@ export default function PaymentModal({
                         input: { ...input, projectId: parseInt(projectId, 10) }
                     }
                 });
-                toast.success("Платіж створено");
             }
             onSave();
         } catch (err) {

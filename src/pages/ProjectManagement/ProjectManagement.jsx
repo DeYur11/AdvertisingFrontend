@@ -196,7 +196,7 @@ export default function ProjectManagement() {
         try {
             await deletePayment({ variables: { id: confirmDeletePayment.id } });
             toast.success("Платіж видалено");
-            refetch();
+            await refetch();
             refetchPayments();
         } catch (e) {
             console.error(e);

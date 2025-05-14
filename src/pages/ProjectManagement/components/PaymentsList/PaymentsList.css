@@ -161,6 +161,32 @@
     background-color: #fff1f240;
 }
 
+/* Historical payment (older than 90 days) styling */
+.payment-row.historical-payment {
+    background-color: #f1f5f9;
+    opacity: 0.75;
+}
+
+.payment-row.historical-payment:hover {
+    background-color: #e2e8f0;
+}
+
+.payment-row.historical-payment .payment-date-col,
+.payment-row.historical-payment .payment-description-col,
+.payment-row.historical-payment .payment-amount-col,
+.payment-row.historical-payment .payment-delta-col {
+    color: #64748b;
+}
+
+.payment-row.historical-payment .delete-button:disabled,
+.payment-row.historical-payment .edit-button:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+    background-color: #f1f5f9;
+    color: #94a3b8;
+    border-color: #cbd5e1;
+}
+
 .payment-date-col {
     color: #64748b;
     font-family: monospace;
