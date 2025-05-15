@@ -7,6 +7,8 @@ import Card from "../../../../components/common/Card/Card";
 import TaskForm from "../TaskForm/TaskForm";
 import EditServiceModal from "../EditServiceModal/EditServiceModal";
 import ConfirmationDialog from "../../../../components/common/ConfirmationDialog/ConfirmationDialog";
+import EditIcon from '@mui/icons-material/Edit';
+import DeleteIcon from '@mui/icons-material/Delete';
 import {
     GET_SERVICES_IN_PROGRESS_BY_PROJECT_SERVICE,
     GET_PROJECT_DETAILS,
@@ -371,15 +373,19 @@ export default function ServiceDetailsModal({
                                                     variant="outline"
                                                     size="small"
                                                     onClick={() => handleEditService(sip)}
+                                                    className="icon-button"
+                                                    title="Редагувати"
                                                 >
-                                                    Редагувати
+                                                    <span className="material-icons">edit</span>
                                                 </Button>
                                                 <Button
                                                     variant="danger"
                                                     size="small"
                                                     onClick={() => handleDeleteService(sip)}
+                                                    className="icon-button"
+                                                    title="Видалити"
                                                 >
-                                                    Видалити
+                                                    <span className="material-icons">delete</span>
                                                 </Button>
                                             </div>
                                         </div>
@@ -454,12 +460,6 @@ export default function ServiceDetailsModal({
                                                         <div key={task.id} className="task-table-row">
                                                             <div className="task-col task-name-col">
                                                                 <div className="task-name">{task.name || "—"}</div>
-                                                                {task.description && (
-                                                                    <div className="task-description-tooltip">
-                                                                        <span className="description-icon">ⓘ</span>
-                                                                        <span className="tooltip-text">{task.description}</span>
-                                                                    </div>
-                                                                )}
                                                             </div>
                                                             <div className="task-col task-status-col">
                                                                 <Badge
@@ -495,15 +495,19 @@ export default function ServiceDetailsModal({
                                                                         variant="outline"
                                                                         size="small"
                                                                         onClick={() => handleEditTask(task, sip)}
+                                                                        className="icon-button"
+                                                                        title="Редагувати"
                                                                     >
-                                                                        Редагувати
+                                                                        <EditIcon fontSize="small"/>
                                                                     </Button>
                                                                     <Button
                                                                         variant="danger"
                                                                         size="small"
                                                                         onClick={() => handleDeleteTask(task)}
+                                                                        className="icon-button"
+                                                                        title="Видалити"
                                                                     >
-                                                                        Видалити
+                                                                        <DeleteIcon fontSize="small"/>
                                                                     </Button>
                                                                 </div>
                                                             </div>
