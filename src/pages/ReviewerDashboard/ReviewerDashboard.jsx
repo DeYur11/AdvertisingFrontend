@@ -302,8 +302,7 @@ export default function ReviewerDashboard() {
                                     )}
 
                                     <div className="material-footer">
-
-                                        {material.status?.name === "Accepted" ? (
+                                        {material.status?.name !== "Pending Review" ? (
                                             <Button variant="outline" size="small" disabled>
                                                 Не можна рецензувати
                                             </Button>

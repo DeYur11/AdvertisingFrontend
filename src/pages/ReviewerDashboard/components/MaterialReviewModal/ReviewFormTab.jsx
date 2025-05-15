@@ -1,5 +1,6 @@
 import Button from "../../../../components/common/Button/Button";
 
+
 export default function ReviewFormTab({
                                           material,
                                           formData,
@@ -11,7 +12,8 @@ export default function ReviewFormTab({
                                           materialSummaries,
                                           isEditing,
                                           setIsEditing,
-                                          setExistingReview // додаємо для скидання відгуку при скасуванні
+                                          setExistingReview, // додаємо для скидання відгуку при скасуванні
+                                          disableSubmit = false
                                       }) {
     if (!formData) return null;
 
@@ -90,6 +92,12 @@ export default function ReviewFormTab({
 
                 {errors.submit && <div className="submit-error">{errors.submit}</div>}
 
+                {disableSubmit && (
+                    <div className="submit-error">
+                        Рецензування недоступне. Матеріал повинен мати статус "Pending Review" для надання відгуку.
+                    </div>
+                )}
+
                 <div className="action-buttons">
                     <Button variant="outline" onClick={onClose} type="button">
                         Скасувати
@@ -99,7 +107,11 @@ export default function ReviewFormTab({
                             Вийти з редагування
                         </Button>
                     )}
-                    <Button variant="primary" type="submit" disabled={submitting}>
+                    <Button
+                        variant="primary"
+                        type="submit"
+                        disabled={submitting || disableSubmit}
+                    >
                         {submitting ? "Збереження..." : "Надіслати рецензію"}
                     </Button>
                 </div>

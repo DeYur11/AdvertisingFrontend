@@ -18,6 +18,18 @@ export const hasBeenReviewedBy = (material, reviewerId) => {
     );
 };
 
+
+/**
+ * Перевіряє, чи матеріал можна рецензувати (має статус "Pending Review")
+ * @param {Object} material - Об'єкт матеріалу
+ * @returns {boolean} Чи матеріал можна рецензувати
+ */
+
+export const canReviewMaterial = (material) => {
+    if (!material?.status) return false;
+    return material.status.name === "Pending Review";
+};
+
 /**
  * Отримати рецензію конкретного рецензента
  * @param {Object} material - Об'єкт матеріалу

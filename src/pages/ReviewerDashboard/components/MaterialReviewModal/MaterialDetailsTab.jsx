@@ -137,8 +137,17 @@ export default function MaterialDetailsTab({
 
             {/* Кнопка переходу до рецензії */}
             <div className="action-buttons">
-                <Button variant="primary" onClick={onOpenReview}>
-                    {existingReview ? "Переглянути мою рецензію" : "Рецензувати матеріал"}
+                <Button
+                    variant="primary"
+                    onClick={onOpenReview}
+                    disabled={material.status?.name !== "Pending Review"}
+                >
+                    {material.status?.name !== "Pending Review"
+                        ? "Рецензування недоступне"
+                        : existingReview
+                            ? "Переглянути мою рецензію"
+                            : "Рецензувати матеріал"
+                    }
                 </Button>
             </div>
         </div>

@@ -22,6 +22,8 @@ import TaskDetailView from "./TaskDetailView";
 import "./MaterialReviewModal.css";
 import "./ClickableLinks.css";
 
+const PENDING_REVIEW_STATUS = "Pending Review";
+
 export default function MaterialReviewModal({
                                                 isOpen,
                                                 onClose,
@@ -156,6 +158,12 @@ export default function MaterialReviewModal({
         e.preventDefault();
         if (!validate()) return;
 
+        // Перевіряємо, чи матеріал можна рецензувати
+        if (material?.status?.name !== PENDING_REVIEW_STATUS) {
+            setErrors((p) => ({ ...p, submit: "Рецензування недоступне. Матеріал повинен мати статус 'Pending Review'." }));
+            return;
+        }
+
         const input = {
             materialId: +material.id,
             reviewerId: +user.workerId,
@@ -226,6 +234,7 @@ export default function MaterialReviewModal({
                             onSubmit={handleSubmit}
                             materialSummaries={materialSummaries}
                             setExistingReview={setExistingReview}
+                            disableSubmit={material?.status?.name !== PENDING_REVIEW_STATUS}
                         />
                     )}
 
