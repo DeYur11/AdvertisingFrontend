@@ -7,6 +7,7 @@ export default function TaskMaterialsTab({
                                              loading,
                                              error,
                                              isTaskCompleted,
+                                             isTaskInProgress,
                                              onAdd,
                                              onEdit,
                                              onDelete,
@@ -19,7 +20,7 @@ export default function TaskMaterialsTab({
         <div>
             <div className="flex justify-between items-center mb-2">
                 <h3>Прикріплені матеріали</h3>
-                {!isTaskCompleted && (
+                {isTaskInProgress && !isTaskCompleted && (
                     <Button variant="primary" size="small" icon="+" onClick={onAdd}>
                         Додати матеріал
                     </Button>
@@ -29,10 +30,15 @@ export default function TaskMaterialsTab({
             {materials.length === 0 ? (
                 <Card className="text-center">
                     <p>Матеріали ще не прикріплені.</p>
-                    {!isTaskCompleted && (
+                    {isTaskInProgress && !isTaskCompleted && (
                         <Button variant="primary" onClick={onAdd}>
                             Додати перший матеріал
                         </Button>
+                    )}
+                    {!isTaskInProgress && !isTaskCompleted && (
+                        <p className="text-orange-500 mt-2">
+                            ⚠️ Завдання ще не розпочате. Ви зможете додавати матеріали після початку виконання завдання.
+                        </p>
                     )}
                 </Card>
             ) : (
@@ -44,7 +50,7 @@ export default function TaskMaterialsTab({
                             onEdit={onEdit}
                             onDelete={onDelete}
                             onClick={() => onSelect(m)}
-                            disabled={isTaskCompleted}
+                            disabled={!isTaskInProgress || isTaskCompleted}
                         />
                     ))}
                 </div>

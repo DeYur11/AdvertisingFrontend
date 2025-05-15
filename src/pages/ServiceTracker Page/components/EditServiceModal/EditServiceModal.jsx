@@ -1,5 +1,5 @@
 // src/pages/ServiceTracker Page/components/EditServiceModal/EditServiceModal.jsx
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useMutation } from "@apollo/client";
 import Modal from "../../../../components/common/Modal/Modal";
 import Button from "../../../../components/common/Button/Button";
@@ -12,7 +12,8 @@ export default function EditServiceModal({
                                              onClose,
                                              serviceInProgress,
                                              onSave,
-                                             serviceStatuses = []
+                                             serviceStatuses = [],
+                                             isLocked = false  // New prop to handle locked projects
                                          }) {
     const [formData, setFormData] = useState({
         startDate: serviceInProgress?.startDate || "",
@@ -23,6 +24,13 @@ export default function EditServiceModal({
 
     const [updateServiceInProgress] = useMutation(UPDATE_SERVICE_IN_PROGRESS);
 
+    // Effect to display a message if the project is locked
+    useEffect(() => {
+        if (isLocked && isOpen) {
+            toast.warning("Цей проект заблоковано для редагування, оскільки він закінчився більше 30 днів тому.");
+        }
+    }, [isLocked, isOpen]);
+
     const handleChange = (e) => {
         const { name, value } = e.target;
         setFormData(prev => ({ ...prev, [name]: value }));
@@ -30,6 +38,12 @@ export default function EditServiceModal({
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+
+        // Double-check lock status before proceeding
+        if (isLocked) {
+            toast.error("Неможливо зберегти зміни. Проект заблоковано.");
+            return;
+        }
 
         try {
             await updateServiceInProgress({
@@ -59,7 +73,37 @@ export default function EditServiceModal({
             title="Редагування реалізації сервісу"
             size="medium"
         >
+            {isLocked && (
+                <div className="modal-lock-notice">
+                    Проект закінчився більше 30 днів тому. Редагування заблоковано.
+                </div>
+            )}
+
             <form onSubmit={handleSubmit} className="edit-service-form">
+                <div className="form-group">
+                    <label className="form-label">Дата початку</label>
+                    <input
+                        type="date"
+                        name="startDate"
+                        value={formData.startDate}
+                        onChange={handleChange}
+                        className="form-control"
+                        required
+                        disabled={isLocked}
+                    />
+                </div>
+
+                <div className="form-group">
+                    <label className="form-label">Дата завершення</label>
+                    <input
+                        type="date"
+                        name="endDate"
+                        value={formData.endDate}
+                        onChange={handleChange}
+                        className="form-control"
+                        disabled={isLocked}
+                    />
+                </div>
 
                 <div className="form-group">
                     <label className="form-label">Вартість</label>
@@ -71,7 +115,26 @@ export default function EditServiceModal({
                         className="form-control"
                         step="0.01"
                         placeholder="Введіть вартість..."
+                        disabled={isLocked}
                     />
+                </div>
+
+                <div className="form-group">
+                    <label className="form-label">Статус</label>
+                    <select
+                        name="statusId"
+                        value={formData.statusId}
+                        onChange={handleChange}
+                        className="form-control"
+                        disabled={isLocked}
+                    >
+                        <option value="">Виберіть статус</option>
+                        {serviceStatuses.map(status => (
+                            <option key={status.id} value={status.id}>
+                                {status.name}
+                            </option>
+                        ))}
+                    </select>
                 </div>
 
                 <div className="form-actions">
@@ -85,7 +148,7 @@ export default function EditServiceModal({
                     <Button
                         variant="primary"
                         type="submit"
-                        disabled={!formData.startDate}
+                        disabled={!formData.startDate || isLocked}
                     >
                         Зберегти зміни
                     </Button>

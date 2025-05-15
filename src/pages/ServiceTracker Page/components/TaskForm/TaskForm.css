@@ -55,3 +55,32 @@
         grid-template-columns: 1fr;
     }
 }
+
+/* Add to src/pages/ServiceTracker Page/components/TaskForm/TaskForm.css */
+
+.task-form-lock-notice {
+    display: flex;
+    align-items: center;
+    background-color: #fee2e2;
+    color: #b91c1c;
+    padding: 12px 16px;
+    border-radius: 6px;
+    margin-bottom: 16px;
+    border: 1px solid #fecaca;
+    font-weight: 500;
+}
+
+.lock-icon {
+    margin-right: 8px;
+    font-size: 18px;
+}
+
+/* Style for disabled form elements */
+.task-form input:disabled,
+.task-form select:disabled,
+.task-form textarea:disabled {
+    background-color: #f1f5f9;
+    cursor: not-allowed;
+    color: #94a3b8;
+    border-color: #cbd5e1;
+}

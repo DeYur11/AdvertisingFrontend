@@ -1,5 +1,7 @@
+// src/components/common/SelectWithCreate.jsx
 import CreatableSelect from "react-select/creatable";
 import { useMutation } from "@apollo/client";
+import { executeMutation } from "../../utils/ErrorHandlingUtils";
 
 export default function SelectWithCreate({
                                              label,
@@ -36,24 +38,29 @@ export default function SelectWithCreate({
         }
 
         try {
-            const { data: created } = await createItem({
+            const result = await executeMutation(createItem, {
                 variables: { input: { name: inputValue } },
-            });
+                successMessage: `Створено новий елемент: ${inputValue}`,
+                errorMessage: `Помилка при створенні: ${inputValue}`,
+                onSuccess: async (data) => {
+                    if (typeof refetchOptions === "function") {
+                        await refetchOptions();
+                    } else {
+                        console.warn("⚠️ refetchOptions не є функцією, пропущено оновлення списку.");
+                    }
 
-            console.log("✅ Створено новий елемент:", created);
+                    // Find the mutation result - this object will have different shapes
+                    // depending on which mutation was used
+                    const resultObj = data?.data ? Object.values(data.data)[0] : null;
 
-            if (created) {
-                if (typeof refetchOptions === "function") {
-                    await refetchOptions();
-                } else {
-                    console.warn("⚠️ refetchOptions не є функцією, пропущено оновлення списку.");
+                    if (resultObj?.id) {
+                        onChange(resultObj.id);
+                    }
                 }
-
-                const newId = Object.values(created)[0]?.id;
-                onChange(newId);
-            }
-        } catch (error) {
-            console.error("❌ Помилка при створенні:", error.message);
+            });
+        } catch (err) {
+            // executeMutation already handles the error display
+            console.error("Error in handleCreate:", err);
         }
     };
 

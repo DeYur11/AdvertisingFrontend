@@ -1,8 +1,10 @@
-// src/pages/ServiceTrackerPage/components/ServiceCard/ServiceCard.jsx
+// src/pages/ServiceTracker Page/components/ServiceCard/ServiceCard.jsx
 import React from "react";
 import Card from "../../../../components/common/Card/Card";
 import Badge from "../../../../components/common/Badge/Badge";
 import Button from "../../../../components/common/Button/Button";
+import LockIcon from '@mui/icons-material/Lock';
+import { isProjectLocked } from "../../utils/projectDateUtils";
 import { calculateProgress, getMissingCount } from "../../utils/serviceUtils";
 import "./ServiceCard.css";
 
@@ -14,9 +16,13 @@ const uk = {
     progressLabel: "Відсоток створених імплементацій",
     createImplementation: "Створити реалізацію",
     viewDetails: "Переглянути деталі",
+    projectLocked: "Проект заблоковано"
 };
 
 export default function ServiceCard({ service, onCreateService, onViewDetails }) {
+    // Check if the project is locked (ended more than 30 days ago)
+    const { isLocked } = isProjectLocked(service.project);
+
     const handleCreateClick = (e) => {
         e.stopPropagation();
         onCreateService(service);
@@ -33,16 +39,24 @@ export default function ServiceCard({ service, onCreateService, onViewDetails })
         <Card
             className={`service-card ${
                 service.servicesInProgress.length < service.amount ? "incomplete" : "complete"
-            }`}
+            } ${isLocked ? "locked" : ""}`}
             onClick={handleCardClick}
         >
             <div className="service-header">
                 <h3 className="service-name">{service.service.serviceName}</h3>
-                <Badge
-                    variant={service.servicesInProgress.length < service.amount ? "warning" : "success"}
-                >
-                    {service.servicesInProgress.length} / {service.amount}
-                </Badge>
+                <div className="service-badges">
+                    <Badge
+                        variant={service.servicesInProgress.length < service.amount ? "warning" : "success"}
+                    >
+                        {service.servicesInProgress.length} / {service.amount}
+                    </Badge>
+
+                    {isLocked && (
+                        <Badge variant="danger" className="locked-badge">
+                            <LockIcon fontSize="small" /> {uk.projectLocked}
+                        </Badge>
+                    )}
+                </div>
             </div>
 
             <div className="service-project">
@@ -63,8 +77,8 @@ export default function ServiceCard({ service, onCreateService, onViewDetails })
             <div className="service-cost">
                 <span className="label">{uk.costLabel}</span>
                 <span className="value">
-          ${parseFloat(service.service.estimateCost).toFixed(2)}
-        </span>
+                    ${parseFloat(service.service.estimateCost).toFixed(2)}
+                </span>
             </div>
 
             <div className="progress-container">
@@ -82,7 +96,12 @@ export default function ServiceCard({ service, onCreateService, onViewDetails })
 
             <div className="service-actions">
                 {missingCount > 0 && (
-                    <Button variant="primary" size="small" onClick={handleCreateClick}>
+                    <Button
+                        variant="primary"
+                        size="small"
+                        onClick={handleCreateClick}
+                        disabled={isLocked}
+                    >
                         {uk.createImplementation}
                     </Button>
                 )}

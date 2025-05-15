@@ -45,3 +45,22 @@
     gap: 12px;
     margin-top: 16px;
 }
+.modal-lock-notice {
+    background-color: #fee2e2;
+    color: #b91c1c;
+    padding: 12px 16px;
+    border-radius: 6px;
+    margin-bottom: 16px;
+    border: 1px solid #fecaca;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+}
+
+/* Style disabled form controls */
+.edit-service-form .form-control:disabled {
+    background-color: #f1f5f9;
+    cursor: not-allowed;
+    color: #94a3b8;
+    border-color: #cbd5e1;
+}

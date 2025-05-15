@@ -1,3 +1,5 @@
+// Update in ProjectGroupView.jsx - adding project locking functionality
+
 import { useState, useEffect } from "react";
 import { useQuery } from "@apollo/client";
 import { GET_PAGINATED_PROJECTS } from "../../graphql/queries";
@@ -6,6 +8,8 @@ import Badge from "../../../../components/common/Badge/Badge";
 import Button from "../../../../components/common/Button/Button";
 import Pagination from "../../../../components/common/Pagination/Pagination";
 import ServiceCard from "../ServiceCard/ServiceCard";
+import LockIcon from '@mui/icons-material/Lock';
+import { isProjectLocked } from "../../utils/projectDateUtils";
 import "./ProjectGroupView.css";
 
 export default function ProjectGroupView({
@@ -123,6 +127,13 @@ export default function ProjectGroupView({
 
     // Функція для визначення класу project-header на основі статусу проекту
     const getProjectHeaderClass = (project) => {
+        // Check if project is locked
+        const { isLocked } = isProjectLocked(project);
+
+        if (isLocked) {
+            return 'locked';
+        }
+
         // Перевіряємо статус проекту
         const statusName = project.status?.name?.toLowerCase() || '';
 
@@ -178,152 +189,169 @@ export default function ProjectGroupView({
     return (
         <>
             {/* Панель сортування проектів */}
-            <div className="sort-controls">
-                <span className="sort-label">Сортувати за:</span>
-                <button
-                    className={`sort-button ${pagination.sortField === "name" ? "active" : ""}`}
-                    onClick={() => handleSortChange("name")}
-                >
-                    Назва проекту {pagination.sortField === "name" ? (pagination.sortDirection === "ASC" ? "↑" : "↓") : null}
-                </button>
-                <button
-                    className={`sort-button ${pagination.sortField === "cost" ? "active" : ""}`}
-                    onClick={() => handleSortChange("cost")}
-                >
-                    Вартість {pagination.sortField === "cost" ? (pagination.sortDirection === "ASC" ? "↑" : "↓") : null}
-                </button>
-                <button
-                    className={`sort-button ${pagination.sortField === "startDate" ? "active" : ""}`}
-                    onClick={() => handleSortChange("startDate")}
-                >
-                    Дата початку {pagination.sortField === "startDate" ? (pagination.sortDirection === "ASC" ? "↑" : "↓") : null}
-                </button>
-                <button
-                    className={`sort-button ${pagination.sortField === "endDate" ? "active" : ""}`}
-                    onClick={() => handleSortChange("endDate")}
-                >
-                    Дата завершення {pagination.sortField === "endDate" ? (pagination.sortDirection === "ASC" ? "↑" : "↓") : null}
-                </button>
-            </div>
+                <div className="sort-controls">
+                    <span className="sort-label">Сортувати за:</span>
+                    <button
+                        className={`sort-button ${pagination.sortField === "name" ? "active" : ""}`}
+                        onClick={() => handleSortChange("name")}
+                    >
+                        Назва проекту {pagination.sortField === "name" ? (pagination.sortDirection === "ASC" ? "↑" : "↓") : null}
+                    </button>
+                    <button
+                        className={`sort-button ${pagination.sortField === "cost" ? "active" : ""}`}
+                        onClick={() => handleSortChange("cost")}
+                    >
+                        Вартість {pagination.sortField === "cost" ? (pagination.sortDirection === "ASC" ? "↑" : "↓") : null}
+                    </button>
+                    <button
+                        className={`sort-button ${pagination.sortField === "startDate" ? "active" : ""}`}
+                        onClick={() => handleSortChange("startDate")}
+                    >
+                        Дата початку {pagination.sortField === "startDate" ? (pagination.sortDirection === "ASC" ? "↑" : "↓") : null}
+                    </button>
+                    <button
+                        className={`sort-button ${pagination.sortField === "endDate" ? "active" : ""}`}
+                        onClick={() => handleSortChange("endDate")}
+                    >
+                        Дата завершення {pagination.sortField === "endDate" ? (pagination.sortDirection === "ASC" ? "↑" : "↓") : null}
+                    </button>
+                </div>
 
-            <div className="projects-list">
-                {projects.map(project => {
-                    const totalReq = project.projectServices.reduce((s, ps) => s + ps.amount, 0);
-                    const totalImpl = project.projectServices.reduce((s, ps) => s + ps.servicesInProgress.length, 0);
-                    const progress = totalReq ? Math.round((totalImpl / totalReq) * 100) : 100;
-                    const incompleteCnt = totalReq - totalImpl;
+                <div className="projects-list">
+                    {projects.map(project => {
+                        const totalReq = project.projectServices.reduce((s, ps) => s + ps.amount, 0);
+                        const totalImpl = project.projectServices.reduce((s, ps) => s + ps.servicesInProgress.length, 0);
+                        const progress = totalReq ? Math.round((totalImpl / totalReq) * 100) : 100;
+                        const incompleteCnt = totalReq - totalImpl;
 
-                    // Фільтруємо сервіси згідно з пошуковим запитом
-                    const filteredServices = project.projectServices.filter(ps => {
-                        const matchesName = filters.searchQuery
-                            ? ps.service?.serviceName?.toLowerCase().includes(filters.searchQuery.toLowerCase())
-                            : true;
-                        const mismatched = filters.onlyMismatched
-                            ? ps.amount > ps.servicesInProgress.length
-                            : true;
-                        return matchesName && mismatched;
-                    });
+                        // Check if project is locked (ended more than 30 days ago)
+                        const { isLocked, message } = isProjectLocked(project);
 
-                    // Використовуємо нову функцію для визначення класу
-                    const headerClass = getProjectHeaderClass(project);
+                        // Фільтруємо сервіси згідно з пошуковим запитом
+                        const filteredServices = project.projectServices.filter(ps => {
+                            const matchesName = filters.searchQuery
+                                ? ps.service?.serviceName?.toLowerCase().includes(filters.searchQuery.toLowerCase())
+                                : true;
+                            const mismatched = filters.onlyMismatched
+                                ? ps.amount > ps.servicesInProgress.length
+                                : true;
+                            return matchesName && mismatched;
+                        });
 
-                    return (
-                        <div key={project.id} className="project-group">
-                            <div
-                                className={`project-header ${headerClass}`}
-                                onClick={() => toggleProject(project.id)}
-                            >
-                                <div className="project-header-info">
-                                    <h3 className="project-name">{project.name}</h3>
-                                    <div className="project-meta">
-                                        <Badge
-                                            variant={
-                                                project.status?.name?.toLowerCase().includes('completed') ? "success" :
-                                                    project.status?.name?.toLowerCase().includes('not started') ? "default" :
-                                                        "primary"
-                                            }
-                                            size="large"
-                                        >
-                                            {project.status?.name || "Невідомо"}
-                                        </Badge>
-                                        <span className="project-client">{project.client.name}</span>
-                                        {project.startDate && (
-                                            <span className="project-date">
+                        // Використовуємо нову функцію для визначення класу
+                        const headerClass = getProjectHeaderClass(project);
+
+                        return (
+                            <div key={project.id} className="project-group">
+                                <div
+                                    className={`project-header ${headerClass}`}
+                                    onClick={() => toggleProject(project.id)}
+                                >
+                                    <div className="project-header-info">
+                                        <h3 className="project-name">{project.name}</h3>
+                                        <div className="project-meta">
+                                            <Badge
+                                                variant={
+                                                    project.status?.name?.toLowerCase().includes('completed') ? "success" :
+                                                        project.status?.name?.toLowerCase().includes('not started') ? "default" :
+                                                            "primary"
+                                                }
+                                                size="large"
+                                            >
+                                                {project.status?.name || "Невідомо"}
+                                            </Badge>
+
+                                            {isLocked && (
+                                                <Badge variant="danger" size="large" className="project-locked-badge">
+                                                    <LockIcon fontSize="small" /> Заблоковано
+                                                </Badge>
+                                            )}
+
+                                            <span className="project-client">{project.client.name}</span>
+                                            {project.startDate && (
+                                                <span className="project-date">
                                                 {new Date(project.startDate).toLocaleDateString()} -
-                                                {project.endDate ? new Date(project.endDate).toLocaleDateString() : "Теперішній час"}
+                                                    {project.endDate ? new Date(project.endDate).toLocaleDateString() : "Теперішній час"}
                                             </span>
-                                        )}
+                                            )}
+                                        </div>
                                     </div>
-                                </div>
 
-                                <div className="project-summary">
-                                    <div className="project-progress">
-                                        <div className="progress-label">
-                                            <span>Сервіси: {totalImpl}/{totalReq}</span>
-                                            <span>{progress}%</span>
+                                    <div className="project-summary">
+                                        <div className="project-progress">
+                                            <div className="progress-label">
+                                                <span>Сервіси: {totalImpl}/{totalReq}</span>
+                                                <span>{progress}%</span>
+                                            </div>
+                                            <div className="progress-bar">
+                                                <div className="progress-fill" style={{ width: `${progress}%` }} />
+                                            </div>
                                         </div>
-                                        <div className="progress-bar">
-                                            <div className="progress-fill" style={{ width: `${progress}%` }} />
-                                        </div>
-                                    </div>
-                                    {incompleteCnt > 0 && (
-                                        <span className="incomplete-count">
+
+                                        {incompleteCnt > 0 && (
+                                            <span className="incomplete-count">
                                             {incompleteCnt} сервіс{incompleteCnt !== 1 ? "ів" : ""} у процесі
                                         </span>
-                                    )}
+                                        )}
+
+                                        {isLocked && (
+                                            <span className="locked-message">
+                                            Проект закінчився більше 30 днів тому
+                                        </span>
+                                        )}
+                                    </div>
+
+                                    <Button
+                                        variant="outline"
+                                        size="small"
+                                        onClick={e => {
+                                            e.stopPropagation();
+                                            toggleProject(project.id);
+                                        }}
+                                    >
+                                        {expandedProjects[project.id] ? "Згорнути" : "Розгорнути"}
+                                    </Button>
                                 </div>
 
-                                <Button
-                                    variant="outline"
-                                    size="small"
-                                    onClick={e => {
-                                        e.stopPropagation();
-                                        toggleProject(project.id);
-                                    }}
-                                >
-                                    {expandedProjects[project.id] ? "Згорнути" : "Розгорнути"}
-                                </Button>
+                                {expandedProjects[project.id] && (
+                                    <div className="project-services">
+                                        {filteredServices.length > 0 ? (
+                                            <div className="services-grid">
+                                                {filteredServices.map(ps => (
+                                                    <ServiceCard
+                                                        key={ps.id}
+                                                        service={ps}
+                                                        onCreateService={onCreateService}
+                                                        onViewDetails={onViewDetails}
+                                                    />
+                                                ))}
+                                            </div>
+                                        ) : (
+                                            <div className="no-services-message">
+                                                {filters.onlyMismatched
+                                                    ? "Усі сервіси цього проекту вже мають достатню кількість імплементацій"
+                                                    : filters.searchQuery
+                                                        ? "Немає сервісів, що відповідають критеріям пошуку."
+                                                        : "Для цього проєкту немає сервісів."}
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
                             </div>
+                        );
+                    })}
+                </div>
 
-                            {expandedProjects[project.id] && (
-                                <div className="project-services">
-                                    {filteredServices.length > 0 ? (
-                                        <div className="services-grid">
-                                            {filteredServices.map(ps => (
-                                                <ServiceCard
-                                                    key={ps.id}
-                                                    service={ps}
-                                                    onCreateService={onCreateService}
-                                                    onViewDetails={onViewDetails}
-                                                />
-                                            ))}
-                                        </div>
-                                    ) : (
-                                        <div className="no-services-message">
-                                            {filters.onlyMismatched
-                                                ? "Усі сервіси цього проекту вже мають достатню кількість імплементацій"
-                                                : filters.searchQuery
-                                                    ? "Немає сервісів, що відповідають критеріям пошуку."
-                                                    : "Для цього проєкту немає сервісів."}
-                                        </div>
-                                    )}
-                                </div>
-                            )}
-                        </div>
-                    );
-                })}
-            </div>
-
-            {/* Пагінація */}
-            <Pagination
-                currentPage={pageInfo.number + 1}
-                totalPages={pageInfo.totalPages}
-                onPageChange={handlePageChange}
-                pageSize={pageInfo.size}
-                onPageSizeChange={handlePageSizeChange}
-                totalItems={pageInfo.totalElements}
-                pageSizeOptions={[5, 10, 20, 50]}
-            />
+                {/* Пагінація */}
+                <Pagination
+                    currentPage={pageInfo.number + 1}
+                    totalPages={pageInfo.totalPages}
+                    onPageChange={handlePageChange}
+                    pageSize={pageInfo.size}
+                    onPageSizeChange={handlePageSizeChange}
+                    totalItems={pageInfo.totalElements}
+                    pageSizeOptions={[5, 10, 20, 50]}
+                />
         </>
     );
 }

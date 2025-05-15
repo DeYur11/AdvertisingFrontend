@@ -235,3 +235,40 @@
     }
 }
 
+
+/* Add to src/pages/ServiceTracker Page/components/ProjectGroupView/ProjectGroupView.css */
+
+/* Project header styles for locked projects */
+.project-header.locked {
+    background-color: #f1f5f9;
+    border-left: 3px solid #dc2626;
+    position: relative;
+    color: #64748b;
+}
+
+.project-header.locked::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(255, 255, 255, 0.3);
+    pointer-events: none;
+    border-radius: 8px;
+}
+
+.project-locked-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    margin-left: 8px;
+}
+
+.locked-message {
+    display: block;
+    font-size: 13px;
+    color: #dc2626;
+    margin-top: 4px;
+    font-style: italic;
+}

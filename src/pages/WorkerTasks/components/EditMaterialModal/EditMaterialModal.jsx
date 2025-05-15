@@ -1,7 +1,9 @@
+// src/pages/WorkerTasks/components/EditMaterialModal/EditMaterialModal.jsx
 import { useEffect, useState } from "react";
 import { useQuery, useMutation, gql } from "@apollo/client";
 import SelectWithCreate from "../../../../components/common/SelectWithCreate";
 import CreatableSelect from "react-select/creatable";
+import { executeMutation } from "../../../../utils/ErrorHandlingUtils";
 
 // --- Queries & Mutations ---
 const GET_MATERIAL_REFERENCE_DATA = gql`
@@ -120,10 +122,18 @@ export default function EditMaterialForm({ materialId, onUpdated }) {
 
         for (const kw of toCreate) {
             try {
-                const { data } = await createKeyword({ variables: { input: { name: kw.label } } });
-                if (data?.createKeyword?.id) newIds.push(data.createKeyword.id);
+                const result = await executeMutation(createKeyword, {
+                    variables: { input: { name: kw.label } },
+                    successMessage: `Ключове слово "${kw.label}" створено`,
+                    showSuccessToast: false // Don't show for each keyword to avoid spam
+                });
+
+                if (result?.data?.createKeyword?.id) {
+                    newIds.push(result.data.createKeyword.id);
+                }
             } catch (err) {
-                console.error("Помилка при створенні ключового слова:", err);
+                // executeMutation already handles the error display
+                console.error("Error creating keyword:", err);
             }
         }
 
@@ -132,8 +142,9 @@ export default function EditMaterialForm({ materialId, onUpdated }) {
 
     const handleUpdate = async (e) => {
         e.preventDefault();
+
         try {
-            await updateMaterial({
+            await executeMutation(updateMaterial, {
                 variables: {
                     id: materialId,
                     input: {
@@ -146,17 +157,21 @@ export default function EditMaterialForm({ materialId, onUpdated }) {
                         languageId: form.languageId ? parseInt(form.languageId) : null,
                         keywordIds: form.keywordIds.map(id => parseInt(id))
                     }
-                }
+                },
+                successMessage: "✅ Матеріал оновлено успішно!",
+                errorMessage: "❌ Не вдалося оновити матеріал",
+                onSuccess: onUpdated
             });
-            alert("✅ Матеріал оновлено успішно!");
-            onUpdated?.();
         } catch (err) {
-            console.error("❌ Оновлення не вдалося:", err);
-            alert("❌ Не вдалося оновити матеріал: " + err.message);
+            // executeMutation already handles the error display
+            console.error("Error updating material:", err);
         }
     };
 
-    const keywordOptions = refData.keywords.map(k => ({ value: k.id, label: k.name }));
+    const keywordOptions = refData.keywords.map(k => ({
+        value: k.id,
+        label: k.name,
+    }));
     const selectedKeywords = keywordOptions.filter(opt => form.keywordIds.includes(opt.value));
 
     return (
@@ -235,10 +250,10 @@ export default function EditMaterialForm({ materialId, onUpdated }) {
                     <label className="form-label">Ключові слова</label>
                     <CreatableSelect
                         isMulti
-                        value={selectedKeywords}
-                        placeholder="Оберіть або створіть ключові слова"
                         onChange={handleKeywordChange}
+                        onCreateOption={handleKeywordChange}
                         options={keywordOptions}
+                        value={selectedKeywords}
                     />
                 </div>
 

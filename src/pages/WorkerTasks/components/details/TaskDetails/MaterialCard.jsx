@@ -1,7 +1,9 @@
+// src/pages/WorkerTasks/components/details/TaskDetails/MaterialCard.jsx
 import { useMutation, gql } from "@apollo/client";
 import Card from "../../../../../components/common/Card/Card";
 import Badge from "../../../../../components/common/Badge/Badge";
 import Button from "../../../../../components/common/Button/Button";
+import { executeMutation } from "../../../../../utils/ErrorHandlingUtils";
 
 const UPDATE_MATERIAL = gql`
     mutation UpdateMaterial($id: ID!, $input: UpdateMaterialInput!) {
@@ -22,19 +24,22 @@ export default function MaterialCard({ material, onEdit, onDelete, onClick, disa
         e.stopPropagation();
 
         try {
-            await updateMaterial({
+            await executeMutation(updateMaterial, {
                 variables: {
                     id: material.id,
                     input: {
-                        statusId: 2 // 🔁 замінити на справжній ID статусу "Очікує перевірки"
+                        statusId: 2 // ID статусу "Очікує перевірки"
                     }
+                },
+                successMessage: "Матеріал відправлено на перевірку",
+                errorMessage: "Не вдалося відправити матеріал на перевірку",
+                onSuccess: () => {
+                    if (onStatusChange) onStatusChange();
                 }
             });
-
-            if (onStatusChange) onStatusChange();
         } catch (err) {
-            console.error("Не вдалося відправити на перевірку", err);
-            alert("Сталася помилка під час відправки на перевірку.");
+            // executeMutation already handles the error display
+            console.error("Error in handleSubmitForReview:", err);
         }
     };
 

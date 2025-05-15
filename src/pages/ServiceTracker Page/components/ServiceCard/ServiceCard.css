@@ -109,3 +109,37 @@
 .service-card:hover::after {
     opacity: 1;
 }
+
+/* Add to src/pages/ServiceTracker Page/components/ServiceCard/ServiceCard.css */
+
+/* Styling for locked service cards */
+.service-card.locked {
+    position: relative;
+    border-color: #ccc;
+    background-color: #f5f5f5;
+}
+
+.service-card.locked::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(255, 255, 255, 0.4);
+    pointer-events: none;
+    border-radius: 6px;
+}
+
+.service-badges {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+
+.locked-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    white-space: nowrap;
+}

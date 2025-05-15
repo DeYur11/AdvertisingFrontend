@@ -1,3 +1,4 @@
+// Updated ServiceDetailsModal.jsx with project locking functionality
 import { useState } from "react";
 import { useQuery, useMutation } from "@apollo/client";
 import Modal from "../../../../components/common/Modal/Modal";
@@ -7,8 +8,10 @@ import Card from "../../../../components/common/Card/Card";
 import TaskForm from "../TaskForm/TaskForm";
 import EditServiceModal from "../EditServiceModal/EditServiceModal";
 import ConfirmationDialog from "../../../../components/common/ConfirmationDialog/ConfirmationDialog";
+import { isProjectLocked } from "../../utils/projectDateUtils";
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
+import LockIcon from '@mui/icons-material/Lock';
 import {
     GET_SERVICES_IN_PROGRESS_BY_PROJECT_SERVICE,
     GET_PROJECT_DETAILS,
@@ -72,23 +75,53 @@ export default function ServiceDetailsModal({
 
     if (!isOpen || !projectService) return null;
 
+    const project = projectData?.project || projectService?.project || {};
+
+    // Check if project is locked (ended more than 30 days ago)
+    const { isLocked, message: lockMessage } = isProjectLocked(project);
+
     const handleCreateServiceClick = () => {
+        // Block if project is locked
+        if (isLocked) {
+            toast.error(lockMessage);
+            return;
+        }
+
         onCreateService(projectService);
         onClose();
     };
 
     // Функції управління імплементаціями сервісу
     const handleEditService = (serviceInProgress) => {
+        // Block if project is locked
+        if (isLocked) {
+            toast.error(lockMessage);
+            return;
+        }
+
         setServiceToEdit(serviceInProgress);
         setShowEditServiceModal(true);
     };
 
     const handleDeleteService = (serviceInProgress) => {
+        // Block if project is locked
+        if (isLocked) {
+            toast.error(lockMessage);
+            return;
+        }
+
         setServiceToDelete(serviceInProgress);
         setShowDeleteServiceConfirm(true);
     };
 
     const confirmDeleteService = async () => {
+        // Double-check lock status before proceeding
+        if (isLocked) {
+            toast.error(lockMessage);
+            setShowDeleteServiceConfirm(false);
+            return;
+        }
+
         try {
             await deleteServiceInProgress({
                 variables: {
@@ -113,6 +146,12 @@ export default function ServiceDetailsModal({
 
     // Функції управління завданнями
     const handleAddTask = (serviceInProgress) => {
+        // Block if project is locked
+        if (isLocked) {
+            toast.error(lockMessage);
+            return;
+        }
+
         setSelectedServiceInProgress(serviceInProgress);
         setCurrentTask({
             name: "",
@@ -127,6 +166,12 @@ export default function ServiceDetailsModal({
     };
 
     const handleEditTask = (task, serviceInProgress) => {
+        // Block if project is locked
+        if (isLocked) {
+            toast.error(lockMessage);
+            return;
+        }
+
         setSelectedServiceInProgress(serviceInProgress);
         setCurrentTask({
             id: task.id,
@@ -142,11 +187,24 @@ export default function ServiceDetailsModal({
     };
 
     const handleDeleteTask = (task) => {
+        // Block if project is locked
+        if (isLocked) {
+            toast.error(lockMessage);
+            return;
+        }
+
         setTaskToDelete(task);
         setShowDeleteConfirm(true);
     };
 
     const confirmDeleteTask = async () => {
+        // Double-check lock status before proceeding
+        if (isLocked) {
+            toast.error(lockMessage);
+            setShowDeleteConfirm(false);
+            return;
+        }
+
         try {
             await deleteTask({
                 variables: {
@@ -164,6 +222,13 @@ export default function ServiceDetailsModal({
     };
 
     const handleTaskSave = async (taskData) => {
+        // Final check before saving
+        if (isLocked) {
+            toast.error(lockMessage);
+            setShowTaskModal(false);
+            return;
+        }
+
         try {
             if (taskData.id) {
                 await updateTask({
@@ -208,8 +273,6 @@ export default function ServiceDetailsModal({
     };
 
     const missingCount = (projectService?.amount || 0) - (projectService?.servicesInProgress?.length || 0);
-    const project = projectData?.project || projectService?.project || {};
-
     const workers = workersData?.workers || [];
     const taskStatuses = taskStatusesData?.taskStatuses || [];
 
@@ -238,6 +301,14 @@ export default function ServiceDetailsModal({
                 size="large"
             >
                 <div className="service-details-container">
+                    {/* Project lock status notification */}
+                    {isLocked && (
+                        <div className="project-locked-notice">
+                            <LockIcon className="lock-icon" />
+                            <span>{lockMessage}</span>
+                        </div>
+                    )}
+
                     <section className="service-overview">
                         <h3>Інформація про сервіс</h3>
                         <div className="info-horizontal-layout">
@@ -287,6 +358,15 @@ export default function ServiceDetailsModal({
                                             >
                                                 {project?.status?.name || "—"}
                                             </Badge>
+                                            {isLocked && (
+                                                <Badge
+                                                    variant="danger"
+                                                    size="small"
+                                                    className="locked-badge"
+                                                >
+                                                    <LockIcon fontSize="small" /> Заблоковано
+                                                </Badge>
+                                            )}
                                         </span>
                                     </div>
                                     {project?.manager && (
@@ -343,7 +423,11 @@ export default function ServiceDetailsModal({
 
                             {missingCount > 0 && (
                                 <div className="action-buttons">
-                                    <Button variant="primary" onClick={handleCreateServiceClick}>
+                                    <Button
+                                        variant="primary"
+                                        onClick={handleCreateServiceClick}
+                                        disabled={isLocked}
+                                    >
                                         Створити нову імплементацію сервісу
                                     </Button>
                                 </div>
@@ -375,8 +459,9 @@ export default function ServiceDetailsModal({
                                                     onClick={() => handleEditService(sip)}
                                                     className="icon-button"
                                                     title="Редагувати"
+                                                    disabled={isLocked}
                                                 >
-                                                    <span className="material-icons">edit</span>
+                                                    <EditIcon fontSize="small"/>
                                                 </Button>
                                                 <Button
                                                     variant="danger"
@@ -384,8 +469,9 @@ export default function ServiceDetailsModal({
                                                     onClick={() => handleDeleteService(sip)}
                                                     className="icon-button"
                                                     title="Видалити"
+                                                    disabled={isLocked}
                                                 >
-                                                    <span className="material-icons">delete</span>
+                                                    <DeleteIcon fontSize="small"/>
                                                 </Button>
                                             </div>
                                         </div>
@@ -440,6 +526,7 @@ export default function ServiceDetailsModal({
                                                     variant="primary"
                                                     size="small"
                                                     onClick={() => handleAddTask(sip)}
+                                                    disabled={isLocked}
                                                 >
                                                     + Додати завдання
                                                 </Button>
@@ -497,6 +584,7 @@ export default function ServiceDetailsModal({
                                                                         onClick={() => handleEditTask(task, sip)}
                                                                         className="icon-button"
                                                                         title="Редагувати"
+                                                                        disabled={isLocked}
                                                                     >
                                                                         <EditIcon fontSize="small"/>
                                                                     </Button>
@@ -506,6 +594,7 @@ export default function ServiceDetailsModal({
                                                                         onClick={() => handleDeleteTask(task)}
                                                                         className="icon-button"
                                                                         title="Видалити"
+                                                                        disabled={isLocked}
                                                                     >
                                                                         <DeleteIcon fontSize="small"/>
                                                                     </Button>
@@ -537,6 +626,7 @@ export default function ServiceDetailsModal({
                     task={currentTask}
                     workers={workers}
                     statuses={taskStatuses}
+                    isLocked={isLocked}
                 />
             )}
 
@@ -560,6 +650,7 @@ export default function ServiceDetailsModal({
                     onSave={handleServiceSaved}
                     serviceInProgress={serviceToEdit}
                     serviceStatuses={serviceStatusesData?.serviceInProgressStatuses || []}
+                    isLocked={isLocked}
                 />
             )}
 

@@ -437,3 +437,38 @@
     }
 }
 
+.project-locked-notice {
+    display: flex;
+    align-items: center;
+    background-color: #fee2e2;
+    color: #b91c1c;
+    padding: 12px 16px;
+    border-radius: 6px;
+    margin-bottom: 16px;
+    border: 1px solid #fecaca;
+    font-weight: 500;
+}
+
+.lock-icon {
+    margin-right: 8px;
+    font-size: 18px;
+}
+
+.locked-badge {
+    margin-left: 8px;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+/* Styling for disabled buttons due to locked project */
+.implementation-actions button:disabled,
+.tasks-header button:disabled,
+.task-actions button:disabled,
+.action-buttons button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    background-color: #f1f5f9;
+    color: #94a3b8;
+    border-color: #cbd5e1;
+}

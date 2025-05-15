@@ -1,7 +1,8 @@
-// src/pages/ServiceTrackerPage/components/TaskForm/TaskForm.jsx
+// src/pages/ServiceTracker Page/components/TaskForm/TaskForm.jsx
 import React, { useState, useEffect } from "react";
 import Modal from "../../../../components/common/Modal/Modal";
 import Button from "../../../../components/common/Button/Button";
+import LockIcon from '@mui/icons-material/Lock';
 import "./TaskForm.css";
 
 const uk = {
@@ -29,6 +30,7 @@ const uk = {
         save: "Зберегти зміни",
         add: "Додати завдання",
     },
+    locked: "Проект закінчився більше 30 днів тому. Модифікації заблоковано."
 };
 
 export default function TaskForm({
@@ -38,6 +40,7 @@ export default function TaskForm({
                                      task = null,
                                      workers = [],
                                      statuses = [],
+                                     isLocked = false  // New prop to handle locked projects
                                  }) {
     const [formData, setFormData] = useState({
         id: task?.id || "",
@@ -72,6 +75,12 @@ export default function TaskForm({
 
     const handleSubmit = (e) => {
         e.preventDefault();
+
+        // Double-check lock status before proceeding
+        if (isLocked) {
+            return;
+        }
+
         const payload = { ...formData };
         if (!formData.id) delete payload.taskStatusId;
         onSave(payload);
@@ -92,6 +101,13 @@ export default function TaskForm({
 
     return (
         <Modal isOpen={isOpen} onClose={onClose} title={modalTitle} size="medium">
+            {isLocked && (
+                <div className="task-form-lock-notice">
+                    <LockIcon className="lock-icon" />
+                    <span>{uk.locked}</span>
+                </div>
+            )}
+
             <form className="task-form" onSubmit={handleSubmit}>
                 <div className="form-group">
                     <label className="form-label">{uk.labels.name}</label>
@@ -103,6 +119,7 @@ export default function TaskForm({
                         className="form-control"
                         placeholder={uk.placeholders.name}
                         required
+                        disabled={isLocked}
                     />
                 </div>
 
@@ -115,6 +132,7 @@ export default function TaskForm({
                         className="form-control"
                         placeholder={uk.placeholders.description}
                         rows="3"
+                        disabled={isLocked}
                     />
                 </div>
 
@@ -128,6 +146,7 @@ export default function TaskForm({
                             onChange={handleChange}
                             className="form-control"
                             required
+                            disabled={isLocked}
                         />
                     </div>
 
@@ -139,7 +158,7 @@ export default function TaskForm({
                             onChange={handleChange}
                             className="form-control"
                             required
-                            disabled={!formData.id}
+                            disabled={!formData.id || isLocked}
                         >
                             <option value="">{uk.optionDefaultStatus}</option>
                             {statuses.map((status) => (
@@ -158,6 +177,7 @@ export default function TaskForm({
                             onChange={handleChange}
                             className="form-control"
                             required
+                            disabled={isLocked}
                         >
                             <option value="">{uk.optionDefaultWorker}</option>
                             {workers.map((worker) => (
@@ -179,6 +199,7 @@ export default function TaskForm({
                             min="1"
                             max="10"
                             placeholder={uk.placeholders.priority}
+                            disabled={isLocked}
                         />
                     </div>
 
@@ -192,6 +213,7 @@ export default function TaskForm({
                             className="form-control"
                             step="0.01"
                             placeholder={uk.placeholders.value}
+                            disabled={isLocked}
                         />
                     </div>
                 </div>
@@ -200,7 +222,7 @@ export default function TaskForm({
                     <Button variant="outline" type="button" onClick={onClose}>
                         {uk.buttons.cancel}
                     </Button>
-                    <Button variant="primary" type="submit" disabled={!isFormValid}>
+                    <Button variant="primary" type="submit" disabled={!isFormValid || isLocked}>
                         {submitLabel}
                     </Button>
                 </div>

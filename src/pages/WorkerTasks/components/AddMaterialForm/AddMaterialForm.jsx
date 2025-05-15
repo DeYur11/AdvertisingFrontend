@@ -1,83 +1,85 @@
+// src/pages/WorkerTasks/components/AddMaterialForm/AddMaterialForm.jsx
 import { useState } from "react";
 import { useQuery, useMutation, gql } from "@apollo/client";
 import SelectWithCreate from "../../../../components/common/SelectWithCreate";
 import CreatableSelect from "react-select/creatable";
+import { executeMutation } from "../../../../utils/ErrorHandlingUtils";
 
 // --- Запит довідників ---
 const GET_MATERIAL_REFERENCE_DATA = gql`
-  query GetMaterialReferenceData {
-    materialTypes { id name }
-    licenceTypes { id name }
-    usageRestrictions { id name }
-    targetAudiences { id name }
-    languages { id name }
-    keywords { id name }
-  }
+    query GetMaterialReferenceData {
+        materialTypes { id name }
+        licenceTypes { id name }
+        usageRestrictions { id name }
+        targetAudiences { id name }
+        languages { id name }
+        keywords { id name }
+    }
 `;
 
 // --- Мутації для створення варіантів ---
 const CREATE_MATERIAL_TYPE = gql`
-  mutation($input: CreateMaterialTypeInput!) {
-    createMaterialType(input: $input) {
-      id
-      name
+    mutation($input: CreateMaterialTypeInput!) {
+        createMaterialType(input: $input) {
+            id
+            name
+        }
     }
-  }
 `;
 
 const CREATE_LICENCE_TYPE = gql`
-  mutation($input: CreateLicenceTypeInput!) {
-    createLicenceType(input: $input) {
-      id
-      name
+    mutation($input: CreateLicenceTypeInput!) {
+        createLicenceType(input: $input) {
+            id
+            name
+        }
     }
-  }
 `;
 
 const CREATE_USAGE_RESTRICTION = gql`
-  mutation($input: CreateUsageRestrictionInput!) {
-    createUsageRestriction(input: $input) {
-      id
-      description
+    mutation($input: CreateUsageRestrictionInput!) {
+        createUsageRestriction(input: $input) {
+            id
+            description
+        }
     }
-  }
 `;
 
 const CREATE_TARGET_AUDIENCE = gql`
-  mutation($input: CreateTargetAudienceInput!) {
-    createTargetAudience(input: $input) {
-      id
-      name
+    mutation($input: CreateTargetAudienceInput!) {
+        createTargetAudience(input: $input) {
+            id
+            name
+        }
     }
-  }
 `;
 
 const CREATE_LANGUAGE = gql`
-  mutation($input: CreateLanguageInput!) {
-    createLanguage(input: $input) {
-      id
-      name
+    mutation($input: CreateLanguageInput!) {
+        createLanguage(input: $input) {
+            id
+            name
+        }
     }
-  }
 `;
 
 const CREATE_KEYWORD = gql`
-  mutation($input: CreateKeywordInput!) {
-    createKeyword(input: $input) {
-      id
-      name
+    mutation($input: CreateKeywordInput!) {
+        createKeyword(input: $input) {
+            id
+            name
+        }
     }
-  }
 `;
 
 // --- Мутація створення матеріалу ---
 const CREATE_MATERIAL = gql`
-  mutation CreateMaterial($input: CreateMaterialInput!) {
-    createMaterial(input: $input) {
-      id
-      name
+    mutation CreateMaterial($input: CreateMaterialInput!) {
+        createMaterial(input: $input) {
+            id
+            name
+        }
     }
-  }
 `;
 
 export default function AddMaterialForm({ taskId, onAdded }) {
@@ -108,7 +110,7 @@ export default function AddMaterialForm({ taskId, onAdded }) {
         e.preventDefault();
 
         try {
-            await createMaterial({
+            await executeMutation(createMaterial, {
                 variables: {
                     input: {
                         ...newMaterial,
@@ -121,23 +123,26 @@ export default function AddMaterialForm({ taskId, onAdded }) {
                         taskId: parseInt(taskId),
                     },
                 },
-            });
+                successMessage: "✅ Матеріал успішно створено!",
+                errorMessage: "❌ Не вдалося створити матеріал",
+                onSuccess: () => {
+                    setNewMaterial({
+                        name: "",
+                        description: "",
+                        materialTypeId: "",
+                        usageRestrictionId: "",
+                        licenceTypeId: "",
+                        targetAudienceId: "",
+                        languageId: "",
+                        keywordIds: []
+                    });
 
-            setNewMaterial({
-                name: "",
-                description: "",
-                materialTypeId: "",
-                usageRestrictionId: "",
-                licenceTypeId: "",
-                targetAudienceId: "",
-                languageId: "",
-                keywordIds: []
+                    if (onAdded) onAdded();
+                }
             });
-
-            alert("✅ Матеріал успішно створено!");
-            if (onAdded) onAdded();
         } catch (err) {
-            console.error("❌ Створення не вдалося:", err.message);
+            // executeMutation already handles the error display
+            console.error("Error creating material:", err);
         }
     };
 
@@ -150,8 +155,20 @@ export default function AddMaterialForm({ taskId, onAdded }) {
         const newIds = [...existing.map(k => k.value)];
 
         for (const kw of toCreate) {
-            const { data: created } = await createKeyword({ variables: { input: { name: kw.label } } });
-            if (created?.createKeyword?.id) newIds.push(created.createKeyword.id);
+            try {
+                const result = await executeMutation(createKeyword, {
+                    variables: { input: { name: kw.label } },
+                    successMessage: `Ключове слово "${kw.label}" створено`,
+                    showSuccessToast: false // Don't show for each keyword to avoid spam
+                });
+
+                if (result?.data?.createKeyword?.id) {
+                    newIds.push(result.data.createKeyword.id);
+                }
+            } catch (err) {
+                // executeMutation already handles the error display
+                console.error("Error creating keyword:", err);
+            }
         }
 
         setNewMaterial((prev) => ({ ...prev, keywordIds: newIds }));

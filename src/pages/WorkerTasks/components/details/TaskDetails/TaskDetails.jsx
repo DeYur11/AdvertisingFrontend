@@ -19,7 +19,10 @@ export default function TaskDetails({ data }) {
     const [editingMaterial, setEditingMaterial] = useState(null);
     const [deleteConfirmation, setDeleteConfirmation] = useState(null);
 
-    const isTaskCompleted = data.taskStatus?.name?.toLowerCase() === "completed";
+    // Check task status - prevent adding materials if task is not started or completed
+    const taskStatus = data.taskStatus?.name?.toLowerCase() || "";
+    const isTaskCompleted = taskStatus === "completed";
+    const isTaskInProgress = taskStatus === "in progress";
 
     const { loading, error, data: materialsData, refetch } = useQuery(MATERIALS_BY_TASK, {
         variables: { taskId: data.id },
@@ -54,7 +57,12 @@ export default function TaskDetails({ data }) {
                     loading={loading}
                     error={error}
                     isTaskCompleted={isTaskCompleted}
-                    onAdd={() => setShowAddMaterial(true)}
+                    isTaskInProgress={isTaskInProgress}
+                    onAdd={() => {
+                        if (isTaskInProgress && !isTaskCompleted) {
+                            setShowAddMaterial(true);
+                        }
+                    }}
                     onEdit={setEditingMaterial}
                     onDelete={handleDelete}
                     onSelect={setSelectedMaterial}

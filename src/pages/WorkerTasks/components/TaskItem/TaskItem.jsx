@@ -3,6 +3,7 @@ import { useMutation, gql } from "@apollo/client";
 import { highlightMatch } from "../../../../utils/highlightMatch";
 import Badge from "../../../../components/common/Badge/Badge";
 import "./TaskItem.css";
+import {toast} from "react-toastify";
 
 const TRANSITION_TASK_STATUS = gql`
     mutation TransitionTaskStatus($taskId: Int!, $event: String!) {
@@ -45,7 +46,7 @@ export default function TaskItem({ task, searchQuery, onSelect, compact = false 
                 refetchQueries: ["PaginatedTasksByWorker"],
             });
         } catch (err) {
-            console.error("Не вдалося змінити статус:", err.message);
+            toast.error("Не вдалося змінити статус:" + err.message)
         }
     }
 
