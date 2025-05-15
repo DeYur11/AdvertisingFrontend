@@ -1,39 +1,65 @@
+// src/components/ui/NotificationBell/NotificationBell.jsx (Updated for TransactionLog schema)
+
 import { useState, useRef, useEffect, useMemo } from "react";
 import { useSubscription, gql } from "@apollo/client";
 import { useSelector } from "react-redux";
 import "./NotificationBell.css";
 
-/* ───── GraphQL subscriptions ───── */
+/* ───── Updated GraphQL subscriptions for TransactionLog schema ───── */
 const SUB_MATERIAL_REVIEW = gql`
-    subscription OnAuditLogByMaterialIds($materialIds: [Int!]!, $entityList: [AuditEntity!]!) {
-        onAuditLogByMaterialIds(materialIds: $materialIds, entityList: $entityList) {
-            id action entity description timestamp
+    subscription OnTransactionByMaterialIds($materialIds: [Int!]!, $entityList: [AuditEntity!]!) {
+        onTransactionByMaterialIds(materialIds: $materialIds, entityList: $entityList) {
+            id
+            entityType
+            entityId
+            action
+            description
+            timestamp
             worker { id name surname }
             material { id name }
             review { id comments }
-            username role
+            username
+            role
+            rolledBack
+            rollbackTransactionId
         }
     }
 `;
 
 const SUB_TASK = gql`
-    subscription OnAuditLogByTaskIds($taskIds: [Int!]!, $entityList: [AuditEntity!]!) {
-        onAuditLogByTaskIds(taskIds: $taskIds, entityList: $entityList) {
-            id action entity description timestamp
+    subscription OnTransactionByTaskIds($taskIds: [Int!]!, $entityList: [AuditEntity!]!) {
+        onTransactionByTaskIds(entityList: $entityList, taskIds: $taskIds) {
+            id
+            entityType
+            entityId
+            action
+            description
+            timestamp
             worker { id name surname }
             task { id name }
-            username role
+            username
+            role
+            rolledBack
+            rollbackTransactionId
         }
     }
 `;
 
 const SUB_PROJECT = gql`
-    subscription OnAuditLogByProjectIds($projectIds: [Int!]!, $entityList: [AuditEntity!]!) {
-        onAuditLogByProjectIds(projectIds: $projectIds, entityList: $entityList) {
-            id action entity description timestamp
+    subscription OnTransactionByProjectIds($projectIds: [Int!]!, $entityList: [AuditEntity!]!) {
+        onTransactionByProjectIds(projectIds: $projectIds, entityList: $entityList) {
+            id
+            entityType
+            entityId
+            action
+            description
+            timestamp
             worker { id name surname }
             project { id name }
-            username role
+            username
+            role
+            rolledBack
+            rollbackTransactionId
         }
     }
 `;
@@ -72,7 +98,7 @@ export default function NotificationBell({
                 subscriptionDoc: SUB_TASK,
                 variables: {
                     taskIds,
-                    entityList: ["TASK"]
+                    entityList: ["TASK", "MATERIAL", "MATERIAL_REVIEW"]
                 },
                 skip: taskIds.length === 0
             };
@@ -82,7 +108,7 @@ export default function NotificationBell({
                 subscriptionDoc: SUB_PROJECT,
                 variables: {
                     projectIds,
-                    entityList: ["PROJECT"]
+                    entityList: ["PROJECT", "TASK", "MATERIAL", "SERVICES_IN_PROGRESS", "MATERIAL_REVIEW"]
                 },
                 skip: projectIds.length === 0
             };
@@ -98,12 +124,21 @@ export default function NotificationBell({
 
     useEffect(() => {
         if (data && !skip) {
-            setHasNewNotification(true);
-            notificationSound.current?.play().catch(err => {
-                console.warn("Не вдалося відтворити звук сповіщення:", err.message);
-            });
+            // Ignore rolled back transactions when determining if there's a new notification
+            const transaction = isWorker
+                ? data.onTransactionByMaterialIds
+                : isScrum
+                    ? data.onTransactionByTaskIds
+                    : data.onTransactionByProjectIds;
+
+            if (transaction && !transaction.rolledBack) {
+                setHasNewNotification(true);
+                notificationSound.current?.play().catch(err => {
+                    console.warn("Не вдалося відтворити звук сповіщення:", err.message);
+                });
+            }
         }
-    }, [data, skip]);
+    }, [data, skip, isWorker, isScrum]);
 
     const handleClick = () => {
         onToggleSidebar();

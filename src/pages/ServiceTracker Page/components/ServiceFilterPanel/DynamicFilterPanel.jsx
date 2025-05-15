@@ -156,9 +156,8 @@ export default function DynamicFilterPanel({
                 <div className="search-container">
                     <input
                         type="text"
-                        placeholder={filters.groupByProject ?
-                            "Пошук за назвою проєкту, сервісу або клієнта..." :
-                            "Пошук за назвою сервісу, проєкту або клієнта..."}
+                        placeholder={
+                            "Пошук за назвою, описом, менеджером, або клієнтом..."}
                         value={filters.searchQuery}
                         onChange={handleSearchChange}
                         className="search-input"

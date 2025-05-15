@@ -121,6 +121,48 @@
     background-color: #f8fafc;
 }
 
+/* Style for rolled back transactions */
+.notification-item.rolled-back {
+    background-color: #f1f5f9;
+    opacity: 0.85;
+}
+
+.notification-item.rolled-back:hover {
+    background-color: #e2e8f0;
+}
+
+.rollback-indicator {
+    font-style: italic;
+    font-size: 11px;
+    color: #94a3b8;
+    margin-left: 4px;
+}
+
+.rollback-info {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 11px;
+    margin-top: 4px;
+    color: #64748b;
+    background-color: #f8fafc;
+    padding: 2px 6px;
+    border-radius: 4px;
+    border-left: 2px solid #94a3b8;
+}
+
+.rollback-label {
+    font-weight: 500;
+}
+
+.rollback-id {
+    font-family: monospace;
+    background-color: #f1f5f9;
+    padding: 0px 4px;
+    border-radius: 3px;
+    border: 1px solid #e2e8f0;
+}
+
 .notification-icon {
     font-size: 16px; /* Smaller icon */
     flex-shrink: 0;
@@ -209,8 +251,7 @@
     }
 }
 
-/* Add these styles to src/components/ui/NotificationSidebar/NotificationSidebar.css */
-
+/* View All Logs button container */
 .view-all-logs-container {
     padding: 16px;
     margin-bottom: 20px;

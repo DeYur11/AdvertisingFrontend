@@ -119,24 +119,6 @@ export default function EditServiceModal({
                     />
                 </div>
 
-                <div className="form-group">
-                    <label className="form-label">Статус</label>
-                    <select
-                        name="statusId"
-                        value={formData.statusId}
-                        onChange={handleChange}
-                        className="form-control"
-                        disabled={isLocked}
-                    >
-                        <option value="">Виберіть статус</option>
-                        {serviceStatuses.map(status => (
-                            <option key={status.id} value={status.id}>
-                                {status.name}
-                            </option>
-                        ))}
-                    </select>
-                </div>
-
                 <div className="form-actions">
                     <Button
                         variant="outline"

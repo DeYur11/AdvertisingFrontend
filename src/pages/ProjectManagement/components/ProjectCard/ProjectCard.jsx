@@ -93,7 +93,7 @@ export default function ProjectCard({
     const getStatusClass = () => {
         const status = project.status?.name?.toLowerCase() || '';
         if (status.includes('completed') || status.includes('done')) return 'project-status-completed';
-        if (status.includes('in progress') || status.includes('active')) return 'project-status-in-progress';
+        if (status.includes('In Progress') || status.includes('active')) return 'project-status-in-progress';
         if (status.includes('pending') || status.includes('scheduled')) return 'project-status-pending';
         if (status.includes('paused') || status.includes('on-hold')) return 'project-status-paused';
         if (status.includes('cancelled')) return 'project-status-cancelled';

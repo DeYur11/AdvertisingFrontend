@@ -1,19 +1,20 @@
-// src/components/ui/NotificationSidebar/NotificationSidebar.jsx (Modified Version)
+// src/components/ui/NotificationSidebar/NotificationSidebar.jsx (Updated for TransactionLog schema)
 
 import { useEffect } from 'react';
 import { useQuery, gql } from '@apollo/client';
-import { useNavigate } from 'react-router-dom'; // Add this import
+import { useNavigate } from 'react-router-dom';
 import './NotificationSidebar.css';
 import { useSelector } from "react-redux";
-import Button from '../../common/Button/Button'; // Add this import
+import Button from '../../common/Button/Button';
 
-// GraphQL queries aligned with the schema
+// Updated GraphQL queries that use the new TransactionLog schema
 const GET_REVIEW_LOGS = gql`
-    query AuditLogsByMaterialIds($materialIds: [Int!]!, $entityList: [AuditEntity!]!) {
-        auditLogsByMaterialIds(materialIds: $materialIds, entityList: $entityList) {
+    query TransactionsByMaterialIds($materialIds: [Int!]!, $entityList: [AuditEntity!]!) {
+        transactionsByMaterialIds(materialIds: $materialIds, entityList: $entityList) {
             id
+            entityType
+            entityId
             action
-            entity
             description
             timestamp
             username
@@ -31,16 +32,19 @@ const GET_REVIEW_LOGS = gql`
                 id
                 comments
             }
+            rolledBack
+            rollbackTransactionId
         }
     }
 `;
 
 const GET_TASK_LOGS = gql`
-    query AuditLogsByTaskIds($taskIds: [Int!]!, $entityList: [AuditEntity!]!) {
-        auditLogsByTaskIds(taskIds: $taskIds, entityList: $entityList) {
+    query TransactionsByTaskIds($taskIds: [Int!]!, $entityList: [AuditEntity!]!) {
+        transactionsByTaskIds(taskIds: $taskIds, entityList: $entityList) {
             id
+            entityType
+            entityId
             action
-            entity
             description
             timestamp
             username
@@ -54,16 +58,19 @@ const GET_TASK_LOGS = gql`
                 id
                 name
             }
+            rolledBack
+            rollbackTransactionId
         }
     }
 `;
 
 const GET_PROJECT_LOGS = gql`
-    query AuditLogsByProjectIds($projectIds: [Int!]!, $entityList: [AuditEntity!]!) {
-        auditLogsByProjectIds(projectIds: $projectIds, entityList: $entityList) {
+    query TransactionsByProjectIds($projectIds: [Int!]!, $entityList: [AuditEntity!]!) {
+        transactionsByProjectIds(projectIds: $projectIds, entityList: $entityList) {
             id
+            entityType
+            entityId
             action
-            entity
             description
             timestamp
             username
@@ -77,6 +84,8 @@ const GET_PROJECT_LOGS = gql`
                 id
                 name
             }
+            rolledBack
+            rollbackTransactionId
         }
     }
 `;
@@ -89,7 +98,7 @@ export default function NotificationSidebar({
                                                 projectIds = []
                                             }) {
     const userRole = useSelector((s) => s.user.mainRole);
-    const navigate = useNavigate(); // Add this hook
+    const navigate = useNavigate();
 
     const isWorker = userRole === "WORKER";
     const isScrumMaster = userRole === "SCRUM_MASTER";
@@ -103,10 +112,7 @@ export default function NotificationSidebar({
             ? GET_TASK_LOGS
             : GET_PROJECT_LOGS;
 
-    // Зверніть увагу на ієрархію сутностей
-    // - для матеріалів ми хочемо бачити рецензії (MATERIAL_REVIEW)
-    // - для завдань ми хочемо бачити TASK події
-    // - для проектів ми хочемо бачити PROJECT події
+    // Updated entity types to match the new schema
     const variables = isWorker
         ? { materialIds, entityList: ["MATERIAL_REVIEW"] }
         : isScrumMaster
@@ -129,12 +135,13 @@ export default function NotificationSidebar({
         if (!skip && isOpen) refetch();
     }, [isOpen, skip, refetch]);
 
-    const getNotificationIcon = (entity, action) => {
+    const getNotificationIcon = (entityType, action) => {
         const iconMap = {
             MATERIAL_REVIEW: { CREATE: "📝", UPDATE: "✏️", DELETE: "🗑️" },
             MATERIAL: { CREATE: "📄", UPDATE: "📝", DELETE: "🗑️" },
             TASK: { CREATE: "🧩", UPDATE: "🔧", DELETE: "🗑️" },
             PROJECT: { CREATE: "📁", UPDATE: "📝", DELETE: "🗑️" },
+            SERVICES_IN_PROGRESS: { CREATE: "🔄", UPDATE: "🔧", DELETE: "🗑️" }
         };
         const colorMap = {
             CREATE: "#10b981",
@@ -143,7 +150,7 @@ export default function NotificationSidebar({
         };
 
         return {
-            icon: iconMap[entity]?.[action] || "📢",
+            icon: iconMap[entityType]?.[action] || "📢",
             color: colorMap[action] || "#64748b",
         };
     };
@@ -158,39 +165,39 @@ export default function NotificationSidebar({
         return date.toLocaleDateString();
     };
 
-    const getActionText = (entity, action) => {
+    const getActionText = (entityType, action) => {
         const dict = {
             MATERIAL_REVIEW: { CREATE: "Створено відгук", UPDATE: "Оновлено відгук", DELETE: "Видалено відгук" },
             MATERIAL: { CREATE: "Створено матеріал", UPDATE: "Оновлено матеріал", DELETE: "Видалено матеріал" },
             TASK: { CREATE: "Створено завдання", UPDATE: "Оновлено завдання", DELETE: "Видалено завдання" },
             PROJECT: { CREATE: "Створено проєкт", UPDATE: "Оновлено проєкт", DELETE: "Видалено проєкт" },
+            SERVICES_IN_PROGRESS: { CREATE: "Створено сервіс", UPDATE: "Оновлено сервіс", DELETE: "Видалено сервіс" }
         };
-        return dict[entity]?.[action] || `${action.toLowerCase()} ${entity.toLowerCase()}`;
+        return dict[entityType]?.[action] || `${action.toLowerCase()} ${entityType.toLowerCase()}`;
     };
 
     // Get the appropriate data field based on user role
     const notifications = isWorker
-        ? data?.auditLogsByMaterialIds
+        ? data?.transactionsByMaterialIds
         : isScrumMaster
-            ? data?.auditLogsByTaskIds
-            : data?.auditLogsByProjectIds;
+            ? data?.transactionsByTaskIds
+            : data?.transactionsByProjectIds;
 
     // Get entity name based on entity type
     const getEntityName = (notification) => {
-        // Якщо це рецензія, показуємо ім'я матеріалу
-        if (notification.entity === 'MATERIAL_REVIEW' && notification.material)
+        // Handle the new schema's entityType property
+        if (notification.entityType === 'MATERIAL_REVIEW' && notification.material)
             return notification.material.name;
-        // Якщо це конкретний матеріал
-        else if (notification.entity === 'MATERIAL' && notification.material)
+        else if (notification.entityType === 'MATERIAL' && notification.material)
             return notification.material.name;
-        // Якщо це завдання
-        else if (notification.entity === 'TASK' && notification.task)
+        else if (notification.entityType === 'TASK' && notification.task)
             return notification.task.name;
-        // Якщо це проект
-        else if (notification.entity === 'PROJECT' && notification.project)
+        else if (notification.entityType === 'PROJECT' && notification.project)
             return notification.project.name;
-        // Якщо немає конкретного імені, повертаємо тип сутності
-        return notification.entity;
+        else if (notification.entityType === 'SERVICES_IN_PROGRESS' && notification.serviceInProgress)
+            return notification.serviceInProgress.name || `Service #${notification.entityId}`;
+        // If none of the above match, just return the entity type and ID
+        return `${notification.entityType} #${notification.entityId}`;
     };
 
     const headingText = isWorker
@@ -215,7 +222,7 @@ export default function NotificationSidebar({
                 </div>
 
                 <div className="notification-sidebar-content">
-                    {/* Add View All Logs button - only visible for managers and admins */}
+                    {/* View All Logs button - only visible for managers and admins */}
                     {(isProjectManager || isAdmin) && (
                         <div className="view-all-logs-container">
                             <Button
@@ -242,17 +249,20 @@ export default function NotificationSidebar({
                     {!loading && !error && notifications?.length > 0 && (
                         <ul className="notifications-list">
                             {notifications.map((n) => {
-                                const { icon, color } = getNotificationIcon(n.entity, n.action);
-                                const actionText = getActionText(n.entity, n.action);
+                                const { icon, color } = getNotificationIcon(n.entityType, n.action);
+                                const actionText = getActionText(n.entityType, n.action);
                                 const entityName = getEntityName(n);
 
                                 return (
-                                    <li key={n.id} className="notification-item">
+                                    <li key={n.id} className={`notification-item ${n.rolledBack ? 'rolled-back' : ''}`}>
                                         <div className="notification-icon" style={{ color }}>{icon}</div>
                                         <div className="notification-content">
                                             <div className="notification-header">
                                                 <span className="notification-type">{entityName}</span>
-                                                <span className="notification-action" style={{ color }}>{actionText}</span>
+                                                <span className="notification-action" style={{ color }}>
+                                                    {actionText}
+                                                    {n.rolledBack && <span className="rollback-indicator"> (відмінено)</span>}
+                                                </span>
                                             </div>
                                             {n.description && <p className="notification-description">{n.description}</p>}
                                             <div className="notification-details">
@@ -260,6 +270,13 @@ export default function NotificationSidebar({
                                                     {n.worker ? `${n.worker.name} ${n.worker.surname}` : n.username || "Користувач"}
                                                     <span className="notification-time">{formatTimestamp(n.timestamp)}</span>
                                                 </div>
+                                                {/* Show the rollback information if available */}
+                                                {n.rollbackTransactionId && (
+                                                    <div className="rollback-info">
+                                                        <span className="rollback-label">ID транзакції відкату:</span>
+                                                        <span className="rollback-id">{n.rollbackTransactionId}</span>
+                                                    </div>
+                                                )}
                                             </div>
                                         </div>
                                     </li>
