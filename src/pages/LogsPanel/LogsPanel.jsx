@@ -580,20 +580,6 @@ export default function LogsPanel() {
                                         >
                                             Відкотити дію
                                         </Button>
-                                        <Button
-                                            variant="outline"
-                                            size="small"
-                                            onClick={() => {
-                                                setSelectedEntityData({
-                                                    type: log.entityType,
-                                                    id: log.entityId,
-                                                });
-                                                setRestoreTimestamp(log.timestamp);
-                                                setShowRestoreModal(true);
-                                            }}
-                                        >
-                                            Відновити до цього стану
-                                        </Button>
                                     </div>
                                 )}
 
