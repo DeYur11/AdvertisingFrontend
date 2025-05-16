@@ -1,94 +1,150 @@
-// src/pages/ServiceTrackerPage/components/TaskInfoTab/TaskInfoTab.jsx
 import React from "react";
-import Card from "../../../../../components/common/Card/Card";
 import Badge from "../../../../../components/common/Badge/Badge";
-
-const uk = {
-    descriptionTitle: "Опис",
-    detailsTitle: "Деталі",
-    datesTitle: "Дати",
-    priorityLabel: "Пріоритет:",
-    valueLabel: "Вартість:",
-    startLabel: "Початок:",
-    deadlineLabel: "Термін:",
-    endLabel: "Завершення:",
-    unknownStatus: "Невідомо",
-    status: {
-        completed: "Виконано",
-        "in progress": "В процесі",
-        pending: "В очікуванні",
-    },
-};
+import Card from "../../../../../components/common/Card/Card";
+import "./TaskInfoTab.css";
 
 export default function TaskInfoTab({ data }) {
-    const formatDate = (d) =>
-        d ? new Date(d).toLocaleDateString("uk-UA") : "—";
+    const formatDate = (dateString) => {
+        if (!dateString) return "—";
+        const date = new Date(dateString);
+        return date.toLocaleDateString('uk-UA', {
+            day: '2-digit',
+            month: '2-digit',
+            year: 'numeric'
+        });
+    };
 
-    const priority = parseInt(data.priority || 0, 10);
+    // Check if deadline is passed or approaching
+    const getDeadlineClass = () => {
+        if (!data.deadline) return "";
+
+        const now = new Date();
+        const deadline = new Date(data.deadline);
+        const daysUntil = Math.ceil((deadline - now) / (1000 * 60 * 60 * 24));
+
+        if (deadline < now) return "overdue";
+        if (daysUntil <= 3) return "soon";
+        return "";
+    };
+
+    const priority = parseInt(data.priority || 0);
     const priorityClass =
-        priority >= 8
-            ? "priority-high"
-            : priority >= 4
-                ? "priority-medium"
-                : "priority-low";
+        priority >= 8 ? "priority-high" :
+            priority >= 4 ? "priority-medium" :
+                "priority-low";
 
     const statusKey = data.taskStatus?.name?.toLowerCase() || "";
-    const badgeText = uk.status[statusKey] || uk.unknownStatus;
-
-    const badgeVariant =
-        statusKey === "completed"
-            ? "success"
-            : statusKey === "in progress"
-                ? "primary"
-                : statusKey === "pending"
-                    ? "danger"
-                    : "default";
 
     return (
-        <Card>
-            <div className="flex items-center justify-between mb-2">
-                <h2>{data.name}</h2>
-                <Badge variant={badgeVariant}>
-                    {badgeText}
-                </Badge>
-            </div>
-
+        <div className="task-info-tab">
             {data.description && (
-                <div className="mb-2">
-                    <h3>{uk.descriptionTitle}</h3>
-                    <p>{data.description}</p>
+                <div className="description-section">
+                    <h3 className="section-title">Опис завдання</h3>
+                    <div className="task-description">
+                        {data.description}
+                    </div>
                 </div>
             )}
 
-            <div className="grid grid-cols-2 gap-4">
-                <div>
-                    <h4>{uk.detailsTitle}</h4>
-                    <p>
-                        {uk.priorityLabel}{" "}
-                        <Badge className={priorityClass}>
-                            {data.priority || "—"}
-                        </Badge>
-                    </p>
-                    <p>
-                        {uk.valueLabel}{" "}
-                        {data.value ? `$${data.value}` : "—"}
-                    </p>
-                </div>
-                <div>
-                    <h4>{uk.datesTitle}</h4>
-                    <p>
-                        {uk.startLabel} {formatDate(data.startDate)}
-                    </p>
-                    <p>
-                        {uk.deadlineLabel} {formatDate(data.deadline)}
-                    </p>
-                    {data.endDate && (
-                        <p>
-                            {uk.endLabel} {formatDate(data.endDate)}
-                        </p>
+            <div className="task-info-grid">
+                <Card className="info-section">
+                    <h3 className="section-title">Деталі завдання</h3>
+
+                    <div className="info-item">
+                        <div className="info-label">Пріоритет:</div>
+                        <div className="info-value">
+                            <Badge className={priorityClass} size="medium">
+                                {data.priority || "—"}
+                            </Badge>
+                        </div>
+                    </div>
+
+                    {data.value && (
+                        <div className="info-item">
+                            <div className="info-label">Вартість:</div>
+                            <div className="info-value value">{data.value}</div>
+                        </div>
                     )}
-                </div>
+
+                    <div className="info-item">
+                        <div className="info-label">Статус:</div>
+                        <div className="info-value">
+                            <Badge
+                                variant={
+                                    statusKey === "completed" ? "success" :
+                                        statusKey === "in progress" ? "primary" :
+                                            statusKey === "pending" ? "danger" :
+                                                "default"
+                                }
+                            >
+                                {data.taskStatus?.name || "Невідомо"}
+                            </Badge>
+                        </div>
+                    </div>
+                </Card>
+
+                <Card className="info-section">
+                    <h3 className="section-title">Терміни</h3>
+
+                    {data.startDate && (
+                        <div className="info-item">
+                            <div className="info-label">Дата початку:</div>
+                            <div className="info-value">{formatDate(data.startDate)}</div>
+                        </div>
+                    )}
+
+                    <div className="info-item">
+                        <div className="info-label">Дедлайн:</div>
+                        <div className={`info-value deadline ${getDeadlineClass()}`}>
+                            {formatDate(data.deadline)}
+                        </div>
+                    </div>
+
+                    {data.endDate && (
+                        <div className="info-item">
+                            <div className="info-label">Дата завершення:</div>
+                            <div className="info-value">{formatDate(data.endDate)}</div>
+                        </div>
+                    )}
+                </Card>
             </div>
-        </Card>
+
+            {data.serviceInProgress?.projectService?.project && (
+                <Card className="info-section project-section">
+                    <h3 className="section-title">Інформація про проект</h3>
+
+                    <div className="info-item">
+                        <div className="info-label">Проект:</div>
+                        <div className="info-value project-name">
+                            {data.serviceInProgress.projectService.project.name}
+                        </div>
+                    </div>
+
+                    <div className="info-item">
+                        <div className="info-label">Сервіс:</div>
+                        <div className="info-value service-name">
+                            {data.serviceInProgress.projectService.service.serviceName}
+                        </div>
+                    </div>
+
+                    <div className="info-item">
+                        <div className="info-label">Клієнт:</div>
+                        <div className="info-value">
+                            {data.serviceInProgress.projectService.project.client?.name || "—"}
+                        </div>
+                    </div>
+
+                    <div className="info-item">
+                        <div className="info-label">Менеджер:</div>
+                        <div className="info-value">
+                            {data.serviceInProgress.projectService.project.manager ?
+                                `${data.serviceInProgress.projectService.project.manager.name} ${data.serviceInProgress.projectService.project.manager.surname}` :
+                                "—"
+                            }
+                        </div>
+                    </div>
+                </Card>
+            )}
+        </div>
     );
 }

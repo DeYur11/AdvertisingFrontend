@@ -4,9 +4,11 @@
 
 .info-card {
     border: none;
-    box-shadow: none;
-    padding: 0;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    padding: 24px;
     margin-bottom: 30px;
+    border-radius: 10px;
+    background-color: #ffffff;
 }
 
 .service-header {
@@ -17,8 +19,8 @@
 }
 
 .service-name {
-    font-size: 20px;
-    font-weight: 600;
+    font-size: 24px;
+    font-weight: 700;
     color: #1e293b;
     margin: 0;
     padding: 0;
@@ -28,11 +30,14 @@
     background-color: #e0e7ff;
     color: #4338ca;
     font-size: 13px;
+    font-weight: 600;
+    padding: 6px 12px;
+    border-radius: 20px;
 }
 
 .service-description {
     margin-bottom: 24px;
-    padding: 16px;
+    padding: 20px;
     background-color: #f8fafc;
     border-radius: 8px;
     border: 1px solid #e2e8f0;
@@ -42,14 +47,15 @@
     line-height: 1.6;
     color: #334155;
     white-space: pre-line;
+    font-size: 15px;
 }
 
 .section-title {
-    font-size: 16px;
+    font-size: 18px;
     font-weight: 600;
     color: #1e293b;
     margin-bottom: 16px;
-    padding-bottom: 8px;
+    padding-bottom: 10px;
     border-bottom: 1px solid #e2e8f0;
 }
 
@@ -67,17 +73,19 @@
     font-size: 14px;
     color: #64748b;
     font-weight: 500;
-    margin-bottom: 6px;
+    margin-bottom: 8px;
 }
 
 .detail-value {
-    font-size: 15px;
+    font-size: 16px;
     color: #1e293b;
+    font-weight: 500;
 }
 
 .detail-value.cost {
     color: #047857;
     font-weight: 600;
+    font-size: 18px;
 }
 
 /* Task statistics */
@@ -88,11 +96,22 @@
 
 .stat-item {
     text-align: center;
+    background-color: #f8fafc;
+    padding: 16px 20px;
+    border-radius: 8px;
+    border: 1px solid #e2e8f0;
+    flex: 1;
+    transition: all 0.2s ease;
+}
+
+.stat-item:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
 }
 
 .stat-value {
-    font-size: 24px;
-    font-weight: 600;
+    font-size: 28px;
+    font-weight: 700;
     color: #1e293b;
     margin-bottom: 4px;
 }
@@ -106,8 +125,9 @@
 }
 
 .stat-label {
-    font-size: 13px;
+    font-size: 14px;
     color: #64748b;
+    font-weight: 500;
 }
 
 /* Related tasks section */
@@ -118,66 +138,28 @@
 .tasks-list {
     display: flex;
     flex-direction: column;
-    gap: 12px;
-}
-
-.task-card {
-    padding: 16px;
-    transition: all 0.2s ease;
-}
-
-.task-card:hover {
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-}
-
-.task-card.status-in-progress,
-.task-card.status-in\\ progress {
-    border-left: 3px solid #4338ca;
-}
-
-.task-card.status-completed {
-    border-left: 3px solid #059669;
-    opacity: 0.8;
-}
-
-.task-card.status-pending {
-    border-left: 3px solid #dc2626;
-}
-
-.task-card-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    margin-bottom: 12px;
-}
-
-.task-name {
-    font-weight: 600;
-    font-size: 15px;
-    color: #1e293b;
-    padding-right: 12px;
-}
-
-.task-meta {
-    display: flex;
-    flex-wrap: wrap;
     gap: 16px;
 }
 
-.meta-item {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    font-size: 13px;
+/* Empty state */
+.empty-state-card {
+    background-color: #f8fafc;
+    border: 1px dashed #cbd5e1;
+    text-align: center;
+    padding: 40px 20px;
+    margin-top: 20px;
 }
 
-.meta-label {
+.empty-icon {
+    font-size: 36px;
+    margin-bottom: 16px;
+    color: #94a3b8;
+}
+
+.empty-message {
     color: #64748b;
-}
-
-.meta-value {
-    color: #334155;
-    font-weight: 500;
+    margin-bottom: 0;
+    font-size: 15px;
 }
 
 /* Animation */
@@ -193,16 +175,23 @@
 }
 
 /* Responsive adjustments */
-@media (max-width: 640px) {
+@media (max-width: 768px) {
     .service-details-grid {
         grid-template-columns: 1fr;
         gap: 20px;
     }
 
     .task-stats {
-        justify-content: space-between;
+        flex-direction: row;
+        flex-wrap: wrap;
     }
 
+    .stat-item {
+        min-width: 120px;
+    }
+}
+
+@media (max-width: 640px) {
     .service-header {
         flex-direction: column;
         gap: 12px;
@@ -210,5 +199,9 @@
 
     .service-header .service-type {
         align-self: flex-start;
+    }
+
+    .service-description {
+        padding: 16px;
     }
 }

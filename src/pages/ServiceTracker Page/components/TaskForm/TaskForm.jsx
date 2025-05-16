@@ -53,6 +53,10 @@ export default function TaskForm({
         value: task?.value || "",
     });
 
+    const fibonacciValues = [
+        0, 1, 2, 3, 5, 8, 13, 21, 34, 55, 89, 144, 233, 377, 610
+    ];
+
     useEffect(() => {
         if (task) {
             setFormData({
@@ -205,16 +209,21 @@ export default function TaskForm({
 
                     <div className="form-group">
                         <label className="form-label">{uk.labels.value}</label>
-                        <input
-                            type="number"
+                        <select
                             name="value"
                             value={formData.value}
                             onChange={handleChange}
                             className="form-control"
-                            step="0.01"
-                            placeholder={uk.placeholders.value}
+                            required      // якщо значення обов’язкове
                             disabled={isLocked}
-                        />
+                        >
+                            <option value="">{uk.placeholders.value}</option>
+                            {fibonacciValues.map((v) => (
+                                <option key={v} value={v}>
+                                    {v}
+                                </option>
+                            ))}
+                        </select>
                     </div>
                 </div>
 

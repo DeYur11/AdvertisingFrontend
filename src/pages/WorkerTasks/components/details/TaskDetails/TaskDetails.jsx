@@ -11,6 +11,7 @@ import ConfirmationDialog from "../../../../../components/common/ConfirmationDia
 import MaterialDetails from "../../MaterialDetails/MaterialDetails";
 import AddMaterialForm from "../../AddMaterialForm/AddMaterialForm";
 import EditMaterialModal from "../../EditMaterialModal/EditMaterialModal";
+import "./TaskDetails.css";
 
 export default function TaskDetails({ data }) {
     const [activeTab, setActiveTab] = useState("info");
@@ -42,7 +43,14 @@ export default function TaskDetails({ data }) {
     };
 
     return (
-        <div>
+        <div className="task-details">
+            <div className="task-details-header">
+                <h2 className="task-title">{data.name}</h2>
+                <div className="task-status-badge" data-status={taskStatus}>
+                    {data.taskStatus?.name || "Unknown"}
+                </div>
+            </div>
+
             <TaskTabs
                 activeTab={activeTab}
                 setActiveTab={setActiveTab}
@@ -50,24 +58,26 @@ export default function TaskDetails({ data }) {
                 loading={loading}
             />
 
-            {activeTab === "info" && <TaskInfoTab data={data} />}
-            {activeTab === "materials" && (
-                <TaskMaterialsTab
-                    materials={materials}
-                    loading={loading}
-                    error={error}
-                    isTaskCompleted={isTaskCompleted}
-                    isTaskInProgress={isTaskInProgress}
-                    onAdd={() => {
-                        if (isTaskInProgress && !isTaskCompleted) {
-                            setShowAddMaterial(true);
-                        }
-                    }}
-                    onEdit={setEditingMaterial}
-                    onDelete={handleDelete}
-                    onSelect={setSelectedMaterial}
-                />
-            )}
+            <div className="task-details-content">
+                {activeTab === "info" && <TaskInfoTab data={data} />}
+                {activeTab === "materials" && (
+                    <TaskMaterialsTab
+                        materials={materials}
+                        loading={loading}
+                        error={error}
+                        isTaskCompleted={isTaskCompleted}
+                        isTaskInProgress={isTaskInProgress}
+                        onAdd={() => {
+                            if (isTaskInProgress && !isTaskCompleted) {
+                                setShowAddMaterial(true);
+                            }
+                        }}
+                        onEdit={setEditingMaterial}
+                        onDelete={handleDelete}
+                        onSelect={setSelectedMaterial}
+                    />
+                )}
+            </div>
 
             <Modal
                 isOpen={!!selectedMaterial}

@@ -1,8 +1,8 @@
 .task-card {
-    margin-bottom: 20px;
+    margin-bottom: 16px;
     padding: 20px;
     border-radius: 10px;
-    transition: box-shadow 0.3s, transform 0.2s;
+    transition: all 0.3s ease;
     background-color: #ffffff;
     border-left: 5px solid transparent;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
@@ -23,9 +23,9 @@
 
 .task-name {
     font-weight: 600;
-    font-size: 20px;
+    font-size: 18px;
     line-height: 1.4;
-    color: #1a202c;
+    color: #1e293b;
     flex: 1;
     margin-right: 12px;
 }
@@ -35,18 +35,10 @@
     color: #4a5568;
     margin-bottom: 16px;
     line-height: 1.5;
-    max-height: 120px;
-    overflow-y: auto;
-    padding-right: 4px;
-}
-
-.task-description::-webkit-scrollbar {
-    width: 4px;
-}
-
-.task-description::-webkit-scrollbar-thumb {
-    background-color: #cbd5e1;
-    border-radius: 4px;
+    padding: 12px;
+    background-color: #f8fafc;
+    border-radius: 8px;
+    border: 1px solid #e2e8f0;
 }
 
 .task-meta {
@@ -63,16 +55,29 @@
     display: flex;
     align-items: center;
     gap: 8px;
+    padding: 6px 10px;
+    background-color: #f8fafc;
+    border-radius: 6px;
+    transition: all 0.2s ease;
+}
+
+.meta-item:hover {
+    background-color: #f1f5f9;
 }
 
 .meta-label {
     font-weight: 500;
-    color: #4a5568;
+    color: #64748b;
 }
 
 .meta-value {
-    color: #1a202c;
+    color: #1e293b;
     font-weight: 500;
+}
+
+.meta-value.value {
+    color: #047857;
+    font-weight: 600;
 }
 
 .deadline {
@@ -82,15 +87,24 @@
     font-size: 13px;
 }
 
+/* Styling for task deadline status */
+.deadline.overdue {
+    background-color: #fee2e2;
+    color: #b91c1c;
+}
+
+.deadline.soon {
+    background-color: #fef3c7;
+    color: #92400e;
+}
+
 /* Status colors */
 .status-in-progress {
     border-left: 5px solid #3182ce;
-    background-color: #ebf8ff;
 }
 
 .status-pending {
     border-left: 5px solid #e53e3e;
-    background-color: #fff5f5;
 }
 
 .status-completed {
@@ -100,24 +114,18 @@
 
 /* Priority badges */
 .priority-high {
-    background-color: #e53e3e;
-    color: white;
-    padding: 3px 8px;
-    font-weight: 600;
+    background-color: #fee2e2 !important;
+    color: #b91c1c !important;
 }
 
 .priority-medium {
-    background-color: #ed8936;
-    color: white;
-    padding: 3px 8px;
-    font-weight: 600;
+    background-color: #fef3c7 !important;
+    color: #92400e !important;
 }
 
 .priority-low {
-    background-color: #48bb78;
-    color: white;
-    padding: 3px 8px;
-    font-weight: 600;
+    background-color: #d1fae5 !important;
+    color: #059669 !important;
 }
 
 /* Task actions */
@@ -136,6 +144,13 @@
     letter-spacing: 0.5px;
     font-size: 13px;
     padding: 8px 16px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    transition: all 0.2s ease;
+}
+
+.status-change-btn:hover {
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    transform: translateY(-2px);
 }
 
 /* Responsive adjustments */
@@ -152,5 +167,9 @@
     .task-meta {
         flex-direction: column;
         gap: 12px;
+    }
+
+    .meta-item {
+        width: 100%;
     }
 }

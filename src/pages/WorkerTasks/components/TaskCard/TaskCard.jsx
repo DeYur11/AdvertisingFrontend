@@ -1,7 +1,7 @@
 import "./TaskCard.css";
 import Card from "../../../../components/common/Card/Card";
 import Badge from "../../../../components/common/Badge/Badge";
-import Button from "../../../../components/common/Button/Button"; // Додаємо кнопку
+import Button from "../../../../components/common/Button/Button";
 
 export default function TaskCard({ task, onStatusChange }) {
     if (!task || !task.name) return null;
@@ -113,6 +113,15 @@ export default function TaskCard({ task, onStatusChange }) {
                         <span className="meta-label">Дедлайн:</span>
                         <span className="meta-value deadline">
                             {new Date(task.deadline).toLocaleDateString()}
+                        </span>
+                    </div>
+                )}
+
+                {task.value && (
+                    <div className="meta-item">
+                        <span className="meta-label">Вартість:</span>
+                        <span className="meta-value value">
+                            {task.value}
                         </span>
                     </div>
                 )}

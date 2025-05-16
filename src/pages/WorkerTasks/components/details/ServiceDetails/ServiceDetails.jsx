@@ -1,12 +1,13 @@
 import Card from "../../../../../components/common/Card/Card";
 import Badge from "../../../../../components/common/Badge/Badge";
+import TaskCard from "../../TaskCard/TaskCard";
 
 import "./ServiceDetails.css";
-import TaskCard from "../../TaskCard/TaskCard";
 
 export default function ServiceDetails({ data }) {
     const tasks = data.tasks || [];
 
+    // Sort tasks by status for better presentation
     const sortedTasks = [...tasks].sort((a, b) => {
         const statusA = a.taskStatus?.name?.toLowerCase() || "";
         const statusB = b.taskStatus?.name?.toLowerCase() || "";
@@ -19,6 +20,7 @@ export default function ServiceDetails({ data }) {
         return 0;
     });
 
+    // Calculate task statistics
     const totalTasks = tasks.length;
     const activeTasks = tasks.filter(task => {
         const status = task.taskStatus?.name?.toLowerCase() || "";
@@ -43,36 +45,36 @@ export default function ServiceDetails({ data }) {
 
                 {data.description && (
                     <div className="service-description">
-                        <h3 className="section-title">Description</h3>
+                        <h3 className="section-title">Опис</h3>
                         <div className="description-content">{data.description}</div>
                     </div>
                 )}
 
                 <div className="service-details-grid">
                     <div className="details-col">
-                        <h3 className="section-title">Service Details</h3>
+                        <h3 className="section-title">Деталі сервісу</h3>
                         <div className="detail-item">
-                            <div className="detail-label">Estimated Cost</div>
+                            <div className="detail-label">Орієнтовна вартість</div>
                             <div className="detail-value cost">
-                                {data.estimateCost ? `$${data.estimateCost}` : "—"}
+                                {data.estimateCost || "—"}
                             </div>
                         </div>
                     </div>
 
                     <div className="details-col">
-                        <h3 className="section-title">Task Statistics</h3>
+                        <h3 className="section-title">Статистика завдань</h3>
                         <div className="task-stats">
                             <div className="stat-item">
                                 <div className="stat-value">{totalTasks}</div>
-                                <div className="stat-label">Total Tasks</div>
+                                <div className="stat-label">Всього</div>
                             </div>
                             <div className="stat-item">
                                 <div className="stat-value active">{activeTasks}</div>
-                                <div className="stat-label">Active</div>
+                                <div className="stat-label">Активні</div>
                             </div>
                             <div className="stat-item">
                                 <div className="stat-value completed">{completedTasks}</div>
-                                <div className="stat-label">Completed</div>
+                                <div className="stat-label">Завершені</div>
                             </div>
                         </div>
                     </div>
@@ -81,13 +83,21 @@ export default function ServiceDetails({ data }) {
 
             {tasks.length > 0 && (
                 <div className="related-tasks-section">
-                    <h3 className="section-title">Related Tasks</h3>
+                    <h3 className="section-title">Пов'язані завдання</h3>
                     <div className="tasks-list">
                         {sortedTasks.map(task => (
                             <TaskCard key={task.id} task={task} />
                         ))}
                     </div>
                 </div>
+            )}
+
+            {tasks.length === 0 && (
+                <Card className="empty-state-card">
+                    <div className="empty-icon">📋</div>
+                    <h4>Немає активних завдань</h4>
+                    <p className="empty-message">Для цього сервісу ще не створено завдань.</p>
+                </Card>
             )}
         </div>
     );
