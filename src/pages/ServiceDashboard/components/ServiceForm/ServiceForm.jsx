@@ -45,7 +45,7 @@ export default function ServiceForm({
         <form className="service-form" onSubmit={handleSubmit}>
             <div className="form-group">
                 <label htmlFor="serviceName" className="form-label">
-                    Назва сервісу *
+                    Назва послуги *
                 </label>
                 <input
                     type="text"
@@ -54,7 +54,7 @@ export default function ServiceForm({
                     value={formData.serviceName}
                     onChange={handleChange}
                     className="form-control"
-                    placeholder="Введіть назву сервісу"
+                    placeholder="Введіть назву послуги"
                     required
                 />
             </div>
@@ -79,7 +79,7 @@ export default function ServiceForm({
 
             <div className="form-group">
                 <label htmlFor="serviceTypeId" className="form-label">
-                    Тип сервісу *
+                    Тип послуги *
                 </label>
                 <select
                     id="serviceTypeId"
@@ -89,7 +89,7 @@ export default function ServiceForm({
                     className="form-control"
                     required
                 >
-                    <option value="">Оберіть тип сервісу</option>
+                    <option value="">Оберіть тип послуги</option>
                     {serviceTypes.map((type) => (
                         <option key={type.id} value={type.id}>
                             {type.name}
@@ -103,7 +103,7 @@ export default function ServiceForm({
                     Скасувати
                 </Button>
                 <Button variant="primary" type="submit" disabled={!isFormValid}>
-                    {service ? "Оновити сервіс" : "Створити сервіс"}
+                    {service ? "Оновити послугу" : "Створити послугу"}
                 </Button>
             </div>
         </form>

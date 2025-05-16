@@ -111,7 +111,6 @@ export default function Header() {
 
     /* ────────── менеджерське меню ────────── */
     const managerNavLinks = [
-        { to: "/", label: "Home" },
         { to: "/projects", label: "Проектний менеджмент" },
         { to: "/service-tracker", label: "Призначення сервісів" },
         { to: "/employee-management", label: "Менеджмент" },

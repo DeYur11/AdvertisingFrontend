@@ -4,6 +4,7 @@ import { useQuery, useMutation, gql } from "@apollo/client";
 import SelectWithCreate from "../../../../components/common/SelectWithCreate";
 import CreatableSelect from "react-select/creatable";
 import { executeMutation } from "../../../../utils/ErrorHandlingUtils";
+import Button from "../../../../components/common/Button/Button";
 
 // --- Queries & Mutations ---
 const GET_MATERIAL_REFERENCE_DATA = gql`
@@ -28,6 +29,7 @@ const GET_MATERIAL_BY_ID = gql`
             targetAudience { id }
             language { id }
             keywords { id name }
+            status { id name }
         }
     }
 `;
@@ -57,7 +59,7 @@ const CREATE_MUTATIONS = {
     languageId: gql`mutation($input: CreateLanguageInput!) { createLanguage(input: $input) { id name } }`
 };
 
-export default function EditMaterialForm({ materialId, onUpdated }) {
+export default function EditMaterialForm({ materialId, onUpdated, onClose }) {
     const {
         data: materialData,
         loading: loadingMaterial,
@@ -79,6 +81,8 @@ export default function EditMaterialForm({ materialId, onUpdated }) {
     const [createKeyword] = useMutation(CREATE_KEYWORD);
 
     const [form, setForm] = useState(null);
+    const [isEditable, setIsEditable] = useState(true);
+    const [statusMessage, setStatusMessage] = useState("");
 
     useEffect(() => {
         if (materialData?.material) {
@@ -93,6 +97,22 @@ export default function EditMaterialForm({ materialId, onUpdated }) {
                 languageId: m.language?.id || "",
                 keywordIds: m.keywords?.map(k => k.id) || [],
             });
+
+            // Перевірка статусу матеріалу
+            const statusName = m.status?.name?.toLowerCase() || "";
+            const isInReview = statusName === "під перевіркою" || statusName === "awaiting review" || statusName === "in review";
+            const isAccepted = statusName === "accepted" || statusName === "прийнято";
+
+            if (isInReview) {
+                setIsEditable(false);
+                setStatusMessage("Цей матеріал знаходиться на рецензуванні і не може бути відредагований. Дочекайтесь результатів рецензування або зверніться до рецензента.");
+            } else if (isAccepted) {
+                setIsEditable(false);
+                setStatusMessage("Цей матеріал вже прийнято і не може бути відредагований. Створіть новий матеріал, якщо потрібно внести зміни.");
+            } else {
+                setIsEditable(true);
+                setStatusMessage("");
+            }
         }
     }, [materialData]);
 
@@ -111,11 +131,14 @@ export default function EditMaterialForm({ materialId, onUpdated }) {
     }
 
     const handleChange = (e) => {
+        if (!isEditable) return;
         const { name, value } = e.target;
         setForm(prev => ({ ...prev, [name]: value }));
     };
 
     const handleKeywordChange = async (selected) => {
+        if (!isEditable) return;
+
         const existing = selected.filter(opt => !opt.__isNew__);
         const toCreate = selected.filter(opt => opt.__isNew__);
         const newIds = [...existing.map(k => k.value)];
@@ -142,6 +165,10 @@ export default function EditMaterialForm({ materialId, onUpdated }) {
 
     const handleUpdate = async (e) => {
         e.preventDefault();
+
+        if (!isEditable) {
+            return;
+        }
 
         try {
             await executeMutation(updateMaterial, {
@@ -177,6 +204,21 @@ export default function EditMaterialForm({ materialId, onUpdated }) {
     return (
         <div>
             <h6>✏️ Редагувати матеріал</h6>
+
+            {!isEditable && (
+                <div className="alert alert-warning" style={{
+                    padding: '12px 16px',
+                    background: '#fffbeb',
+                    border: '1px solid #fbbf24',
+                    borderRadius: '6px',
+                    color: '#92400e',
+                    marginBottom: '16px'
+                }}>
+                    <strong>⚠️ Редагування заблоковано</strong>
+                    <p style={{ margin: '8px 0 0' }}>{statusMessage}</p>
+                </div>
+            )}
+
             <form className="mt-2" onSubmit={handleUpdate}>
                 <div className="mb-2">
                     <label className="form-label">Назва</label>
@@ -187,6 +229,7 @@ export default function EditMaterialForm({ materialId, onUpdated }) {
                         value={form.name}
                         onChange={handleChange}
                         required
+                        disabled={!isEditable}
                     />
                 </div>
 
@@ -198,6 +241,7 @@ export default function EditMaterialForm({ materialId, onUpdated }) {
                         value={form.description}
                         onChange={handleChange}
                         rows="2"
+                        disabled={!isEditable}
                     />
                 </div>
 
@@ -205,45 +249,70 @@ export default function EditMaterialForm({ materialId, onUpdated }) {
                     label="Тип матеріалу"
                     options={refData.materialTypes}
                     value={form.typeId}
-                    onChange={(val) => setForm(prev => ({ ...prev, typeId: val }))}
+                    onChange={(val) => {
+                        if (isEditable) {
+                            setForm(prev => ({ ...prev, typeId: val }));
+                        }
+                    }}
                     createMutation={CREATE_MUTATIONS.typeId}
                     refetchOptions={refetch}
+                    disabled={!isEditable}
                 />
 
                 <SelectWithCreate
                     label="Тип ліцензії"
                     options={refData.licenceTypes}
                     value={form.licenceTypeId}
-                    onChange={(val) => setForm(prev => ({ ...prev, licenceTypeId: val }))}
+                    onChange={(val) => {
+                        if (isEditable) {
+                            setForm(prev => ({ ...prev, licenceTypeId: val }));
+                        }
+                    }}
                     createMutation={CREATE_MUTATIONS.licenceTypeId}
                     refetchOptions={refetch}
+                    disabled={!isEditable}
                 />
 
                 <SelectWithCreate
                     label="Обмеження використання"
                     options={refData.usageRestrictions}
                     value={form.usageRestrictionId}
-                    onChange={(val) => setForm(prev => ({ ...prev, usageRestrictionId: val }))}
+                    onChange={(val) => {
+                        if (isEditable) {
+                            setForm(prev => ({ ...prev, usageRestrictionId: val }));
+                        }
+                    }}
                     createMutation={CREATE_MUTATIONS.usageRestrictionId}
                     refetchOptions={refetch}
+                    disabled={!isEditable}
                 />
 
                 <SelectWithCreate
                     label="Цільова аудиторія"
                     options={refData.targetAudiences}
                     value={form.targetAudienceId}
-                    onChange={(val) => setForm(prev => ({ ...prev, targetAudienceId: val }))}
+                    onChange={(val) => {
+                        if (isEditable) {
+                            setForm(prev => ({ ...prev, targetAudienceId: val }));
+                        }
+                    }}
                     createMutation={CREATE_MUTATIONS.targetAudienceId}
                     refetchOptions={refetch}
+                    disabled={!isEditable}
                 />
 
                 <SelectWithCreate
                     label="Мова"
                     options={refData.languages}
                     value={form.languageId}
-                    onChange={(val) => setForm(prev => ({ ...prev, languageId: val }))}
+                    onChange={(val) => {
+                        if (isEditable) {
+                            setForm(prev => ({ ...prev, languageId: val }));
+                        }
+                    }}
                     createMutation={CREATE_MUTATIONS.languageId}
                     refetchOptions={refetch}
+                    disabled={!isEditable}
                 />
 
                 <div className="mb-2">
@@ -254,12 +323,38 @@ export default function EditMaterialForm({ materialId, onUpdated }) {
                         onCreateOption={handleKeywordChange}
                         options={keywordOptions}
                         value={selectedKeywords}
+                        isDisabled={!isEditable}
                     />
                 </div>
 
-                <button type="submit" className="btn btn-sm btn-primary mt-3" disabled={saving}>
-                    {saving ? "Збереження..." : "💾 Зберегти зміни"}
-                </button>
+                <div className="mt-3" style={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <Button
+                        variant="outline"
+                        size="medium"
+                        onClick={onClose}
+                    >
+                        Скасувати
+                    </Button>
+
+                    {isEditable ? (
+                        <Button
+                            type="submit"
+                            variant="primary"
+                            size="medium"
+                            disabled={saving}
+                        >
+                            {saving ? "Збереження..." : "💾 Зберегти зміни"}
+                        </Button>
+                    ) : (
+                        <Button
+                            variant="outline"
+                            size="medium"
+                            onClick={onClose}
+                        >
+                            Закрити
+                        </Button>
+                    )}
+                </div>
             </form>
         </div>
     );

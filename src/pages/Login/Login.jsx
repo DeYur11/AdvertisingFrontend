@@ -24,7 +24,7 @@ export default function Login() {
         setIsLoading(true);
 
         try {
-            const response = await axios.post("http://192.168.0.197:8080/auth/login", { username, password });
+            const response = await axios.post("http://localhost:8080/auth/login", { username, password });
             const token = response.data.token;
 
             // Зберігаємо токен

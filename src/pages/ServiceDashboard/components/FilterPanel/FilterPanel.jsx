@@ -39,26 +39,26 @@ export default function FilterPanel({
     return (
         <Card className="filter-panel">
             <div className="filter-header">
-                <h2>Filters</h2>
+                <h2>Фільтри</h2>
             </div>
 
             <div className="filter-content">
                 <div className="filter-row">
                     <div className="filter-group">
-                        <label htmlFor="search">Search</label>
+                        <label htmlFor="search">Пошук</label>
                         <input
                             id="search"
                             name="search"
                             type="text"
                             value={localFilters.search}
                             onChange={handleInputChange}
-                            placeholder="Search by service name..."
+                            placeholder="Пошук за назвою послуги..."
                             className="filter-input"
                         />
                     </div>
 
                     <div className="filter-group">
-                        <label htmlFor="serviceType">Service Type</label>
+                        <label htmlFor="serviceType">Тип послуги</label>
                         <select
                             id="serviceType"
                             name="serviceType"
@@ -66,7 +66,7 @@ export default function FilterPanel({
                             onChange={handleInputChange}
                             className="filter-input"
                         >
-                            <option value="">All Types</option>
+                            <option value="">Усі типи</option>
                             {serviceTypes.map(type => (
                                 <option key={type.id} value={type.id}>
                                     {type.name}
@@ -78,14 +78,14 @@ export default function FilterPanel({
 
                 <div className="filter-row">
                     <div className="filter-group">
-                        <label htmlFor="costMin">Min Cost ($)</label>
+                        <label htmlFor="costMin">Мін. вартість (₴)</label>
                         <input
                             id="costMin"
                             name="costMin"
                             type="number"
                             value={localFilters.costMin}
                             onChange={handleInputChange}
-                            placeholder="Minimum"
+                            placeholder="Мінімум"
                             className="filter-input"
                             min="0"
                             step="0.01"
@@ -93,14 +93,14 @@ export default function FilterPanel({
                     </div>
 
                     <div className="filter-group">
-                        <label htmlFor="costMax">Max Cost ($)</label>
+                        <label htmlFor="costMax">Макс. вартість (₴)</label>
                         <input
                             id="costMax"
                             name="costMax"
                             type="number"
                             value={localFilters.costMax}
                             onChange={handleInputChange}
-                            placeholder="Maximum"
+                            placeholder="Максимум"
                             className="filter-input"
                             min="0"
                             step="0.01"
@@ -114,13 +114,13 @@ export default function FilterPanel({
                     variant="outline"
                     onClick={resetFilters}
                 >
-                    Reset
+                    Скинути
                 </Button>
                 <Button
                     variant="primary"
                     onClick={applyFilters}
                 >
-                    Apply Filters
+                    Застосувати фільтри
                 </Button>
             </div>
         </Card>

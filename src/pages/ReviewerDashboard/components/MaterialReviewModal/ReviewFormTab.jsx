@@ -13,7 +13,8 @@ export default function ReviewFormTab({
                                           isEditing,
                                           setIsEditing,
                                           setExistingReview, // додаємо для скидання відгуку при скасуванні
-                                          disableSubmit = false
+                                          disableSubmit = false,
+                                          hasExistingReview = false
                                       }) {
     if (!formData) return null;
 
@@ -40,6 +41,12 @@ export default function ReviewFormTab({
                     <h3>{isEditing ? "Редагування рецензії" : "Нова рецензія"}</h3>
                 </div>
 
+                {hasExistingReview && !isEditing && (
+                    <div className="submit-error">
+                        Ви вже рецензували цей матеріал. Щоб змінити рецензію, використовуйте режим редагування.
+                    </div>
+                )}
+
                 <div className="form-group">
                     <label htmlFor="comments">Коментарі*</label>
                     <textarea
@@ -49,6 +56,7 @@ export default function ReviewFormTab({
                         value={formData?.comments || ""}
                         onChange={handleChange}
                         className={errors.comments ? "has-error" : ""}
+                        disabled={hasExistingReview && !isEditing}
                     />
                     {errors.comments && (
                         <div className="error-message">{errors.comments}</div>
@@ -63,6 +71,7 @@ export default function ReviewFormTab({
                         rows="4"
                         value={formData?.suggestedChange || ""}
                         onChange={handleChange}
+                        disabled={hasExistingReview && !isEditing}
                     />
                 </div>
 
@@ -80,6 +89,7 @@ export default function ReviewFormTab({
                                     : null
                             }))
                         }
+                        disabled={hasExistingReview && !isEditing}
                     >
                         <option value="">Оберіть...</option>
                         {materialSummaries.map((summary) => (
@@ -92,7 +102,7 @@ export default function ReviewFormTab({
 
                 {errors.submit && <div className="submit-error">{errors.submit}</div>}
 
-                {disableSubmit && (
+                {material?.status?.name !== "Pending Review" && (
                     <div className="submit-error">
                         Рецензування недоступне. Матеріал повинен мати статус "Pending Review" для надання відгуку.
                     </div>
@@ -102,18 +112,25 @@ export default function ReviewFormTab({
                     <Button variant="outline" onClick={onClose} type="button">
                         Скасувати
                     </Button>
+                    {hasExistingReview && !isEditing && (
+                        <Button variant="primary" onClick={() => setIsEditing(true)} type="button">
+                            Редагувати мою рецензію
+                        </Button>
+                    )}
                     {isEditing && (
                         <Button variant="outline" onClick={handleCancelEdit} type="button">
                             Вийти з редагування
                         </Button>
                     )}
-                    <Button
-                        variant="primary"
-                        type="submit"
-                        disabled={submitting || disableSubmit}
-                    >
-                        {submitting ? "Збереження..." : "Надіслати рецензію"}
-                    </Button>
+                    {(!hasExistingReview || isEditing) && (
+                        <Button
+                            variant="primary"
+                            type="submit"
+                            disabled={submitting || disableSubmit}
+                        >
+                            {submitting ? "Збереження..." : isEditing ? "Зберегти зміни" : "Надіслати рецензію"}
+                        </Button>
+                    )}
                 </div>
             </form>
         </div>

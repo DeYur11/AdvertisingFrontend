@@ -35,7 +35,7 @@ export default function ExportButton({ onExportExcel, onExportPdf, isExporting =
                 disabled={isExporting}
                 className="export-button"
             >
-                {isExporting ? "Exporting..." : "Export"}
+                {isExporting ? "Експортуємо..." : "Експорт"}
                 <span className="dropdown-icon">{showDropdown ? "▲" : "▼"}</span>
             </Button>
 
@@ -43,11 +43,11 @@ export default function ExportButton({ onExportExcel, onExportPdf, isExporting =
                 <div className="export-dropdown">
                     <button className="export-option" onClick={handleExportExcel}>
                         <span className="export-icon">📊</span>
-                        Export to Excel
+                        Експортувати в Excel
                     </button>
                     <button className="export-option" onClick={handleExportPdf}>
                         <span className="export-icon">📄</span>
-                        Export to PDF
+                        Експортувати в PDF
                     </button>
                 </div>
             )}

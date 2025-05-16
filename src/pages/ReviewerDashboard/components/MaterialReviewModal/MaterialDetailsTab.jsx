@@ -28,6 +28,19 @@ export default function MaterialDetailsTab({
         }
     };
 
+    // Визначаємо текст кнопки на основі статусу матеріалу та наявності рецензії
+    const getButtonText = () => {
+        if (material.status?.name !== "Pending Review") {
+            return "Рецензування недоступне";
+        }
+
+        if (existingReview) {
+            return "Переглянути мою рецензію";
+        }
+
+        return "Рецензувати матеріал";
+    };
+
     return (
         <div className="material-details-tab">
             {/* Заголовок + статус */}
@@ -135,19 +148,21 @@ export default function MaterialDetailsTab({
                 </div>
             )}
 
+            {/* Повідомлення про наявність власної рецензії */}
+            {existingReview && material.status?.name === "Pending Review" && (
+                <div className="review-notice success">
+                    <p>Ви вже рецензували цей матеріал. Ви можете переглянути або відредагувати свою рецензію.</p>
+                </div>
+            )}
+
             {/* Кнопка переходу до рецензії */}
             <div className="action-buttons">
                 <Button
                     variant="primary"
                     onClick={onOpenReview}
-                    disabled={material.status?.name !== "Pending Review"}
+                    disabled={material.status?.name !== "Pending Review" && !existingReview}
                 >
-                    {material.status?.name !== "Pending Review"
-                        ? "Рецензування недоступне"
-                        : existingReview
-                            ? "Переглянути мою рецензію"
-                            : "Рецензувати матеріал"
-                    }
+                    {getButtonText()}
                 </Button>
             </div>
         </div>

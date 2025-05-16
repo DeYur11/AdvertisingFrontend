@@ -3,25 +3,25 @@ import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recha
 import "./Charts.css";
 
 export default function ServiceTypeDistribution({ data = [] }) {
-    // Custom colors for the pie chart
+    // Кольори для діаграми
     const COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4', '#ec4899', '#f97316'];
 
     if (!data || data.length === 0) {
         return (
             <div className="chart-placeholder">
-                <p>No service type data available to display</p>
+                <p>Немає даних для відображення типів послуг</p>
             </div>
         );
     }
 
-    // Custom tooltip content
+    // Кастомний tooltip
     const CustomTooltip = ({ active, payload }) => {
         if (active && payload && payload.length) {
             return (
                 <div className="custom-tooltip">
-                    <p className="label">{payload[0].name}: {payload[0].value} services</p>
+                    <p className="label">{payload[0].name}: {payload[0].value} послуг</p>
                     <p className="percent">
-                        {((payload[0].value / data.reduce((sum, entry) => sum + entry.value, 0)) * 100).toFixed(1)}% of total
+                        {((payload[0].value / data.reduce((sum, entry) => sum + entry.value, 0)) * 100).toFixed(1)}% від загальної кількості
                     </p>
                 </div>
             );
@@ -31,7 +31,7 @@ export default function ServiceTypeDistribution({ data = [] }) {
 
     return (
         <div className="chart-wrapper">
-            <h3 className="chart-title">Service Type Distribution</h3>
+            <h3 className="chart-title">Розподіл за типами послуг</h3>
             <ResponsiveContainer width="100%" height={350}>
                 <PieChart>
                     <Pie

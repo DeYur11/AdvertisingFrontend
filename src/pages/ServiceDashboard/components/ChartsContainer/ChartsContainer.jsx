@@ -10,17 +10,15 @@ import "./ChartsContainer.css";
 export default function ChartsContainer({ services = [], filteredServices = [] }) {
     const [activeTab, setActiveTab] = useState("distribution");
 
-    // Data preparation logic for different charts
+    // Підготовка даних для різних графіків
     const prepareServiceTypeData = (data) => {
         const typeCount = {};
 
-        // Count services by type
         data.forEach(service => {
-            const typeName = service.serviceType?.name || "Unknown";
+            const typeName = service.serviceType?.name || "Невідомо";
             typeCount[typeName] = (typeCount[typeName] || 0) + 1;
         });
 
-        // Convert to array format for the chart
         return Object.entries(typeCount).map(([name, count]) => ({
             name,
             value: count
@@ -41,7 +39,7 @@ export default function ChartsContainer({ services = [], filteredServices = [] }
         const maxCost = Math.max(...costs);
 
         const numBuckets = 5;
-        const bucketSize = (maxCost - minCost) / numBuckets;
+        const bucketSize = (maxCost - minCost) / numBuckets || 1;
         const buckets = Array(numBuckets).fill(0);
 
         servicesWithCost.forEach(service => {
@@ -57,7 +55,7 @@ export default function ChartsContainer({ services = [], filteredServices = [] }
             const lowerBound = minCost + (bucketSize * index);
             const upperBound = minCost + (bucketSize * (index + 1));
             return {
-                name: `$${lowerBound.toFixed(0)} - $${upperBound.toFixed(0)}`,
+                name: `${lowerBound.toFixed(0)}₴ – ${upperBound.toFixed(0)}₴`,
                 value: count
             };
         });
@@ -67,10 +65,9 @@ export default function ChartsContainer({ services = [], filteredServices = [] }
         const costByType = {};
         const countByType = {};
 
-        // Sum costs by type
         data.forEach(service => {
             if (service.estimateCost !== null && service.estimateCost !== undefined) {
-                const typeName = service.serviceType?.name || "Unknown";
+                const typeName = service.serviceType?.name || "Невідомо";
                 const cost = parseFloat(service.estimateCost);
 
                 costByType[typeName] = (costByType[typeName] || 0) + cost;
@@ -78,7 +75,6 @@ export default function ChartsContainer({ services = [], filteredServices = [] }
             }
         });
 
-        // Calculate average cost by type
         return Object.entries(costByType).map(([name, totalCost]) => ({
             name,
             totalCost,
@@ -87,7 +83,7 @@ export default function ChartsContainer({ services = [], filteredServices = [] }
         }));
     };
 
-    // Prepare data for charts
+    // Готуємо дані для графіків
     const serviceTypeData = prepareServiceTypeData(filteredServices);
     const costBucketData = prepareCostBucketData(filteredServices);
     const costByTypeData = prepareCostByTypeData(filteredServices);
@@ -95,28 +91,28 @@ export default function ChartsContainer({ services = [], filteredServices = [] }
     return (
         <Card className="charts-container">
             <div className="charts-header">
-                <h2>Service Analytics</h2>
+                <h2>Аналітика по послугах</h2>
                 <div className="chart-tabs">
                     <Button
                         variant={activeTab === "distribution" ? "primary" : "outline"}
                         size="small"
                         onClick={() => setActiveTab("distribution")}
                     >
-                        Type Distribution
+                        Розподіл за типами
                     </Button>
                     <Button
                         variant={activeTab === "cost" ? "primary" : "outline"}
                         size="small"
                         onClick={() => setActiveTab("cost")}
                     >
-                        Cost Distribution
+                        Розподіл за вартістю
                     </Button>
                     <Button
                         variant={activeTab === "costByType" ? "primary" : "outline"}
                         size="small"
                         onClick={() => setActiveTab("costByType")}
                     >
-                        Cost by Type
+                        Вартість по типах
                     </Button>
                 </div>
             </div>

@@ -20,6 +20,19 @@ const UPDATE_MATERIAL = gql`
 export default function MaterialCard({ material, onEdit, onDelete, onClick, disabled, onStatusChange }) {
     const [updateMaterial] = useMutation(UPDATE_MATERIAL);
 
+    // Перевірка чи може користувач редагувати матеріал на основі його статусу
+    const statusName = material.status?.name?.toLowerCase() || "";
+    const isEditable = statusName === "draft" || statusName === "";
+    const isInReview = statusName === "під перевіркою" || statusName === "awaiting review" || statusName === "in review";
+    const isAccepted = statusName === "accepted" || statusName === "прийнято";
+
+    // Отримання варіанту бейджу на основі статусу
+    const getBadgeVariant = () => {
+        if (isAccepted) return "success";
+        if (isInReview) return "warning";
+        return "default";
+    };
+
     const handleSubmitForReview = async (e) => {
         e.stopPropagation();
 
@@ -47,8 +60,8 @@ export default function MaterialCard({ material, onEdit, onDelete, onClick, disa
         <Card className="material-card" onClick={onClick}>
             <div className="flex justify-between items-center">
                 <strong>{material.name}</strong>
-                <Badge variant={material.status?.name === "Accepted" ? "success" : "default"}>
-                    {material.status?.name || "Невідомо"}
+                <Badge variant={getBadgeVariant()}>
+                    {material.status?.name || "Чернетка"}
                 </Badge>
             </div>
 
@@ -65,30 +78,34 @@ export default function MaterialCard({ material, onEdit, onDelete, onClick, disa
 
             {!disabled && (
                 <div className="flex gap-2 mt-2 flex-wrap">
-                    <Button
-                        variant="outline"
-                        size="small"
-                        icon="✏️"
-                        onClick={(e) => {
-                            e.stopPropagation();
-                            onEdit(material.id);
-                        }}
-                    >
-                        Редагувати
-                    </Button>
-                    <Button
-                        variant="danger"
-                        size="small"
-                        icon="🗑"
-                        onClick={(e) => {
-                            e.stopPropagation();
-                            onDelete(material.id);
-                        }}
-                    >
-                        Видалити
-                    </Button>
+                    {isEditable && (
+                        <>
+                            <Button
+                                variant="outline"
+                                size="small"
+                                icon="✏️"
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    onEdit(material.id);
+                                }}
+                            >
+                                Редагувати
+                            </Button>
+                            <Button
+                                variant="danger"
+                                size="small"
+                                icon="🗑"
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    onDelete(material.id);
+                                }}
+                            >
+                                Видалити
+                            </Button>
+                        </>
+                    )}
 
-                    {material.status?.name === "Draft" && (
+                    {isEditable && (
                         <Button
                             variant="primary"
                             size="small"
@@ -96,6 +113,28 @@ export default function MaterialCard({ material, onEdit, onDelete, onClick, disa
                             onClick={handleSubmitForReview}
                         >
                             Надіслати на перевірку
+                        </Button>
+                    )}
+
+                    {isInReview && (
+                        <Button
+                            variant="outline"
+                            size="small"
+                            icon="⏳"
+                            disabled={true}
+                        >
+                            Очікує перевірки
+                        </Button>
+                    )}
+
+                    {isAccepted && (
+                        <Button
+                            variant="success"
+                            size="small"
+                            icon="✅"
+                            disabled={true}
+                        >
+                            Прийнято
                         </Button>
                     )}
                 </div>

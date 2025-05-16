@@ -232,13 +232,14 @@ export default function NotificationSidebar({
                                 className="view-all-logs-button"
                                 onClick={navigateToLogs}
                             >
-                                View All Logs
+                                Переглянути всі логи
                             </Button>
                             <p className="logs-description">
-                                Access the full audit log system to view and manage all system activities
+                                Перейдіть до повного журналу аудиту для перегляду та керування всіма діями в системі
                             </p>
                         </div>
                     )}
+
 
                     {loading && <div className="notification-loading">Завантаження сповіщень...</div>}
                     {error && <div className="notification-error">Помилка завантаження: {error.message}</div>}

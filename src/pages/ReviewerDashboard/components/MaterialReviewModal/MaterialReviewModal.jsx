@@ -75,22 +75,44 @@ export default function MaterialReviewModal({
 
     // ------------- effects -----------------
     useEffect(() => {
-        // при відкритті форми — завжди готувати до додавання
-        setExistingReview(null);
-        setIsEditing(false);
-        setFormData({
-            comments: "",
-            suggestedChange: "",
-            reviewDate: "",
-            materialSummaryId: null
-        });
-    }, [material?.id, isOpen]);
+        // Check if user already has a review for this material
+        if (material && material.reviews && user.workerId) {
+            const review = material.reviews.find(
+                (r) => r.reviewer?.id === user.workerId.toString()
+            );
+
+            if (review) {
+                setExistingReview(review);
+                setFormData({
+                    comments: review.comments || "",
+                    suggestedChange: review.suggestedChange || "",
+                    reviewDate: review.reviewDate || "",
+                    materialSummaryId: review.materialSummary?.id || null
+                });
+            } else {
+                setExistingReview(null);
+                setFormData({
+                    comments: "",
+                    suggestedChange: "",
+                    reviewDate: "",
+                    materialSummaryId: null
+                });
+            }
+            setIsEditing(false);
+        }
+    }, [material?.id, isOpen, user.workerId, material?.reviews]);
 
 
     // ------------- helpers -----------------
     const validate = () => {
         const errs = {};
         if (!formData.comments.trim()) errs.comments = "Поле обов'язкове";
+
+        // Check if user is trying to submit a new review when they already have one
+        if (!isEditing && existingReview) {
+            errs.submit = "Ви вже рецензували цей матеріал. Ви можете редагувати свою рецензію.";
+        }
+
         setErrors(errs);
         return !Object.keys(errs).length;
     };
@@ -198,6 +220,10 @@ export default function MaterialReviewModal({
         }
     };
 
+    // Check if reviewer already has a review for this material
+    const hasExistingReview = !!existingReview;
+    const isReviewSubmitDisabled = hasExistingReview && !isEditing || material?.status?.name !== PENDING_REVIEW_STATUS;
+
     // ---------------------------------------
     return (
         <>
@@ -234,7 +260,8 @@ export default function MaterialReviewModal({
                             onSubmit={handleSubmit}
                             materialSummaries={materialSummaries}
                             setExistingReview={setExistingReview}
-                            disableSubmit={material?.status?.name !== PENDING_REVIEW_STATUS}
+                            disableSubmit={isReviewSubmitDisabled}
+                            hasExistingReview={hasExistingReview}
                         />
                     )}
 

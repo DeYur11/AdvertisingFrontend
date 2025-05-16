@@ -4,35 +4,31 @@ import Badge from "../../../../components/common/Badge/Badge";
 import "./ServiceTable.css";
 
 export default function ServiceTable({ services, onEdit, onDelete }) {
-    // Format cost to display as currency
+    // Форматування вартості у вигляді валюти (гривні)
     const formatCurrency = (amount) => {
-        return new Intl.NumberFormat('en-US', {
-            style: 'currency',
-            currency: 'USD',
-            minimumFractionDigits: 2
-        }).format(amount);
+        return `${parseFloat(amount).toFixed(2)}₴`;
     };
 
-    // Calculate usage count (how many times the service is used in projects)
+    // Підрахунок кількості використань послуги у проектах
     const getUsageCount = (service) => {
         return service.projectServices ? service.projectServices.length : 0;
     };
 
-    // Format date for display
+    // Форматування дати
     const formatDate = (dateString) => {
         if (!dateString) return "—";
         try {
             const date = new Date(dateString);
             return date.toLocaleDateString();
         } catch (e) {
-            return "Invalid date";
+            return "Невірна дата";
         }
     };
 
     if (!services || services.length === 0) {
         return (
             <div className="no-services-message">
-                No services found. Add a new service to get started.
+                Не знайдено жодної послуги. Додайте нову послугу для початку роботи.
             </div>
         );
     }
@@ -42,11 +38,11 @@ export default function ServiceTable({ services, onEdit, onDelete }) {
             <table className="service-table">
                 <thead>
                 <tr>
-                    <th>Service Name</th>
-                    <th>Service Type</th>
-                    <th>Est. Cost</th>
-                    <th>Usage</th>
-                    <th className="actions-column">Actions</th>
+                    <th>Назва послуги</th>
+                    <th>Тип послуги</th>
+                    <th>Вартість</th>
+                    <th>Використань</th>
+                    <th className="actions-column">Дії</th>
                 </tr>
                 </thead>
                 <tbody>
@@ -58,7 +54,7 @@ export default function ServiceTable({ services, onEdit, onDelete }) {
                                 variant="primary"
                                 size="small"
                             >
-                                {service.serviceType?.name || "Unknown"}
+                                {service.serviceType?.name || "Невідомо"}
                             </Badge>
                         </td>
                         <td className="cost-column">
@@ -67,9 +63,9 @@ export default function ServiceTable({ services, onEdit, onDelete }) {
                                 : "—"}
                         </td>
                         <td className="usage-column">
-                <span className="usage-badge">
-                  {getUsageCount(service)}
-                </span>
+                            <span className="usage-badge">
+                                {getUsageCount(service)}
+                            </span>
                         </td>
                         <td className="actions-column">
                             <div className="row-actions">
@@ -78,14 +74,14 @@ export default function ServiceTable({ services, onEdit, onDelete }) {
                                     size="small"
                                     onClick={() => onEdit(service)}
                                 >
-                                    Edit
+                                    Редагувати
                                 </Button>
                                 <Button
                                     variant="danger"
                                     size="small"
                                     onClick={() => onDelete(service)}
                                 >
-                                    Delete
+                                    Видалити
                                 </Button>
                             </div>
                         </td>
