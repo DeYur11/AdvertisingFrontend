@@ -284,10 +284,7 @@ export default function ExportDataModal({ isOpen, onClose, workerId, filter = {}
                     <div className="export-error">Помилка завантаження: {error.message}</div>
                 ) : (
                     <>
-                        <Card className="export-info">
                             <p>Доступно для експорту: <strong>{totalTasks}</strong> задач</p>
-                        </Card>
-
                         <div className="export-sections">
                             <div className="export-section">
                                 <h3 className="export-section-title">Формат експорту</h3>

@@ -79,7 +79,7 @@ export default function NotificationBell({
     const isPm = role === "PROJECT_MANAGER";
 
     useEffect(() => {
-        notificationSound.current = new Audio("/notification-sound.mp3");
+        notificationSound.current = new Audio("./notification-sound.mp3");
     }, []);
 
     const { subscriptionDoc, variables, skip } = useMemo(() => {

@@ -7,21 +7,21 @@ export default function ServiceForm({
                                         service,
                                         serviceTypes,
                                         onSubmit,
-                                        onCancel
+                                        onCancel,
                                     }) {
     const [formData, setFormData] = useState({
         serviceName: "",
         estimateCost: "",
-        serviceTypeId: ""
+        serviceTypeId: "",
     });
 
-    // Load service data when editing
+    // Завантажуємо дані сервісу при редагуванні
     useEffect(() => {
         if (service) {
             setFormData({
                 serviceName: service.serviceName || "",
                 estimateCost: service.estimateCost || "",
-                serviceTypeId: service.serviceType?.id || ""
+                serviceTypeId: service.serviceType?.id || "",
             });
         }
     }, [service]);
@@ -44,7 +44,9 @@ export default function ServiceForm({
     return (
         <form className="service-form" onSubmit={handleSubmit}>
             <div className="form-group">
-                <label htmlFor="serviceName" className="form-label">Service Name *</label>
+                <label htmlFor="serviceName" className="form-label">
+                    Назва сервісу *
+                </label>
                 <input
                     type="text"
                     id="serviceName"
@@ -52,13 +54,15 @@ export default function ServiceForm({
                     value={formData.serviceName}
                     onChange={handleChange}
                     className="form-control"
-                    placeholder="Enter service name"
+                    placeholder="Введіть назву сервісу"
                     required
                 />
             </div>
 
             <div className="form-group">
-                <label htmlFor="estimateCost" className="form-label">Estimated Cost ($) *</label>
+                <label htmlFor="estimateCost" className="form-label">
+                    Оціночна вартість (₴) *
+                </label>
                 <input
                     type="number"
                     id="estimateCost"
@@ -66,7 +70,7 @@ export default function ServiceForm({
                     value={formData.estimateCost}
                     onChange={handleChange}
                     className="form-control"
-                    placeholder="Enter estimated cost"
+                    placeholder="Введіть оціночну вартість"
                     min="0"
                     step="0.01"
                     required
@@ -74,7 +78,9 @@ export default function ServiceForm({
             </div>
 
             <div className="form-group">
-                <label htmlFor="serviceTypeId" className="form-label">Service Type *</label>
+                <label htmlFor="serviceTypeId" className="form-label">
+                    Тип сервісу *
+                </label>
                 <select
                     id="serviceTypeId"
                     name="serviceTypeId"
@@ -83,7 +89,7 @@ export default function ServiceForm({
                     className="form-control"
                     required
                 >
-                    <option value="">Select service type</option>
+                    <option value="">Оберіть тип сервісу</option>
                     {serviceTypes.map((type) => (
                         <option key={type.id} value={type.id}>
                             {type.name}
@@ -93,19 +99,11 @@ export default function ServiceForm({
             </div>
 
             <div className="form-actions">
-                <Button
-                    variant="outline"
-                    type="button"
-                    onClick={onCancel}
-                >
-                    Cancel
+                <Button variant="outline" type="button" onClick={onCancel}>
+                    Скасувати
                 </Button>
-                <Button
-                    variant="primary"
-                    type="submit"
-                    disabled={!isFormValid}
-                >
-                    {service ? "Update Service" : "Create Service"}
+                <Button variant="primary" type="submit" disabled={!isFormValid}>
+                    {service ? "Оновити сервіс" : "Створити сервіс"}
                 </Button>
             </div>
         </form>

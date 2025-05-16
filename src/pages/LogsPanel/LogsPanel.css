@@ -193,6 +193,9 @@
     font-weight: 600;
     color: #475569;
     white-space: nowrap;
+    position: sticky;
+    top: 0;
+    z-index: 10;
 }
 
 .logs-table tr:hover {
@@ -271,6 +274,9 @@
     text-align: center;
     color: #64748b;
     font-style: italic;
+    background-color: #f8fafc;
+    border-radius: 8px;
+    border: 1px solid #e2e8f0;
 }
 
 /* Loading and error states */
@@ -310,6 +316,14 @@
     color: #ef4444;
 }
 
+/* Log summary */
+.logs-summary {
+    margin-bottom: 16px;
+    font-size: 16px;
+    font-weight: 500;
+    color: #475569;
+}
+
 /* Animations */
 @keyframes fadeIn {
     from {
@@ -320,6 +334,33 @@
         opacity: 1;
         transform: translateY(0);
     }
+}
+
+/* Alert styling */
+.alert {
+    padding: 16px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.alert-success {
+    background-color: #d1fae5;
+    color: #059669;
+    border: 1px solid #10b981;
+}
+
+.alert-danger {
+    background-color: #fee2e2;
+    color: #dc2626;
+    border: 1px solid #ef4444;
+}
+
+.alert-default {
+    background-color: #f1f5f9;
+    color: #475569;
+    border: 1px solid #cbd5e1;
 }
 
 /* Responsive adjustments */

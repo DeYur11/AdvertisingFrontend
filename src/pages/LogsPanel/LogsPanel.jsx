@@ -1,11 +1,11 @@
 // src/pages/LogsPanel/LogsPanel.jsx
-import { useState } from "react";
-import { useQuery, useMutation, gql } from "@apollo/client";
+import { useState, useEffect } from "react";
+import { useQuery, useMutation, useSubscription, gql } from "@apollo/client";
 import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import "./LogsPanel.css";
 
-// Компоненти
+// Components
 import Button from "../../components/common/Button/Button";
 import Card from "../../components/common/Card/Card";
 import Badge from "../../components/common/Badge/Badge";
@@ -47,36 +47,35 @@ const GET_ALL_TRANSACTION_LOGS = gql`
     }
 `;
 
-const GET_ROLLBACK_CANDIDATES = gql`
-    query GetRollbackCandidates($entityType: String!, $entityId: Int!) {
-        getRollbackCandidates(entityType: $entityType, entityId: $entityId) {
-            id
-            entityType
-            entityId
-            action
-            worker { id name surname }
-            username
-            role
-            description
-            timestamp
-            rolledBack
-            rollbackTransactionId
-        }
-    }
-`;
-
 const ROLLBACK_TRANSACTION = gql`
     mutation RollbackTransaction($transactionId: String!, $username: String!) {
         rollbackTransaction(transactionId: $transactionId, username: $username)
     }
 `;
 
-const RESTORE_ENTITY_TO_POINT = gql`
-    mutation RestoreEntityToPoint($entityType: String!, $entityId: Int!, $timestamp: String!) {
-        restoreEntityToPoint(entityType: $entityType, entityId: $entityId, timestamp: $timestamp) {
-            success
-            message
-            transactionId
+// Підписка на оновлення логів
+const SUBSCRIBE_TO_AUDIT_LOGS = gql`
+    subscription OnAuditLogByProjectIds($projectIds: [Int!]!, $entityList: [AuditEntity!]!) {
+        onTransactionByProjectIds(projectIds: $projectIds, entityList: $entityList) {
+            id
+            entityType
+            entityId
+            action
+            worker {
+                id
+                name
+                surname
+            }
+            username
+            role
+            description
+            timestamp
+            rolledBack
+            rollbackTransactionId
+            project { id name }
+            task    { id name }
+            material{ id name }
+            review  { id comments }
         }
     }
 `;
@@ -89,7 +88,7 @@ export default function LogsPanel() {
     const isAuthorized =
         user.mainRole === "ADMIN" || user.mainRole === "PROJECT_MANAGER";
 
-    // ---------- отримуємо проєкти менеджера ----------
+    // ---------- get manager projects ----------
     const {
         loading: projectsLoading,
         error: projectsError,
@@ -98,15 +97,14 @@ export default function LogsPanel() {
         variables: { managerId: user.workerId },
         skip: !user?.workerId,
         fetchPolicy: "network-only",
-        onError: (e) => {
-            console.log(e)
-        }
+        onError: (e) => console.log(e),
     });
 
     const managerProjectIds = (projectsData?.projectsByManager ?? [])
-        .map(p => Number(p.id))        // або parseInt(p.id, 10)
+        .map((p) => Number(p.id))
         .filter(Boolean);
-    // ---------- журнали ----------
+
+    // ---------- logs ----------
     const {
         loading,
         error,
@@ -124,34 +122,43 @@ export default function LogsPanel() {
             ],
         },
         skip: managerProjectIds.length === 0,
-        onCompleted: (data) => {
-            console.log(data);
-        },
+        onCompleted: (data) => console.log(data),
         onError: (err) => console.error("Помилка отримання логів:", err),
         fetchPolicy: "network-only",
     });
 
-    // ---------- кандидати на відкат ----------
-    const [selectedEntityData, setSelectedEntityData] = useState({
-        type: null,
-        id: null,
-    });
+    // ---------- Підписка на оновлення логів ----------
+    const [allLogs, setAllLogs] = useState([]);
 
-    const {
-        loading: rollbacksLoading,
-        error: rollbacksError,
-        data: rollbackCandidatesData,
-        refetch: refetchRollbackCandidates,
-    } = useQuery(GET_ROLLBACK_CANDIDATES, {
+    useEffect(() => {
+        if (data?.transactionsByProjectIds) {
+            setAllLogs(data.transactionsByProjectIds);
+        }
+    }, [data]);
+
+    const { data: subscriptionData } = useSubscription(SUBSCRIBE_TO_AUDIT_LOGS, {
         variables: {
-            entityType: selectedEntityData.type,
-            entityId: selectedEntityData.id,
+            projectIds: managerProjectIds,
+            entityList: [
+                "PROJECT",
+                "TASK",
+                "MATERIAL",
+                "MATERIAL_REVIEW",
+                "SERVICES_IN_PROGRESS",
+            ],
         },
-        skip: !selectedEntityData.type || !selectedEntityData.id,
-        fetchPolicy: "network-only",
+        skip: managerProjectIds.length === 0,
+        onSubscriptionData: ({ subscriptionData }) => {
+            const newLog = subscriptionData?.data?.onAuditLogByProjectIds;
+            if (newLog) {
+                // Додаємо новий лог до поточного стану і показуємо повідомлення
+                setAllLogs(prev => [newLog, ...prev]);
+                notify(`Нова дія: ${newLog.action} на ${newLog.entityType} від ${getUserDisplayName(newLog)}`, "info");
+            }
+        },
     });
 
-    // ---------- стан фільтрів ----------
+    // ---------- filter state ----------
     const [searchTerm, setSearchTerm] = useState("");
     const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
     const [startDate, setStartDate] = useState(null);
@@ -160,13 +167,11 @@ export default function LogsPanel() {
     const [selectedEntityTypes, setSelectedEntityTypes] = useState([]);
     const [selectedUsers, setSelectedUsers] = useState([]);
 
-    // ---------- модальні вікна ----------
+    // ---------- modal windows ----------
     const [selectedTransaction, setSelectedTransaction] = useState(null);
     const [showRollbackModal, setShowRollbackModal] = useState(false);
-    const [showRestoreModal, setShowRestoreModal] = useState(false);
-    const [restoreTimestamp, setRestoreTimestamp] = useState(null);
 
-    // ---------- нотифікації ----------
+    // ---------- notifications ----------
     const [notification, setNotification] = useState({
         visible: false,
         message: "",
@@ -177,7 +182,7 @@ export default function LogsPanel() {
         setTimeout(() => setNotification((p) => ({ ...p, visible: false })), 5000);
     };
 
-    // ---------- мутації ----------
+    // ---------- mutations ----------
     const [rollbackTransaction, { loading: rollbackLoading }] = useMutation(
         ROLLBACK_TRANSACTION,
         {
@@ -185,8 +190,7 @@ export default function LogsPanel() {
                 if (rollbackTransaction) {
                     notify("Транзакцію успішно відкочено", "success");
                     refetch();
-                    refetchRollbackCandidates();
-                } else notify("Не вдалося виконати відкат", "danger");
+                } else notify("Не вдалося виконати відкат транзакції", "danger");
                 setShowRollbackModal(false);
             },
             onError: (e) => {
@@ -196,24 +200,7 @@ export default function LogsPanel() {
         }
     );
 
-    const [restoreEntityToPoint, { loading: restoreLoading }] = useMutation(
-        RESTORE_ENTITY_TO_POINT,
-        {
-            onCompleted: ({ restoreEntityToPoint }) => {
-                const { success, message } = restoreEntityToPoint;
-                success ? notify(message, "success") : notify(message, "danger");
-                refetch();
-                refetchRollbackCandidates();
-                setShowRestoreModal(false);
-            },
-            onError: (e) => {
-                notify(`Помилка: ${e.message}`, "danger");
-                setShowRestoreModal(false);
-            },
-        }
-    );
-
-    // ---------- фільтри ----------
+    // ---------- filters ----------
     const filterLogs = (logs) =>
         logs.filter((log) => {
             const text = searchTerm.toLowerCase();
@@ -223,9 +210,7 @@ export default function LogsPanel() {
                 log.entityType.toLowerCase().includes(text) ||
                 log.username?.toLowerCase().includes(text) ||
                 (log.worker &&
-                    `${log.worker.name} ${log.worker.surname}`
-                        .toLowerCase()
-                        .includes(text)) ||
+                    `${log.worker.name} ${log.worker.surname}`.toLowerCase().includes(text)) ||
                 log.material?.name?.toLowerCase().includes(text) ||
                 log.task?.name?.toLowerCase().includes(text) ||
                 log.project?.name?.toLowerCase().includes(text);
@@ -235,30 +220,25 @@ export default function LogsPanel() {
                 (!endDate || new Date(log.timestamp) <= endDate);
 
             const actionMatch =
-                selectedActions.length === 0 ||
-                selectedActions.includes(log.action);
+                selectedActions.length === 0 || selectedActions.includes(log.action);
 
             const typeMatch =
-                selectedEntityTypes.length === 0 ||
-                selectedEntityTypes.includes(log.entityType);
+                selectedEntityTypes.length === 0 || selectedEntityTypes.includes(log.entityType);
 
             const userMatch =
                 selectedUsers.length === 0 ||
                 selectedUsers.includes(log.username) ||
                 (log.worker &&
-                    selectedUsers.includes(
-                        `${log.worker.name} ${log.worker.surname}`
-                    ));
+                    selectedUsers.includes(`${log.worker.name} ${log.worker.surname}`));
 
             return matchText && dateMatch && actionMatch && typeMatch && userMatch;
         });
 
-    // ---------- допоміжні функції ----------
+    // ---------- helper functions ----------
     const formatTimestamp = (t) => new Date(t).toLocaleString();
+
     const getUserDisplayName = (log) =>
-        log.worker
-            ? `${log.worker.name} ${log.worker.surname}`
-            : log.username || "System";
+        log.worker ? `${log.worker.name} ${log.worker.surname}` : log.username || "Система";
 
     const getEntityName = (log) => {
         switch (log.entityType) {
@@ -270,9 +250,7 @@ export default function LogsPanel() {
                 return log.project?.name || `Проєкт #${log.entityId}`;
             case "MATERIAL_REVIEW":
                 return log.review
-                    ? `Рев'ю #${log.review.id} ${
-                        log.material ? `для ${log.material.name}` : ""
-                    }`
+                    ? `Рев'ю #${log.review.id} ${log.material ? `для ${log.material.name}` : ""}`
                     : `Рев'ю #${log.entityId}`;
             case "SERVICES_IN_PROGRESS":
                 return `Сервіс #${log.entityId}`;
@@ -281,7 +259,7 @@ export default function LogsPanel() {
         }
     };
 
-    // ---------- UI неавторизованих ----------
+    // ---------- UI for unauthorized ----------
     if (!isAuthorized) {
         return (
             <div className="access-denied">
@@ -295,21 +273,17 @@ export default function LogsPanel() {
         );
     }
 
-    const logs =
-        data?.transactionsByProjectIds ? filterLogs(data.transactionsByProjectIds) : [];
+    const logs = allLogs.length > 0
+        ? filterLogs(allLogs)
+            .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp)) // спадання
+        : [];
 
-    const actionTypes = [
-        ...new Set(data?.transactionsByProjectIds?.map((l) => l.action) || []),
-    ].sort();
-    const entityTypes = [
-        ...new Set(data?.transactionsByProjectIds?.map((l) => l.entityType) || []),
-    ].sort();
+    const actionTypes = [...new Set(allLogs?.map((l) => l.action) || [])].sort();
+    const entityTypes = [...new Set(allLogs?.map((l) => l.entityType) || [])].sort();
     const users = [
         ...new Set(
-            (data?.transactionsByProjectIds || [])
-                .map((l) =>
-                    l.worker ? `${l.worker.name} ${l.worker.surname}` : l.username
-                )
+            (allLogs || [])
+                .map((l) => (l.worker ? `${l.worker.name} ${l.worker.surname}` : l.username))
                 .filter(Boolean)
         ),
     ].sort();
@@ -317,23 +291,20 @@ export default function LogsPanel() {
     // ---------- JSX ----------
     return (
         <div className="logs-panel-container">
-            {/* Заголовок */}
+            {/* Header */}
             <div className="logs-header">
-                <h1>Журнал дій та історія транзакцій</h1>
+                <h1>Журнал транзакцій та історія дій</h1>
                 <p className="logs-subtitle">
-                    Переглядайте та керуйте діями системи, відстежуйте зміни та за
-                    потреби відкочуйте транзакції.
+                    Відстежуйте дії системи, контролюйте зміни та за потреби відкочуйте транзакції.
                 </p>
             </div>
 
-            {/* Нотифікація */}
+            {/* Notification */}
             {notification.visible && (
-                <div className={`alert alert-${notification.type}`}>
-                    {notification.message}
-                </div>
+                <div className={`alert alert-${notification.type}`}>{notification.message}</div>
             )}
 
-            {/* Фільтри */}
+            {/* Filters */}
             <Card variant="elevated" className="logs-filter-card">
                 <div className="logs-filter-header">
                     <div className="search-container">
@@ -345,23 +316,15 @@ export default function LogsPanel() {
                             onChange={(e) => setSearchTerm(e.target.value)}
                         />
                         {searchTerm && (
-                            <button
-                                className="clear-search"
-                                aria-label="Очистити"
-                                onClick={() => setSearchTerm("")}
-                            >
+                            <button className="clear-search" aria-label="Очистити" onClick={() => setSearchTerm("")}>
                                 ×
                             </button>
                         )}
                     </div>
 
                     <div className="filter-actions">
-                        <Button
-                            variant="outline"
-                            size="small"
-                            onClick={() => setShowAdvancedFilters((s) => !s)}
-                        >
-                            {showAdvancedFilters ? "Сховати фільтри" : "Показати фільтри"}
+                        <Button variant="outline" size="small" onClick={() => setShowAdvancedFilters((s) => !s)}>
+                            {showAdvancedFilters ? "Приховати фільтри" : "Показати фільтри"}
                         </Button>
                         {showAdvancedFilters && (
                             <Button
@@ -376,7 +339,7 @@ export default function LogsPanel() {
                                     setSelectedUsers([]);
                                 }}
                             >
-                                Очистити фільтри
+                                Скинути фільтри
                             </Button>
                         )}
                     </div>
@@ -388,7 +351,7 @@ export default function LogsPanel() {
                             <h3>Діапазон дат</h3>
                             <div className="date-filters">
                                 <div className="date-input">
-                                    <label>З:</label>
+                                    <label>Від:</label>
                                     <DatePicker
                                         selected={startDate}
                                         onChange={setStartDate}
@@ -415,14 +378,10 @@ export default function LogsPanel() {
                                 {actionTypes.map((a) => (
                                     <div
                                         key={a}
-                                        className={`filter-chip ${
-                                            selectedActions.includes(a) ? "selected" : ""
-                                        }`}
+                                        className={`filter-chip ${selectedActions.includes(a) ? "selected" : ""}`}
                                         onClick={() =>
                                             setSelectedActions((prev) =>
-                                                prev.includes(a)
-                                                    ? prev.filter((x) => x !== a)
-                                                    : [...prev, a]
+                                                prev.includes(a) ? prev.filter((x) => x !== a) : [...prev, a]
                                             )
                                         }
                                     >
@@ -438,14 +397,10 @@ export default function LogsPanel() {
                                 {entityTypes.map((e) => (
                                     <div
                                         key={e}
-                                        className={`filter-chip ${
-                                            selectedEntityTypes.includes(e) ? "selected" : ""
-                                        }`}
+                                        className={`filter-chip ${selectedEntityTypes.includes(e) ? "selected" : ""}`}
                                         onClick={() =>
                                             setSelectedEntityTypes((prev) =>
-                                                prev.includes(e)
-                                                    ? prev.filter((x) => x !== e)
-                                                    : [...prev, e]
+                                                prev.includes(e) ? prev.filter((x) => x !== e) : [...prev, e]
                                             )
                                         }
                                     >
@@ -461,14 +416,10 @@ export default function LogsPanel() {
                                 {users.map((u) => (
                                     <div
                                         key={u}
-                                        className={`filter-chip ${
-                                            selectedUsers.includes(u) ? "selected" : ""
-                                        }`}
+                                        className={`filter-chip ${selectedUsers.includes(u) ? "selected" : ""}`}
                                         onClick={() =>
                                             setSelectedUsers((prev) =>
-                                                prev.includes(u)
-                                                    ? prev.filter((x) => x !== u)
-                                                    : [...prev, u]
+                                                prev.includes(u) ? prev.filter((x) => x !== u) : [...prev, u]
                                             )
                                         }
                                     >
@@ -481,120 +432,103 @@ export default function LogsPanel() {
                 )}
             </Card>
 
-            {/* Стан завантаження */}
-            {loading && (
-                <div className="loading-container">
-                    <div className="spinner"></div>
-                    <p>Завантаження журналу дій...</p>
-                </div>
-            )}
+            {/* Loading state */}
+            {loading && <div className="loading-indicator">Завантаження журналу транзакцій...</div>}
 
-            {/* Повідомлення про помилку */}
+            {/* Error message */}
             {error && (
                 <div className="error-message">
                     <h3>Помилка завантаження даних</h3>
                     <p>{error.message}</p>
                     <Button variant="outline" onClick={() => refetch()}>
-                        Спробувати ще раз
+                        Спробувати ще
                     </Button>
                 </div>
             )}
 
-            {/* Порожній стан */}
+            {/* Empty state */}
             {!loading && !error && logs.length === 0 && (
-                <div className="empty-state">
-                    <div className="empty-icon">📋</div>
-                    <h3>Немає записів журналу</h3>
-                    <p>
-                        {searchTerm || startDate || endDate || selectedActions.length > 0 || selectedEntityTypes.length > 0 || selectedUsers.length > 0
-                            ? "Немає записів, що відповідають вашим фільтрам"
-                            : "Ще немає записів журналу для ваших проєктів"}
-                    </p>
-                    {searchTerm || startDate || endDate || selectedActions.length > 0 || selectedEntityTypes.length > 0 || selectedUsers.length > 0 ? (
-                        <Button
-                            variant="outline"
-                            onClick={() => {
-                                setSearchTerm("");
-                                setStartDate(null);
-                                setEndDate(null);
-                                setSelectedActions([]);
-                                setSelectedEntityTypes([]);
-                                setSelectedUsers([]);
-                            }}
-                        >
-                            Очистити фільтри
-                        </Button>
-                    ) : null}
+                <div className="no-logs-message">
+                    {searchTerm ||
+                    startDate ||
+                    endDate ||
+                    selectedActions.length > 0 ||
+                    selectedEntityTypes.length > 0 ||
+                    selectedUsers.length > 0
+                        ? "Немає журналів, що відповідають критеріям фільтру"
+                        : "Немає журналів транзакцій для ваших проєктів"}
                 </div>
             )}
 
-            {/* Список карток з логами */}
+            {/* Table of logs */}
             {!loading && !error && logs.length > 0 && (
-                <div className="logs-list">
-                    <div className="logs-summary">
-                        <h3>Знайдено {logs.length} записів</h3>
-                    </div>
-
-                    {logs.map((log) => (
-                        <Card key={log.id} className="log-card">
-                            <div className="log-header">
-                                <div className="log-entity-info">
-                                    <Badge variant={log.rolledBack ? "warning" : "primary"}>
-                                        {log.entityType}
-                                    </Badge>
-                                    <h3 className="log-entity-name">{getEntityName(log)}</h3>
-                                </div>
-                                <div className="log-timestamp">
-                                    {formatTimestamp(log.timestamp)}
-                                </div>
-                            </div>
-
-                            <div className="log-content">
-                                <div className="log-action">
-                                    <Badge variant={log.action === "CREATE" ? "success" :
-                                        log.action === "DELETE" ? "danger" : "info"}>
-                                        {log.action}
-                                    </Badge>
-                                    <p className="log-description">{log.description}</p>
-                                </div>
-
-                                <div className="log-user">
-                                    <span className="user-role">{log.role}</span>
-                                    <span className="user-name">{getUserDisplayName(log)}</span>
-                                </div>
-                            </div>
-
-                            <div className="log-footer">
-                                {log.rolledBack ? (
-                                    <Badge variant="warning">Відкочено</Badge>
-                                ) : (
-                                    <div className="log-actions">
-                                        <Button
-                                            variant="outline"
+                <>
+                    <div className="logs-summary">Знайдено {logs.length} записів</div>
+                    <div className="logs-table-wrapper">
+                        <table className="logs-table">
+                            <thead>
+                            <tr>
+                                <th className="timestamp-col">Час</th>
+                                <th className="action-col">Дія</th>
+                                <th className="entity-col">Тип сутності</th>
+                                <th className="entity-name-col">Назва сутності</th>
+                                <th className="user-col">Користувач</th>
+                                <th className="description-col">Опис</th>
+                                <th className="actions-col">Дії</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            {logs.map((log) => (
+                                <tr key={log.id} className={`log-row ${log.action?.toLowerCase()}`}>
+                                    <td className="timestamp-col">{formatTimestamp(log.timestamp)}</td>
+                                    <td className="action-col">
+                                        <Badge
+                                            variant={
+                                                log.action === "CREATE"
+                                                    ? "success"
+                                                    : log.action === "DELETE"
+                                                        ? "danger"
+                                                        : "primary"
+                                            }
                                             size="small"
-                                            onClick={() => {
-                                                setSelectedTransaction(log);
-                                                setShowRollbackModal(true);
-                                            }}
-                                            disabled={["DELETE", "ROLLBACK"].includes(log.action)}
                                         >
-                                            Відкотити дію
-                                        </Button>
-                                    </div>
-                                )}
-
-                                {log.rollbackTransactionId && (
-                                    <div className="rollback-info">
-                                        <span>Відкочена транзакція: {log.rollbackTransactionId}</span>
-                                    </div>
-                                )}
-                            </div>
-                        </Card>
-                    ))}
-                </div>
+                                            {log.action}
+                                        </Badge>
+                                        {log.rolledBack && <Badge variant="warning" size="small">ВІДКАТО</Badge>}
+                                    </td>
+                                    <td className="entity-col">{log.entityType}</td>
+                                    <td className="entity-name-col">{getEntityName(log)}</td>
+                                    <td className="user-col">
+                                        {getUserDisplayName(log)}
+                                        <div className="user-role">{log.role}</div>
+                                    </td>
+                                    <td className="description-col">{log.description}</td>
+                                    <td className="actions-col">
+                                        {log.rolledBack ? (
+                                            <span className="cannot-undo">Відкотили</span>
+                                        ) : (
+                                            <Button
+                                                variant="outline"
+                                                size="small"
+                                                onClick={() => {
+                                                    setSelectedTransaction(log);
+                                                    setShowRollbackModal(true);
+                                                }}
+                                                disabled={["DELETE", "ROLLBACK"].includes(log.action)}
+                                            >
+                                                Відкотити
+                                            </Button>
+                                        )}
+                                    </td>
+                                </tr>
+                            ))}
+                            </tbody>
+                        </table>
+                    </div>
+                </>
             )}
 
-            {/* Модальне підтвердження відкату */}
+            {/* Rollback confirmation modal */}
             <ConfirmationDialog
                 isOpen={showRollbackModal}
                 onClose={() => setShowRollbackModal(false)}
@@ -609,28 +543,6 @@ export default function LogsPanel() {
                 title="Підтвердити відкат"
                 message={`Ви впевнені, що хочете відкотити дію ${selectedTransaction?.action} над ${selectedTransaction?.entityType} #${selectedTransaction?.entityId}?`}
                 confirmText="Відкотити"
-                cancelText="Скасувати"
-                variant="danger"
-            />
-
-            {/* Модальне підтвердження відновлення */}
-            <ConfirmationDialog
-                isOpen={showRestoreModal}
-                onClose={() => setShowRestoreModal(false)}
-                onConfirm={() =>
-                    restoreEntityToPoint({
-                        variables: {
-                            entityType: selectedEntityData.type,
-                            entityId: selectedEntityData.id,
-                            timestamp: restoreTimestamp,
-                        },
-                    })
-                }
-                title="Підтвердити відновлення"
-                message={`Відновити ${selectedEntityData.type} #${selectedEntityData.id} до стану на ${formatTimestamp(
-                    restoreTimestamp
-                )}?`}
-                confirmText="Відновити"
                 cancelText="Скасувати"
                 variant="danger"
             />

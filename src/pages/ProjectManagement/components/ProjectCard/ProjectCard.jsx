@@ -48,8 +48,20 @@ export default function ProjectCard({
     const services = servicesData?.projectServicesByProject ?? [];
     const payments = paymentsData?.paymentsByProject ?? [];
 
+    // Helper function to check if the project is cancelled
+    const isProjectCancelled = () => {
+        const status = project.status?.name?.toLowerCase() || '';
+        return status.includes('cancelled') || status.includes('cancel');
+    };
+
     const handleEdit = (e) => {
         e.stopPropagation();
+        // Prevent editing if project is cancelled
+        if (isProjectCancelled()) {
+            // Show toast notification or alert
+            alert("Неможливо редагувати скасований проект");
+            return;
+        }
         onEdit?.(project.id);
     };
 
@@ -59,6 +71,11 @@ export default function ProjectCard({
     };
 
     const handleDeletePayment = (payment) => {
+        // Prevent payment deletion if project is cancelled
+        if (isProjectCancelled()) {
+            alert("Неможливо видалити платіж для скасованого проекту");
+            return;
+        }
         setPaymentToDelete?.(payment);
         refetchPayments();
     };
@@ -149,7 +166,16 @@ export default function ProjectCard({
                             />
                         )}
 
-                        <Button variant="outline" size="small" icon="✏️" onClick={handleEdit} />
+                        <Button
+                            variant="outline"
+                            size="small"
+                            icon="✏️"
+                            onClick={handleEdit}
+                            disabled={isProjectCancelled()}
+                            title={isProjectCancelled() ? "Редагування скасованого проекту заборонено" : "Редагувати проект"}
+                            className={isProjectCancelled() ? "button-tooltip" : ""}
+                            data-tooltip="Редагування скасованого проекту заборонено"
+                        />
                         <Button variant="danger" size="small" icon="🗑️" onClick={handleDelete} />
                         <Button
                             variant={open ? "primary" : "outline"}
@@ -221,6 +247,12 @@ export default function ProjectCard({
 
             {open && (
                 <div className="project-expanded-content">
+                    {isProjectCancelled() && (
+                        <div className="project-cancelled-warning">
+                            <strong>⚠️ Цей проект скасовано.</strong> Редагування та зміна даних заборонені.
+                        </div>
+                    )}
+
                     {project.description && (
                         <div className="project-description-section">
                             <h5 className="project-section-title">Опис</h5>
@@ -240,6 +272,7 @@ export default function ProjectCard({
                                 projectService={ps}
                                 onOpenDetails={() => onOpenServiceDetails?.(ps)}
                                 onShowImplementationDetails={onShowImplementationDetails}
+                                isProjectCancelled={isProjectCancelled()}
                             />
                         ))}
                     </div>
@@ -251,12 +284,13 @@ export default function ProjectCard({
                             payments={payments}
                             loading={loadingPayments}
                             error={errorPayments}
-                            onAddPayment={() => {
+                            onAddPayment={isProjectCancelled() ? null : () => {
                                 onAddPayment?.(project, refetchPayments);
                                 refetchPayments();
                             }}
-                            onEditPayment={(payment, project) => onEditPayment?.(payment, refetchPayments, project)}
+                            onEditPayment={isProjectCancelled() ? null : (payment, project) => onEditPayment?.(payment, refetchPayments, project)}
                             onDeletePayment={handleDeletePayment}
+                            isProjectCancelled={isProjectCancelled()}
                         />
                     </div>
                 </div>

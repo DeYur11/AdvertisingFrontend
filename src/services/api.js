@@ -11,7 +11,7 @@ import { createClient } from 'graphql-ws';
 import { getMainDefinition } from '@apollo/client/utilities';
 
 const httpLink = createHttpLink({
-    uri: process.env.REACT_APP_API_URL || 'http://localhost:8080/graphql',
+    uri: process.env.REACT_APP_API_URL || 'http://192.168.0.197:8080/graphql',
 });
 
 const authLink = setContext((_, { headers }) => {
@@ -27,7 +27,7 @@ const authLink = setContext((_, { headers }) => {
 // 👇 WebSocket Link для підписок
 const wsLink = new GraphQLWsLink(
     createClient({
-        url: 'ws://localhost:8080/graphql',
+        url: 'ws://192.168.0.197:8080/graphql',
         lazy: false,
         retryAttempts: 5,
         connectionParams: () => {
